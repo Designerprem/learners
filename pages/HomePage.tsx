@@ -1,29 +1,151 @@
 
-import React from 'react';
+
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { COURSES, TESTIMONIALS } from '../constants';
-import NewsTicker from '../components/NewsTicker';
+import { COURSES, TESTIMONIALS, BLOG_POSTS, FACULTY_MEMBERS } from '../constants';
 import AIAssistant from '../components/AIAssistant';
 
-const Hero = () => (
-    <div className="relative bg-brand-dark">
-        <div className="absolute inset-0">
-            <img src="https://picsum.photos/seed/hero/1920/1080" alt="Campus" className="w-full h-full object-cover opacity-30" />
-        </div>
-        <div className="relative container mx-auto px-6 py-16 md:py-32 text-center text-white">
-            <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-tight mb-4">
-                Shape Your Future in Finance with<br/> <span className="text-red-400">Reliant Learners Academy</span>
-            </h1>
-            <p className="text-lg md:text-xl max-w-3xl mx-auto mb-8 text-gray-200">
-                Your premier destination for ACCA qualifications and professional accounting education.
-            </p>
-            <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-                <Link to="/admissions" className="bg-brand-red text-white px-8 py-3 rounded-md font-semibold hover:bg-red-700 transition-transform hover:scale-105 shadow-lg">Apply Now</Link>
-                <Link to="/courses" className="bg-white text-brand-dark px-8 py-3 rounded-md font-semibold hover:bg-gray-200 transition-transform hover:scale-105 shadow-lg">Explore Courses</Link>
+const slides = [
+    {
+        url: 'https://picsum.photos/seed/hero-campus/1920/1080',
+        alt: 'Vibrant campus life at Learners Academy',
+        title: {
+            main: 'Shape Your Future in Finance with',
+            highlighted: 'Reliant Learners Academy',
+        },
+        subtitle: 'Your premier destination for ACCA qualifications and professional accounting education.',
+        buttons: [
+            { to: '/admissions', text: 'Apply Now', variant: 'primary' },
+            { to: '/courses', text: 'Explore Courses', variant: 'secondary' },
+        ],
+    },
+    {
+        url: 'https://picsum.photos/seed/hero-classroom/1920/1080',
+        alt: 'Students engaged in a modern classroom',
+        title: {
+            main: 'Expert-Led & Interactive',
+            highlighted: 'ACCA Classes',
+        },
+        subtitle: 'Learn from industry veterans in state-of-the-art facilities designed for your success.',
+        buttons: [
+            { to: '/about', text: 'Meet Our Faculty', variant: 'primary' },
+            { to: '/gallery', text: 'View Our Campus', variant: 'secondary' },
+        ],
+    },
+    {
+        url: 'https://picsum.photos/seed/hero-students/1920/1080',
+        alt: 'Successful students celebrating their achievements',
+        title: {
+            main: 'Join a Community of',
+            highlighted: 'Successful Achievers',
+        },
+        subtitle: 'Benefit from our proven high pass rates and dedicated career support to launch your professional journey.',
+        buttons: [
+            { to: '/admissions', text: 'Start Your Journey', variant: 'primary' },
+            { to: '/blog', text: 'Read Success Stories', variant: 'secondary' },
+        ],
+    }
+];
+
+const Hero = () => {
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const currentSlide = slides[currentIndex];
+
+    const goToPrevious = () => {
+        const isFirstSlide = currentIndex === 0;
+        const newIndex = isFirstSlide ? slides.length - 1 : currentIndex - 1;
+        setCurrentIndex(newIndex);
+    };
+
+    const goToNext = () => {
+        const isLastSlide = currentIndex === slides.length - 1;
+        const newIndex = isLastSlide ? 0 : currentIndex + 1;
+        setCurrentIndex(newIndex);
+    };
+    
+    useEffect(() => {
+        const timer = setTimeout(goToNext, 7000);
+        return () => clearTimeout(timer);
+    }, [currentIndex]);
+
+    return (
+        <>
+            <style>{`
+                @keyframes hero-fade-in-up {
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .hero-content-container > * {
+                    opacity: 0; /* Start invisible */
+                    animation: hero-fade-in-up 0.8s ease-out forwards;
+                }
+                /* Staggered delays */
+                .hero-content-container > h1 {
+                    animation-delay: 0.2s;
+                }
+                .hero-content-container > p {
+                    animation-delay: 0.4s;
+                }
+                .hero-content-container > div {
+                    animation-delay: 0.6s;
+                }
+            `}</style>
+            <div className="relative bg-brand-dark h-[50vh] md:h-[70vh] w-full group">
+                {/* Background Images */}
+                <div className="w-full h-full">
+                    {slides.map((slide, slideIndex) => (
+                         <div key={slideIndex} className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${slideIndex === currentIndex ? 'opacity-30' : 'opacity-0'}`}>
+                            <img src={slide.url} alt={slide.alt} className="w-full h-full object-cover" />
+                        </div>
+                    ))}
+                </div>
+
+                {/* Content Overlay */}
+                <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+                     <div key={currentIndex} className="relative container mx-auto px-6 py-16 md:py-32 text-center text-white hero-content-container">
+                        <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-tight mb-4">
+                            {currentSlide.title.main}<br/> <span className="text-red-400">{currentSlide.title.highlighted}</span>
+                        </h1>
+                        <p className="text-lg md:text-xl max-w-3xl mx-auto mb-8 text-gray-200">
+                            {currentSlide.subtitle}
+                        </p>
+                        <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                            {currentSlide.buttons.map((button) => (
+                                <Link 
+                                    key={button.to + button.text} 
+                                    to={button.to} 
+                                    className={`${
+                                        button.variant === 'primary' 
+                                            ? 'bg-brand-red text-white hover:bg-red-700' 
+                                            : 'bg-white text-brand-dark hover:bg-gray-200'
+                                    } px-8 py-3 rounded-md font-semibold transition-transform hover:scale-105 shadow-lg`}
+                                >
+                                    {button.text}
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Navigation Arrows */}
+                <button onClick={goToPrevious} className="absolute top-1/2 left-5 transform -translate-y-1/2 p-2 bg-black bg-opacity-30 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-opacity-50 z-10">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                </button>
+                <button onClick={goToNext} className="absolute top-1/2 right-5 transform -translate-y-1/2 p-2 bg-black bg-opacity-30 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-opacity-50 z-10">
+                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                </button>
+
+                {/* Dot Indicators */}
+                <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex space-x-2 z-10">
+                    {slides.map((_, slideIndex) => (
+                        <button key={slideIndex} onClick={() => setCurrentIndex(slideIndex)} className={`w-3 h-3 rounded-full transition-colors duration-300 ${currentIndex === slideIndex ? 'bg-white' : 'bg-white bg-opacity-50'}`}></button>
+                    ))}
+                </div>
             </div>
-        </div>
-    </div>
-);
+        </>
+    );
+};
+
 
 const WhyChooseUs = () => {
     const features = [
@@ -49,7 +171,7 @@ const WhyChooseUs = () => {
         },
     ];
     return (
-        <section className="py-12 md:py-20 bg-white">
+        <section className="py-8 md:py-16 bg-white">
             <div className="container mx-auto px-6">
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 text-center">
                     {features.map(feature => (
@@ -64,6 +186,78 @@ const WhyChooseUs = () => {
         </section>
     );
 };
+
+const StatCounter = ({ end, duration = 2000, label, suffix = '' }: { end: number; duration?: number; label: string; suffix?: string; }) => {
+    const [count, setCount] = useState(0);
+    const countRef = useRef<HTMLSpanElement>(null);
+
+    useEffect(() => {
+        let start = 0;
+        const endValue = end;
+        if (start === endValue) return;
+
+        const totalFrames = Math.round(duration / (1000 / 60));
+        const increment = (endValue - start) / totalFrames;
+
+        let currentFrame = 0;
+        let animationFrameId: number;
+
+        const counter = () => {
+            currentFrame += 1;
+            const newCount = Math.round(start + (increment * currentFrame));
+            
+            if (currentFrame < totalFrames) {
+                setCount(newCount);
+                animationFrameId = requestAnimationFrame(counter);
+            } else {
+                setCount(endValue);
+            }
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                animationFrameId = requestAnimationFrame(counter);
+                observer.disconnect();
+            }
+        }, { threshold: 0.1 });
+
+        if (countRef.current) {
+            observer.observe(countRef.current);
+        }
+        
+        return () => {
+            cancelAnimationFrame(animationFrameId);
+            observer.disconnect();
+        }
+
+    }, [end, duration]);
+
+    return (
+        <div className="text-center">
+            <span ref={countRef} className="text-4xl md:text-5xl font-black text-brand-red">
+                {count.toLocaleString()}{suffix}
+            </span>
+            <p className="mt-2 text-lg text-gray-300">{label}</p>
+        </div>
+    );
+};
+
+const ProvenRecords = () => (
+    <section className="py-12 md:py-20 bg-brand-dark">
+        <div className="container mx-auto px-6">
+            <div className="text-center mb-12">
+                <h2 className="text-3xl md:text-4xl font-bold text-white">Our Proven Records</h2>
+                <p className="text-gray-400 mt-2 max-w-2xl mx-auto">Decades of dedication, reflected in numbers.</p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-y-12 gap-x-8">
+                <StatCounter end={95} suffix="%" label="High Pass Rate" />
+                <StatCounter end={5000} suffix="+" label="Successful Alumni" />
+                <StatCounter end={10} suffix="+" label="Years of Excellence" />
+                <StatCounter end={98} suffix="%" label="Student Satisfaction" />
+            </div>
+        </div>
+    </section>
+);
 
 
 const ACCAPrograms = () => (
@@ -114,6 +308,48 @@ const Testimonials = () => (
     </section>
 );
 
+const LatestBlogPosts = () => {
+    const latestPosts = BLOG_POSTS.slice(0, 3);
+    const facultyMap = new Map(FACULTY_MEMBERS.map(f => [f.id, f]));
+
+    return (
+        <section className="py-12 md:py-20 bg-brand-beige">
+            <div className="container mx-auto px-6">
+                <div className="text-center mb-12">
+                    <h2 className="text-3xl md:text-4xl font-bold">From Our Blog</h2>
+                    <p className="text-gray-600 mt-2">Get the latest insights, tips, and news from our experts.</p>
+                </div>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {latestPosts.map(post => {
+                        const author = facultyMap.get(post.authorId);
+                        return (
+                            <div key={post.id} className="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col group">
+                                <img src={post.imageUrl.replace('/1200/800', '/800/600')} alt={post.title} className="w-full h-56 object-cover" />
+                                <div className="p-6 flex flex-col flex-grow">
+                                    <p className="text-sm text-brand-red font-semibold">{post.tags.join(', ')}</p>
+                                    <h3 className="text-xl font-bold mt-2 mb-3 group-hover:text-brand-red transition-colors">{post.title}</h3>
+                                    <p className="text-gray-600 flex-grow">{post.excerpt}</p>
+                                    <div className="mt-6 pt-4 border-t flex items-center">
+                                        {author && <img src={author.imageUrl.replace('/400/400', '/100/100')} alt={author.name} className="w-10 h-10 rounded-full mr-3" />}
+                                        <div>
+                                            <p className="font-semibold text-sm">{author ? author.name : 'Learners Academy'}</p>
+                                            <p className="text-xs text-gray-500">{post.publicationDate}</p>
+                                        </div>
+                                    </div>
+                                    <Link to={`/blog/${post.id}`} className="mt-4 font-semibold text-brand-red self-start">Read More &rarr;</Link>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+                <div className="text-center mt-12">
+                    <Link to="/blog" className="bg-brand-dark text-white px-8 py-3 rounded-md font-semibold hover:bg-opacity-80 transition-transform hover:scale-105 shadow-lg">View All Posts</Link>
+                </div>
+            </div>
+        </section>
+    );
+};
+
 const CallToAction = () => (
     <section className="bg-brand-red text-white">
         <div className="container mx-auto px-6 py-16 text-center">
@@ -130,9 +366,10 @@ const HomePage: React.FC = () => {
         <div>
             <Hero />
             <WhyChooseUs />
-            <NewsTicker />
+            <ProvenRecords />
             <ACCAPrograms />
             <Testimonials />
+            <LatestBlogPosts />
             <CallToAction />
             <AIAssistant />
         </div>

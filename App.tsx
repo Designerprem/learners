@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { HashRouter, Routes, Route, Outlet } from 'react-router-dom';
 import Header from './components/Header';
@@ -16,6 +17,8 @@ import ScrollToTop from './components/ScrollToTop';
 import CourseDetailPage from './pages/CourseDetailPage';
 import LoginPage from './pages/LoginPage';
 import AdminPortalPage from './pages/AdminPortalPage';
+import BlogPage from './pages/BlogPage';
+import BlogPostPage from './pages/BlogPostPage';
 
 const MainLayout = () => (
     <>
@@ -40,9 +43,11 @@ const App: React.FC = () => {
                         <Route path="/courses" element={<CoursesPage />} />
                         <Route path="/courses/:courseId" element={<CourseDetailPage />} />
                         <Route path="/admissions" element={<AdmissionsPage />} />
-                        <Route path="/contact" element={<ContactPage />} />
                         <Route path="/gallery" element={<GalleryPage />} />
                         <Route path="/faq" element={<FAQPage />} />
+                        <Route path="/blog" element={<BlogPage />} />
+                        <Route path="/blog/:postId" element={<BlogPostPage />} />
+                        <Route path="/contact" element={<ContactPage />} />
                     </Route>
                     
                     <Route path="/login" element={<LoginPage />} />

@@ -8,6 +8,7 @@ const navLinksList = [
     { to: "/admissions", text: "Admissions" },
     { to: "/gallery", text: "Gallery" },
     { to: "/faq", text: "FAQ" },
+    { to: "/blog", text: "Blog" },
     { to: "/contact", text: "Contact" },
 ];
 

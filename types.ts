@@ -59,6 +59,17 @@ export interface Message {
   text: string;
 }
 
+export interface BlogPost {
+  id: string; // This will be the URL slug
+  title: string;
+  authorId: number;
+  publicationDate: string;
+  excerpt: string;
+  content: string; // Could be Markdown in a real app
+  imageUrl: string;
+  tags: string[];
+}
+
 // Student Portal Specific Types
 export interface Student {
   id: number;

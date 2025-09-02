@@ -1,6 +1,6 @@
 
 
-import type { FacultyMember, Course, Testimonial, FAQItem, GalleryImage, Student, ChatMessage, TeacherQuestion, LiveClass, RecordedLecture, CourseMaterial, FeeSummary, PaymentHistoryItem, CalendarEvent, Notification, Admin, Announcement, Application, RecentSubmission, TeacherRating, StudentFeeRecord } from './types';
+import type { FacultyMember, Course, Testimonial, FAQItem, GalleryImage, Student, ChatMessage, TeacherQuestion, LiveClass, RecordedLecture, CourseMaterial, FeeSummary, PaymentHistoryItem, CalendarEvent, Notification, Admin, Announcement, Application, RecentSubmission, TeacherRating, StudentFeeRecord, BlogPost } from './types';
 
 export const ADMIN_USER: Admin = {
     id: 'admin01',
@@ -118,6 +118,77 @@ export const GALLERY_IMAGES: GalleryImage[] = [
     { id: 11, src: 'https://picsum.photos/seed/classroom2/600/400', alt: 'An interactive classroom session', category: 'Classrooms' },
     { id: 12, src: 'https://picsum.photos/seed/campus3/600/400', alt: 'Academy front gate', category: 'Campus' },
 ];
+
+export const BLOG_POSTS: BlogPost[] = [
+    {
+        id: '5-tips-for-sbr-exam',
+        title: '5 Essential Tips for Passing Your SBR Exam',
+        authorId: 1,
+        publicationDate: '2024-07-20',
+        excerpt: 'The Strategic Business Reporting (SBR) exam is challenging, but with the right approach, you can excel. Here are five key tips from our expert faculty to guide your preparation.',
+        content: `
+        <p class="mb-4">The Strategic Business Reporting (SBR) exam is a significant hurdle in the ACCA journey, focusing on the application of accounting standards and ethical principles in complex scenarios. Success requires more than just memorization; it demands deep understanding and strategic thinking. Here are five essential tips to help you conquer the SBR exam.</p>
+        <h3 class="text-xl font-bold mb-2 mt-6">1. Master the Conceptual Framework</h3>
+        <p class="mb-4">The framework isn't just an introductory topic; it's the backbone of all accounting standards. Examiners often test your understanding of the principles when a specific IFRS doesn't apply. Ensure you can confidently discuss concepts like faithful representation, prudence, and substance over form.</p>
+        <h3 class="text-xl font-bold mb-2 mt-6">2. Practice, Practice, Practice</h3>
+        <p class="mb-4">This cannot be overstated. Work through as many past exam questions as possible under timed conditions. This builds your stamina, improves your time management, and familiarizes you with the examiner's style. Pay close attention to the professional skills marks, which can make the difference between a pass and a fail.</p>
+        <h3 class="text-xl font-bold mb-2 mt-6">3. Stay Current with IFRS</h3>
+        <p class="mb-4">SBR is a contemporary exam. Be aware of recent changes to IFRS, exposure drafts, and discussion papers. Examiners like to see that you are up-to-date with the latest developments in the accounting world. Reading technical articles on the ACCA website is a great way to stay informed.</p>
+        <h3 class="text-xl font-bold mb-2 mt-6">4. Develop Your Ethical Acumen</h3>
+        <p class="mb-4">Ethics is a guaranteed component of the SBR exam. You must be able to identify ethical dilemmas, explain their implications for stakeholders, and recommend appropriate courses of action. Use the ACCA's ethical framework (Integrity, Objectivity, Professional Competence and Due Care, Confidentiality, and Professional Behaviour) to structure your answers.</p>
+        <h3 class="text-xl font-bold mb-2 mt-6">5. Perfect Your Exam Technique</h3>
+        <p class="mb-4">Structure your answers clearly with headings and short paragraphs. Directly address the verb in the question (e.g., 'discuss', 'advise', 'explain'). For calculation questions, always show your workings. For narrative questions, make a point and then explain its significance ('Point, Explain'). This logical approach will earn you marks and impress the examiner.</p>
+        `,
+        imageUrl: 'https://picsum.photos/seed/blog1/1200/800',
+        tags: ['SBR', 'Exam Tips', 'ACCA Professional']
+    },
+    {
+        id: 'career-in-management-accounting',
+        title: 'Beyond the Books: A Career in Management Accounting',
+        authorId: 2,
+        publicationDate: '2024-07-15',
+        excerpt: 'What does a management accountant really do? We explore the dynamic and strategic role that a qualification in Performance Management (PM) can lead to.',
+        content: `
+        <p class="mb-4">When people think of accounting, they often picture tax returns and financial audits. While that's one side of the coin, the other, equally vital side is management accounting. This field is about looking forward, using financial data to drive business strategy and decision-making from within an organization.</p>
+        <h3 class="text-xl font-bold mb-2 mt-6">What is Management Accounting?</h3>
+        <p class="mb-4">At its core, management accounting involves preparing and analyzing financial information for internal use. A management accountant is a strategic partner to the business, providing insights that help leaders make informed decisions. This includes budgeting, forecasting, cost analysis, and performance evaluation.</p>
+        <h3 class="text-xl font-bold mb-2 mt-6">Key Responsibilities</h3>
+        <ul class="list-disc list-inside mb-4 pl-4">
+            <li><strong>Budgeting and Forecasting:</strong> Creating detailed budgets and financial forecasts to plan for the future.</li>
+            <li><strong>Cost Management:</strong> Analyzing costs to identify inefficiencies and opportunities for savings.</li>
+            <li><strong>Performance Analysis:</strong> Using variance analysis and other techniques to compare actual results against budgets.</li>
+            <li><strong>Strategic Planning:</strong> Providing financial input for long-term business planning and investment decisions.</li>
+        </ul>
+        <p class="mb-4">The ACCA papers in Performance Management (PM) and Advanced Performance Management (APM) are specifically designed to equip you with these critical skills. By mastering these subjects, you position yourself not just as an accountant, but as a future business leader.</p>
+        `,
+        imageUrl: 'https://picsum.photos/seed/blog2/1200/800',
+        tags: ['Careers', 'Management Accounting', 'PM']
+    },
+    {
+        id: 'demystifying-corporate-law',
+        title: 'Demystifying the LW Paper: More Than Just Law',
+        authorId: 3,
+        publicationDate: '2024-07-10',
+        excerpt: 'The Corporate and Business Law (LW) paper can seem daunting. Ms. Emily White breaks down why it\'s a crucial part of your accounting toolkit and how to approach it effectively.',
+        content: `
+        <p class="mb-4">For many students on the path to becoming an accountant, the Corporate and Business Law (LW) paper can feel like an outlier. It's less about numbers and more about rules and regulations. However, understanding the legal framework in which businesses operate is absolutely fundamental to a career in finance.</p>
+        <h3 class="text-xl font-bold mb-2 mt-6">Why is Law Important for Accountants?</h3>
+        <p class="mb-4">Every financial transaction, every contract, and every business decision is underpinned by law. As an accountant, you will be involved in company formation, employment contracts, and ensuring the business complies with statutory requirements. A strong grasp of law protects both your company and you from legal and financial risk.</p>
+        <h3 class="text-xl font-bold mb-2 mt-6">Key Areas of the LW Syllabus</h3>
+        <ul class="list-disc list-inside mb-4 pl-4">
+            <li><strong>The Legal System:</strong> Understanding how laws are made and enforced.</li>
+            <li><strong>Contract Law:</strong> The essential elements of a legally binding agreement.</li>
+            <li><strong>Company Law:</strong> The rules governing the formation, management, and financing of companies.</li>
+            <li><strong>Employment Law:</strong> The rights and responsibilities of employers and employees.</li>
+        </ul>
+        <h3 class="text-xl font-bold mb-2 mt-6">How to Succeed in LW</h3>
+        <p class="mb-4">Success in LW comes from understanding concepts rather than rote memorization of case law. Focus on learning the legal principles and then applying them to the scenarios presented in the exam questions. Use mind maps and flashcards to remember key definitions and rules. Practice applying your knowledge to short, scenario-based questions to build your confidence.</p>
+        `,
+        imageUrl: 'https://picsum.photos/seed/blog3/1200/800',
+        tags: ['LW', 'Exam Tips', 'Applied Skills']
+    },
+];
+
 
 export const NOTIFICATIONS: Notification[] = [
     { id: 1, type: 'grade', title: 'New Grade Posted', message: 'Your result for Financial Reporting mock exam is available.', timestamp: '15m ago', read: false },

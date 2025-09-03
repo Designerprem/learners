@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useRef } from 'react';
 import type { FacultyMember } from '../../types';
 import { COURSES } from '../../constants';
@@ -10,11 +11,13 @@ interface AddFacultyModalProps {
 }
 
 const AddFacultyModal: React.FC<AddFacultyModalProps> = ({ isOpen, onClose, onAddFaculty }) => {
-    // FIX: Added 'phone' to the initial state to match the FacultyMember type.
+    // FIX: Added 'username' to the initial state to satisfy the FacultyMember type.
     const initialState = {
         name: '',
+        username: '',
         email: '',
         phone: '',
+        address: '',
         qualification: '',
         bio: '',
         password: '',
@@ -68,12 +71,11 @@ const AddFacultyModal: React.FC<AddFacultyModalProps> = ({ isOpen, onClose, onAd
     
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const { password, ...facultyData } = formData;
-        console.log(`Creating faculty ${facultyData.name} with password: ${password}`); // Handle password securely in a real app
+        console.log(`Creating faculty ${formData.name} with password: ${formData.password}`); // Handle password securely in a real app
 
         const newFaculty: FacultyMember = {
             id: Date.now(),
-            ...facultyData,
+            ...formData,
             imageUrl: previewUrl || 'https://picsum.photos/seed/newfaculty/400/400',
             assignedPapers: selectedPapers,
         };
@@ -98,26 +100,34 @@ const AddFacultyModal: React.FC<AddFacultyModalProps> = ({ isOpen, onClose, onAd
                     <h2 className="text-2xl font-bold text-brand-dark">Register New Faculty</h2>
                 </div>
                 <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
+                    {/* FIX: Added a username field and reorganized the form for better UX. */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label htmlFor="name" className="block text-sm font-medium text-gray-700">Full Name</label>
                             <input type="text" name="name" id="name" required value={formData.name} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white" />
                         </div>
                         <div>
+                            <label htmlFor="username" className="block text-sm font-medium text-gray-700">Username</label>
+                            <input type="text" name="username" id="username" required value={formData.username} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white" />
+                        </div>
+                    </div>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
                             <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email Address</label>
                             <input type="email" name="email" id="email" required value={formData.email} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white" />
                         </div>
-                    </div>
-                     {/* FIX: Added phone number input and grouped it with qualification for better layout. */}
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Phone</label>
                             <input type="tel" name="phone" id="phone" required value={formData.phone} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white" />
                         </div>
-                        <div>
-                            <label htmlFor="qualification" className="block text-sm font-medium text-gray-700">Qualification</label>
-                            <input type="text" name="qualification" id="qualification" required value={formData.qualification} onChange={handleChange} placeholder="e.g., PhD, FCCA" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white" />
-                        </div>
+                    </div>
+                    <div>
+                        <label htmlFor="qualification" className="block text-sm font-medium text-gray-700">Qualification</label>
+                        <input type="text" name="qualification" id="qualification" required value={formData.qualification} onChange={handleChange} placeholder="e.g., PhD, FCCA" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white" />
+                    </div>
+                    <div>
+                        <label htmlFor="address" className="block text-sm font-medium text-gray-700">Address</label>
+                        <textarea name="address" id="address" rows={2} required value={formData.address} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white"></textarea>
                     </div>
                      <div>
                         <label htmlFor="password"className="block text-sm font-medium text-gray-700">Set Initial Password</label>

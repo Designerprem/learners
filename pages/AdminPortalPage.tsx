@@ -1,6 +1,5 @@
 
 
-
 import React, { useState } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import AdminSidebar from '../components/admin-portal/AdminSidebar';
@@ -12,6 +11,9 @@ import ManageAdmissions from './admin-portal/ManageAdmissions';
 import ManageAnnouncements from './admin-portal/ManageAnnouncements';
 import ManageFees from './admin-portal/ManageFees';
 import TeacherRatings from './admin-portal/TeacherRatings';
+import ManageContentPage from './admin-portal/ManageContentPage';
+import MockResults from './admin-portal/MockResults';
+import SettingsPage from './admin-portal/SettingsPage';
 
 const AdminPortalLayout = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -47,7 +49,10 @@ const AdminPortalPage: React.FC = () => {
                 <Route path="admissions" element={<ManageAdmissions />} />
                 <Route path="announcements" element={<ManageAnnouncements />} />
                 <Route path="fees" element={<ManageFees />} />
+                <Route path="mock-results" element={<MockResults />} />
                 <Route path="ratings" element={<TeacherRatings />} />
+                <Route path="content" element={<ManageContentPage />} />
+                <Route path="settings" element={<SettingsPage />} />
             </Route>
         </Routes>
     );

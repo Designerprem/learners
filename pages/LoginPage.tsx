@@ -1,29 +1,65 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
-import type { UserRole } from '../types';
+import type { UserRole, Student, FacultyMember } from '../types';
+import { STUDENTS, FACULTY_MEMBERS } from '../constants';
+
+const getStudents = (): Student[] => {
+    try {
+        const saved = localStorage.getItem('students');
+        return saved ? JSON.parse(saved) : STUDENTS;
+    } catch {
+        return STUDENTS;
+    }
+};
+
+const getFaculty = (): FacultyMember[] => {
+    try {
+        const saved = localStorage.getItem('faculty');
+        return saved ? JSON.parse(saved) : FACULTY_MEMBERS;
+    } catch {
+        return FACULTY_MEMBERS;
+    }
+};
+
 
 const LoginPage: React.FC = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const role = (searchParams.get('role') as UserRole) || 'student';
+    
+    const [id, setId] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
 
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
-        // In a real app, you'd perform authentication here.
-        // For this prototype, we'll just navigate to the correct portal.
-        switch (role) {
-            case 'student':
-                navigate('/student-portal/dashboard');
-                break;
-            case 'faculty':
-                navigate('/faculty-portal/dashboard');
-                break;
-            case 'admin':
+        setError('');
+
+        let user: Student | FacultyMember | undefined;
+        let path: string = '/';
+
+        if (role === 'student') {
+            const allStudents = getStudents();
+            user = allStudents.find(s => s.studentId === id && s.password === password);
+            path = '/student-portal/dashboard';
+        } else if (role === 'faculty') {
+            const allFaculty = getFaculty();
+            user = allFaculty.find(f => f.username === id && f.password === password);
+            path = '/faculty-portal/dashboard';
+        } else if (role === 'admin') {
+             if (id === 'admin@learners.edu' && password === 'password') { // Simplified admin check
                 navigate('/admin-portal/dashboard');
-                break;
-            default:
-                navigate('/');
+                return;
+            }
+        }
+        
+        if (user) {
+            sessionStorage.setItem('loggedInUser', JSON.stringify(user));
+            sessionStorage.setItem('userRole', role);
+            navigate(path);
+        } else {
+            setError('Invalid credentials. Please try again.');
         }
     };
 
@@ -31,27 +67,30 @@ const LoginPage: React.FC = () => {
         student: {
             title: 'Student Portal Login',
             idLabel: 'Student ID',
-            idDefault: 'S12345',
+            idPlaceholder: 'e.g., S12345',
+            idType: 'text',
             switchRoleLink: '/login?role=faculty',
             switchRoleText: 'Faculty Login'
         },
         faculty: {
             title: 'Faculty Portal Login',
-            idLabel: 'Faculty Email',
-            idDefault: 'jane.smith@learners.edu',
+            idLabel: 'Faculty Username',
+            idPlaceholder: 'e.g., kabin.p',
+            idType: 'text',
             switchRoleLink: '/login?role=student',
             switchRoleText: 'Student Login'
         },
         admin: {
             title: 'Admin Portal Login',
             idLabel: 'Admin Email',
-            idDefault: 'admin@learners.edu',
+            idPlaceholder: 'e.g., admin@learners.edu',
+            idType: 'email',
             switchRoleLink: '/',
             switchRoleText: ''
         },
     };
     
-    const { title, idLabel, idDefault, switchRoleLink, switchRoleText } = roleConfig[role];
+    const { title, idLabel, idPlaceholder, idType, switchRoleLink, switchRoleText } = roleConfig[role];
 
     return (
          <div className="flex flex-col items-center justify-center min-h-screen bg-brand-beige">
@@ -61,14 +100,32 @@ const LoginPage: React.FC = () => {
             </div>
             <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg">
                 <h2 className="text-3xl font-bold text-center mb-6">{title}</h2>
+                {error && <p className="bg-red-100 text-red-700 p-3 rounded-md text-sm mb-4">{error}</p>}
                 <form onSubmit={handleLogin} className="space-y-6">
                     <div>
                         <label htmlFor="id" className="block text-sm font-medium text-gray-700">{idLabel}</label>
-                        <input type="text" name="id" id="id" required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white" defaultValue={idDefault} />
+                        <input 
+                            type={idType} 
+                            name="id" 
+                            id="id" 
+                            required 
+                            value={id}
+                            onChange={(e) => setId(e.target.value)}
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white" 
+                            placeholder={idPlaceholder}
+                        />
                     </div>
                     <div>
                         <label htmlFor="password"className="block text-sm font-medium text-gray-700">Password</label>
-                        <input type="password" name="password" id="password" required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white" defaultValue="password" />
+                        <input 
+                            type="password" 
+                            name="password" 
+                            id="password" 
+                            required 
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white"
+                        />
                     </div>
                     <button type="submit" className="w-full bg-brand-red text-white py-3 px-4 rounded-md font-semibold hover:bg-red-700 transition-colors">Login</button>
                     {role !== 'admin' && (

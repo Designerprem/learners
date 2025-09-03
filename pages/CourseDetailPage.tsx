@@ -2,8 +2,9 @@
 
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { COURSES, FACULTY_MEMBERS } from '../constants';
-import type { FacultyMember } from '../types';
+// FIX: Corrected import from FEE_STRUCTURE_ACCA to ACCA_FEE_STRUCTURE.
+import { COURSES, FACULTY_MEMBERS, ACCA_FEE_STRUCTURE } from '../constants';
+import type { FacultyMember, AccaFeeCategory } from '../types';
 
 const SyllabusAccordion: React.FC<{ syllabus: { topic: string; details: string }[] }> = ({ syllabus }) => {
     const [openIndex, setOpenIndex] = React.useState<number | null>(0);
@@ -52,6 +53,62 @@ const FacultyCard: React.FC<{ member: FacultyMember }> = ({ member }) => (
     </div>
 );
 
+const CourseFeeStructure: React.FC<{ feeCategories: AccaFeeCategory[] }> = ({ feeCategories }) => {
+    const formatCurrency = (value: number | undefined) => {
+        if (value === undefined || value === null) return '-';
+        return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+
+    if (feeCategories.length === 0) {
+        return <p className="text-gray-600">Fee information for this level is not available at the moment. Please contact admissions for details.</p>;
+    }
+
+    return (
+        <div className="overflow-x-auto bg-brand-beige p-4 sm:p-6 rounded-lg">
+            <table className="w-full text-left min-w-[700px]">
+                <thead className="border-b-2 border-brand-red">
+                    <tr>
+                        <th className="p-3 font-bold text-brand-dark uppercase tracking-wider text-sm w-[30%]">Paper</th>
+                        <th className="p-3 font-bold text-brand-dark uppercase tracking-wider text-sm">Details</th>
+                        <th className="p-3 font-bold text-brand-dark uppercase tracking-wider text-sm text-right">UK Fees (NRS)</th>
+                        <th className="p-3 font-bold text-brand-dark uppercase tracking-wider text-sm text-right">College Fees (NRS)</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                    {feeCategories.map((category, catIndex) => (
+                        <React.Fragment key={catIndex}>
+                            <tr className="bg-gray-700 text-white">
+                                <td colSpan={4} className="p-3 font-bold">
+                                    {category.level}
+                                    {category.description && <span className="font-normal text-sm block text-gray-300">{category.description}</span>}
+                                </td>
+                            </tr>
+                            {category.items.map((item, itemIndex) => (
+                                <tr key={itemIndex} className="hover:bg-gray-50 align-top">
+                                    <td className="p-3 font-semibold">{item.paper || '-'}</td>
+                                    <td className="p-3">{item.details}</td>
+                                    <td className="p-3 text-right font-mono">{formatCurrency(item.ukFeesNrs)}</td>
+                                    <td className="p-3 text-right font-mono">{formatCurrency(item.collegeFeesNrs)}</td>
+                                </tr>
+                            ))}
+                            {category.subtotals && (
+                                <tr className="bg-yellow-100 font-bold">
+                                    <td colSpan={2} className="p-3 text-right text-brand-dark">Subtotal</td>
+                                    <td className="p-3 text-right font-mono text-brand-dark">{formatCurrency(category.subtotals.ukFeesNrs)}</td>
+                                    <td className="p-3 text-right font-mono text-brand-dark">{formatCurrency(category.subtotals.collegeFeesNrs)}</td>
+                                </tr>
+                            )}
+                        </React.Fragment>
+                    ))}
+                </tbody>
+            </table>
+             <div className="mt-6 text-center text-xs text-gray-600 bg-yellow-50 p-3 rounded-lg">
+                <p><strong>Disclaimer:</strong> All fees are subject to change without prior notice. The external fees payable to ACCA are based on current exchange rates and may vary. Please confirm the latest fees with our admissions office.</p>
+            </div>
+        </div>
+    );
+};
+
 
 const CourseDetailPage: React.FC = () => {
     const { courseId } = useParams<{ courseId: string }>();
@@ -70,6 +127,17 @@ const CourseDetailPage: React.FC = () => {
     }
     
     const courseFaculty = FACULTY_MEMBERS.filter(member => course.facultyIds.includes(member.id));
+    
+    const courseLevelMapping: { [key: string]: string[] } = {
+        'Applied Knowledge': ['ACCA Knowledge Level'],
+        'Applied Skills': ['ACCA Skills Level'],
+        'Strategic Professional': ['Strategic Professional'],
+    };
+
+    const relevantFeeLevels = courseLevelMapping[course.level] || [];
+    // FIX: Corrected variable name from FEE_STRUCTURE_ACCA to ACCA_FEE_STRUCTURE.
+    const courseFeeCategories = ACCA_FEE_STRUCTURE.filter(cat => relevantFeeLevels.includes(cat.level));
+
 
     return (
         <div className="bg-white">
@@ -93,11 +161,16 @@ const CourseDetailPage: React.FC = () => {
                             <SyllabusAccordion syllabus={course.syllabus} />
                         </section>
 
-                        <section id="outcomes">
+                        <section id="outcomes" className="mb-12">
                             <h2 className="text-2xl md:text-3xl font-bold text-brand-dark mb-4 border-b-2 border-brand-red pb-2">Learning Outcomes</h2>
                             <ul className="list-disc list-inside space-y-2 text-gray-700 pl-4">
                                 {course.learningOutcomes.map((outcome, index) => <li key={index}>{outcome}</li>)}
                             </ul>
+                        </section>
+
+                         <section id="fees">
+                            <h2 className="text-2xl md:text-3xl font-bold text-brand-dark mb-4 border-b-2 border-brand-red pb-2">Fee Structure</h2>
+                            <CourseFeeStructure feeCategories={courseFeeCategories} />
                         </section>
                     </div>
 

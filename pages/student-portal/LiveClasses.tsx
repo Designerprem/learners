@@ -5,6 +5,7 @@ import { LIVE_CLASSES, RECORDED_LECTURES, COURSE_MATERIALS, COURSES } from '../.
 import type { CourseMaterial, DownloadItem, LiveClass, RecordedLecture } from '../../types';
 import DownloadManager from '../../components/student-portal/DownloadManager';
 import RatingModal from '../../components/student-portal/RatingModal';
+import { useStudent } from '../StudentPortalPage';
 
 type ResourceType = 'lectures' | 'notes' | 'assignments';
 
@@ -62,21 +63,58 @@ const ResourceViewerModal = ({ file, onClose }: { file: CourseMaterial; onClose:
 
 
 const LiveClasses: React.FC = () => {
+    const { student } = useStudent();
     const [searchParams] = useSearchParams();
     const paperFromUrl = searchParams.get('paper');
     
     const [activeTab, setActiveTab] = useState<ResourceType>('lectures');
-    const [selectedPaper, setSelectedPaper] = useState<string>(paperFromUrl || 'All');
+    const [selectedPaper, setSelectedPaper] = useState<string>('All');
     const [selectedFiles, setSelectedFiles] = useState<Set<number>>(new Set());
     const [downloadQueue, setDownloadQueue] = useState<DownloadItem[]>([]);
     const [viewingFile, setViewingFile] = useState<CourseMaterial | null>(null);
     const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
     const [classToRate, setClassToRate] = useState<LiveClass | null>(null);
-    
-    const enrolledPapers = COURSES[1].papers;
 
-    const liveNow = LIVE_CLASSES.find(c => c.status === 'Live');
-    const upcomingClasses = LIVE_CLASSES.filter(c => c.status === 'Upcoming');
+    useEffect(() => {
+        if (student && paperFromUrl) {
+            setSelectedPaper(paperFromUrl);
+        } else if (student) {
+            setSelectedPaper('All');
+        }
+    }, [student, paperFromUrl]);
+
+    const allPapersMap = useMemo(() => {
+        const map = new Map<string, string>();
+        COURSES.forEach(course => {
+            course.papers.forEach(paper => {
+                const code = paper.split(':')[0].trim();
+                map.set(code, paper);
+            });
+        });
+        return map;
+    }, []);
+    
+    const enrolledPapersWithNames = useMemo(() => {
+        if (!student) return [];
+        return student.enrolledPapers.map(code => allPapersMap.get(code) || code);
+    }, [student, allPapersMap]);
+
+    const liveNow = useMemo(() => {
+        if (!student) return null;
+        return LIVE_CLASSES.find(c => {
+            const paperCode = c.paper.split(':')[0].trim();
+            return c.status === 'Live' && student.enrolledPapers.includes(paperCode);
+        });
+    }, [student]);
+
+    const upcomingClasses = useMemo(() => {
+        if (!student) return [];
+        return LIVE_CLASSES.filter(c => {
+            const paperCode = c.paper.split(':')[0].trim();
+            return c.status === 'Upcoming' && student.enrolledPapers.includes(paperCode);
+        });
+    }, [student]);
+    
 
     const allCourseMaterials = useMemo(() => {
         const savedMaterials = localStorage.getItem('customMaterials');
@@ -102,6 +140,8 @@ const LiveClasses: React.FC = () => {
     }, [allCourseMaterials]);
 
     const filteredMaterials = useMemo(() => {
+        if (!student) return [];
+
         let materials: (CourseMaterial | {id: number, paper: string; title: string; uploadDate: string; downloadLink: string; type: 'lectures'})[] = [];
         if (activeTab === 'lectures') {
              materials = allRecordedLectures.map(lec => ({ ...lec, id: lec.id, title: lec.topic, uploadDate: lec.date, downloadLink: lec.videoUrl, type: 'lectures' as const }));
@@ -110,11 +150,15 @@ const LiveClasses: React.FC = () => {
         } else {
             materials = allCourseMaterials.filter(m => m.type === 'Assignment');
         }
+        
+        const enrolledMaterials = materials.filter(m => student.enrolledPapers.includes(m.paper));
+
         if (selectedPaper !== 'All') {
-            return materials.filter(m => m.paper === selectedPaper);
+            const selectedPaperCode = selectedPaper.split(':')[0].trim();
+            return enrolledMaterials.filter(m => m.paper === selectedPaperCode);
         }
-        return materials.sort((a, b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime());
-    }, [activeTab, selectedPaper, allCourseMaterials, allRecordedLectures]);
+        return enrolledMaterials.sort((a, b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime());
+    }, [activeTab, selectedPaper, allCourseMaterials, allRecordedLectures, student]);
 
 
     const handleToggleFileSelection = (fileId: number) => {
@@ -223,6 +267,10 @@ const LiveClasses: React.FC = () => {
             feedback,
         });
     };
+    
+    if (!student) {
+        return <div>Loading...</div>;
+    }
 
     return (
         <div>
@@ -284,8 +332,8 @@ const LiveClasses: React.FC = () => {
                             onChange={(e) => setSelectedPaper(e.target.value)}
                             className="mt-1 block w-full pl-3 pr-10 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red"
                         >
-                            <option value="All">All Papers</option>
-                            {enrolledPapers.map(paper => <option key={paper} value={paper}>{paper}</option>)}
+                            <option value="All">All My Papers</option>
+                            {enrolledPapersWithNames.map(paper => <option key={paper} value={paper}>{paper}</option>)}
                         </select>
                     </div>
                 </div>
@@ -304,7 +352,9 @@ const LiveClasses: React.FC = () => {
 
 
                 <div className="space-y-3">
-                    {filteredMaterials.length > 0 ? filteredMaterials.map((item) => (
+                    {filteredMaterials.length > 0 ? filteredMaterials.map((item) => {
+                        const fullPaperName = allPapersMap.get(item.paper) || item.paper;
+                        return (
                          <div key={item.id} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-md transition-colors">
                             <div className="flex items-center">
                                {isDownloadableTab && (
@@ -319,7 +369,7 @@ const LiveClasses: React.FC = () => {
                                 {resourceIcons[activeTab]}
                                 <div>
                                     <p className="font-semibold text-brand-dark">{item.title}</p>
-                                    <p className="text-sm text-gray-500">{item.paper || selectedPaper} - {item.uploadDate}</p>
+                                    <p className="text-sm text-gray-500">{fullPaperName} - {item.uploadDate}</p>
                                 </div>
                             </div>
                             <div className="flex items-center space-x-4">
@@ -341,7 +391,7 @@ const LiveClasses: React.FC = () => {
                                 </a>
                             </div>
                         </div>
-                    )) : (
+                    )}) : (
                          <div className="text-center py-8 text-gray-500">
                              <p>No resources found for the selected criteria.</p>
                         </div>

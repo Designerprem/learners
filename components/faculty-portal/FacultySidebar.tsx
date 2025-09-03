@@ -1,9 +1,9 @@
 
 
-
 import React, { useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { FACULTY_MEMBERS } from '../../constants';
+import type { FacultyMember } from '../../types';
+import { logout } from '../../services/authService';
 
 const icons = {
     dashboard: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>,
@@ -14,6 +14,7 @@ const icons = {
     announcements: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.277 0 7.423-4.586 6.357-8.455A4.002 4.002 0 0118 4v6c0 .635-.21 1.223-.592 1.699l-2.147 6.15a1.76 1.76 0 01-3.417-.592V5.882z"></path></svg>,
     schedule: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>,
     questions: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>,
+    students: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>,
 };
 
 const SidebarLink = ({ to, icon, children, onClick }: { to: string; icon: JSX.Element; children: React.ReactNode; onClick?: () => void }) => (
@@ -37,11 +38,11 @@ const SidebarLink = ({ to, icon, children, onClick }: { to: string; icon: JSX.El
 interface FacultySidebarProps {
     isOpen: boolean;
     setIsOpen: (isOpen: boolean) => void;
+    facultyMember: FacultyMember;
 }
 
-const FacultySidebar: React.FC<FacultySidebarProps> = ({ isOpen, setIsOpen }) => {
+const FacultySidebar: React.FC<FacultySidebarProps> = ({ isOpen, setIsOpen, facultyMember }) => {
     const navigate = useNavigate();
-    const facultyMember = FACULTY_MEMBERS[0]; // Assuming Dr. Jane Smith is logged in
     const sidebarRef = useRef<HTMLElement>(null);
 
     useEffect(() => {
@@ -55,6 +56,7 @@ const FacultySidebar: React.FC<FacultySidebarProps> = ({ isOpen, setIsOpen }) =>
     }, [setIsOpen]);
 
     const handleLogoutClick = () => {
+        logout();
         setIsOpen(false);
         navigate('/login?role=faculty');
     };
@@ -81,6 +83,7 @@ const FacultySidebar: React.FC<FacultySidebarProps> = ({ isOpen, setIsOpen }) =>
                 <nav className="flex-1 space-y-2">
                     <SidebarLink to="/faculty-portal/dashboard" icon={icons.dashboard} onClick={handleLinkClick}>Dashboard</SidebarLink>
                     <SidebarLink to="/faculty-portal/classes" icon={icons.classes} onClick={handleLinkClick}>My Classes</SidebarLink>
+                    <SidebarLink to="/faculty-portal/my-students" icon={icons.students} onClick={handleLinkClick}>My Students</SidebarLink>
                     <SidebarLink to="/faculty-portal/grading" icon={icons.grading} onClick={handleLinkClick}>Grading &amp; Results</SidebarLink>
                     <SidebarLink to="/faculty-portal/announcements" icon={icons.announcements} onClick={handleLinkClick}>Announcements</SidebarLink>
                     <SidebarLink to="/faculty-portal/schedule" icon={icons.schedule} onClick={handleLinkClick}>My Schedule</SidebarLink>

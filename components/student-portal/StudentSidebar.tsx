@@ -1,9 +1,9 @@
 
 
-
 import React, { useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { STUDENTS } from '../../constants';
+import type { Student } from '../../types';
+import { logout } from '../../services/authService';
 
 const icons = {
     dashboard: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>,
@@ -38,11 +38,11 @@ const SidebarLink = ({ to, icon, children, onClick }: { to: string; icon: JSX.El
 interface StudentSidebarProps {
     isOpen: boolean;
     setIsOpen: (isOpen: boolean) => void;
+    student: Student;
 }
 
-const StudentSidebar: React.FC<StudentSidebarProps> = ({ isOpen, setIsOpen }) => {
+const StudentSidebar: React.FC<StudentSidebarProps> = ({ isOpen, setIsOpen, student }) => {
     const navigate = useNavigate();
-    const student = STUDENTS[0]; // Assuming Alex Doe is the logged-in user
     const sidebarRef = useRef<HTMLElement>(null);
 
     useEffect(() => {
@@ -56,6 +56,7 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({ isOpen, setIsOpen }) =>
     }, [setIsOpen]);
 
     const handleLogoutClick = () => {
+        logout();
         setIsOpen(false);
         navigate('/login?role=student');
     };

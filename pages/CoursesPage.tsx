@@ -42,8 +42,8 @@ const CoursesPage: React.FC = () => {
         <div className="bg-brand-beige">
              <div className="bg-brand-dark text-white py-12 md:py-20">
                 <div className="container mx-auto px-6 text-center">
-                    <h1 className="text-3xl md:text-4xl font-bold">ACCA Courses & Programs</h1>
-                    <p className="mt-4 text-lg max-w-3xl mx-auto">Explore our comprehensive ACCA study pathways from Foundation to Professional.</p>
+                    <h1 className="text-3xl md:text-4xl font-bold">ACCA Courses</h1>
+                    <p className="mt-4 text-lg max-w-3xl mx-auto">Explore our comprehensive ACCA study pathways and the associated fee structure.</p>
                 </div>
             </div>
 

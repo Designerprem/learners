@@ -1,9 +1,10 @@
 
 
 import React, { useState } from 'react';
-import { CALENDAR_EVENTS, FACULTY_MEMBERS } from '../../constants';
+import { CALENDAR_EVENTS } from '../../constants';
 import type { CalendarEvent } from '../../types';
 import AddClassModal from '../../components/faculty-portal/AddClassModal';
+import { useFaculty } from '../FacultyPortalPage';
 
 const eventColors: { [key in CalendarEvent['type']]: string } = {
     class: 'bg-blue-500',
@@ -46,7 +47,7 @@ const AgendaItem = ({ event, onEdit, onDelete }: { event: CalendarEvent, onEdit:
 
 
 const Schedule: React.FC = () => {
-    const facultyMember = FACULTY_MEMBERS[0];
+    const { facultyMember } = useFaculty();
     const [currentDate, setCurrentDate] = useState(new Date('2024-07-22T10:00:00Z'));
     const [selectedDate, setSelectedDate] = useState(new Date('2024-07-22T10:00:00Z'));
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -114,6 +115,7 @@ const Schedule: React.FC = () => {
         .filter(event => event.date === selectedDate.toISOString().split('T')[0])
         .sort((a, b) => (a.startTime || '00:00').localeCompare(b.startTime || '00:00'));
 
+    if (!facultyMember) return null;
 
     return (
         <div>

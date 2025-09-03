@@ -1,8 +1,7 @@
 
 
-
 import React, { useState, useRef, useEffect } from 'react';
-import { Routes, Route, Link, Navigate, Outlet } from 'react-router-dom';
+import { Routes, Route, Link, Navigate, Outlet, useNavigate, useOutletContext } from 'react-router-dom';
 import StudentSidebar from '../components/student-portal/StudentSidebar';
 import Dashboard from './student-portal/Dashboard';
 import MyCourses from './student-portal/MyCourses';
@@ -12,14 +11,75 @@ import Community from './student-portal/Community';
 import LiveClasses from './student-portal/LiveClasses';
 import FeePayment from './student-portal/FeePayment';
 import SchedulePage from './student-portal/SchedulePage';
-import type { Notification } from '../types';
-import { NOTIFICATIONS } from '../constants';
+import type { Notification, Announcement, Student } from '../types';
+import { NOTIFICATIONS, GLOBAL_ANNOUNCEMENTS } from '../constants';
+import AnnouncementPopup from '../components/AnnouncementPopup';
+import { getLoggedInUser } from '../services/authService';
 
 const StudentPortalLayout = () => {
+    const [student, setStudent] = useState<Student | null>(null);
+    const navigate = useNavigate();
+
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [notifications, setNotifications] = useState<Notification[]>(NOTIFICATIONS);
+    const [announcementPopup, setAnnouncementPopup] = useState<Announcement | null>(null);
     const notificationRef = useRef<HTMLDivElement>(null);
+
+     useEffect(() => {
+        const { user, role } = getLoggedInUser();
+        if (role === 'student' && user) {
+            setStudent(user as Student);
+        } else {
+            navigate('/login?role=student', { replace: true });
+        }
+    }, [navigate]);
+
+    useEffect(() => {
+        if (!student) return;
+
+        try {
+            const storedAnnouncements: Announcement[] = JSON.parse(localStorage.getItem('globalAnnouncements') || JSON.stringify(GLOBAL_ANNOUNCEMENTS));
+            const studentAnnouncements = storedAnnouncements.filter(
+                ann => ann.audience === 'All Students' || ann.audience === 'All Students & Faculty'
+            ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+            const seenPopups: number[] = JSON.parse(localStorage.getItem('seenAnnouncementPopups') || '[]');
+            const firstUnseenPopup = studentAnnouncements.find(ann => !seenPopups.includes(ann.id));
+            if (firstUnseenPopup) {
+                setAnnouncementPopup(firstUnseenPopup);
+            }
+
+            const announcementNotifications: Notification[] = studentAnnouncements.map(ann => ({
+                id: ann.id,
+                type: 'announcement',
+                title: ann.title,
+                message: ann.content,
+                timestamp: new Date(ann.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                read: false,
+            }));
+
+            setNotifications(prev => {
+                const existingNotificationIds = new Set(prev.map(n => n.id));
+                const newNotifications = announcementNotifications.filter(ann => !existingNotificationIds.has(ann.id));
+                return [...newNotifications, ...prev];
+            });
+        } catch (error) {
+            console.error("Failed to process announcements:", error);
+        }
+    }, [student]);
+
+    const handleClosePopup = () => {
+        if (announcementPopup) {
+            try {
+                const seenPopups: number[] = JSON.parse(localStorage.getItem('seenAnnouncementPopups') || '[]');
+                localStorage.setItem('seenAnnouncementPopups', JSON.stringify([...seenPopups, announcementPopup.id]));
+            } catch (error) {
+                console.error("Failed to update seen popups:", error);
+            }
+            setAnnouncementPopup(null);
+        }
+    };
 
     const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -39,9 +99,13 @@ const StudentPortalLayout = () => {
         };
     }, []);
 
+    if (!student) {
+        return <div className="flex h-screen items-center justify-center">Loading...</div>; // Or a spinner
+    }
+
     return (
         <div className="flex h-screen bg-gray-100 font-sans">
-            <StudentSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+            <StudentSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} student={student} />
             <div className="flex-1 flex flex-col lg:ml-64">
                 <header className="bg-white shadow-sm p-4 flex justify-between lg:justify-end items-center sticky top-0 z-20 border-b">
                     <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden text-gray-500 hover:text-brand-red">
@@ -100,16 +164,19 @@ const StudentPortalLayout = () => {
                     </div>
                 </header>
                 <main className="flex-1 p-4 sm:p-6 lg:p-10 overflow-y-auto">
-                    <Outlet />
+                    <Outlet context={{ student }} />
                 </main>
+                {announcementPopup && <AnnouncementPopup announcement={announcementPopup} onClose={handleClosePopup} />}
             </div>
         </div>
     );
 };
 
+export function useStudent() {
+    return useOutletContext<{ student: Student }>();
+}
+
 const StudentPortalPage: React.FC = () => {
-    // In a real app, you'd have a check here to see if the user is authenticated.
-    // For this prototype, we'll assume they are and render the portal directly.
     return (
         <Routes>
             <Route path="/" element={<StudentPortalLayout />}>

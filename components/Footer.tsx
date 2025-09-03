@@ -27,9 +27,9 @@ const Footer: React.FC = () => {
                         <ul className="mt-4 space-y-2">
                             <li><Link to="/about" className="text-gray-400 hover:text-white transition-colors">About Us</Link></li>
                             <li><Link to="/courses" className="text-gray-400 hover:text-white transition-colors">Courses</Link></li>
-                            <li><Link to="/faq" className="text-gray-400 hover:text-white transition-colors">FAQ</Link></li>
-                            <li><Link to="/blog" className="text-gray-400 hover:text-white transition-colors">Blog</Link></li>
                             <li><Link to="/gallery" className="text-gray-400 hover:text-white transition-colors">Gallery</Link></li>
+                            <li><Link to="/blog" className="text-gray-400 hover:text-white transition-colors">Blog</Link></li>
+                            <li><Link to="/faq" className="text-gray-400 hover:text-white transition-colors">FAQ</Link></li>
                         </ul>
                     </div>
 
@@ -47,9 +47,10 @@ const Footer: React.FC = () => {
                     <div>
                         <h3 className="font-semibold tracking-wider uppercase">Contact Us</h3>
                         <ul className="mt-4 space-y-2 text-gray-400">
-                            <li>123 Education Lane, Kathmandu, Nepal</li>
-                            <li>Email: info@learners.edu</li>
-                            <li>Phone: +977 1 1234567</li>
+                            <li>Kathmandu, 44600, Nepal</li>
+                            <li>Email: learnersaccademynp@gmail.com</li>
+                            <li>Phone: +977-9802394518</li>
+                             <li>Phone: +977-9802394519</li>
                         </ul>
                     </div>
                 </div>

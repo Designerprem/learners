@@ -1,17 +1,60 @@
-
-
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FACULTY_MEMBERS } from '../../constants';
 import type { FacultyMember } from '../../types';
 import AddFacultyModal from '../../components/admin-portal/AddFacultyModal';
 import FacultyDetailModal from '../../components/admin-portal/FacultyDetailModal';
 
 const ManageFaculty: React.FC = () => {
-    const [faculty, setFaculty] = useState<FacultyMember[]>(FACULTY_MEMBERS);
+    const [faculty, setFaculty] = useState<FacultyMember[]>(() => {
+        try {
+            const saved = localStorage.getItem('faculty');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed)) {
+                    return parsed;
+                }
+            }
+        } catch (e) {
+            console.error(`Failed to load faculty from localStorage`, e);
+        }
+        return FACULTY_MEMBERS;
+    });
+
+    const [archivedFaculty, setArchivedFaculty] = useState<FacultyMember[]>(() => {
+        try {
+            const saved = localStorage.getItem('archivedFaculty');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed)) {
+                    return parsed;
+                }
+            }
+        } catch (e) {
+            console.error(`Failed to load archivedFaculty from localStorage`, e);
+        }
+        return [];
+    });
+
+
     const [searchTerm, setSearchTerm] = useState('');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [selectedFaculty, setSelectedFaculty] = useState<FacultyMember | null>(null);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem('faculty', JSON.stringify(faculty));
+        } catch (error) {
+            console.error("Failed to save faculty to localStorage", error);
+        }
+    }, [faculty]);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem('archivedFaculty', JSON.stringify(archivedFaculty));
+        } catch (error) {
+            console.error("Failed to save archived faculty to localStorage", error);
+        }
+    }, [archivedFaculty]);
 
     const filteredFaculty = faculty.filter(member =>
         member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -22,6 +65,21 @@ const ManageFaculty: React.FC = () => {
     const handleAddFaculty = (newFacultyMember: FacultyMember) => {
         setFaculty(prev => [newFacultyMember, ...prev]);
         setIsAddModalOpen(false);
+    };
+    
+    const handleRemoveFaculty = (facultyId: number) => {
+        if (window.confirm('Are you sure you want to remove this faculty member? Their records will be archived for future reference.')) {
+            const facultyToRemove = faculty.find(f => f.id === facultyId);
+            if (facultyToRemove) {
+                setArchivedFaculty(prev => [...prev, facultyToRemove]);
+                setFaculty(prev => prev.filter(f => f.id !== facultyId));
+            }
+        }
+    };
+    
+    const handleSaveFaculty = (updatedFaculty: FacultyMember) => {
+        setFaculty(prev => prev.map(f => f.id === updatedFaculty.id ? updatedFaculty : f));
+        setSelectedFaculty(null);
     };
 
     return (
@@ -75,8 +133,9 @@ const ManageFaculty: React.FC = () => {
                                             : member.assignedPapers.join(', ')
                                         }
                                     </td>
-                                    <td className="p-4">
+                                    <td className="p-4 space-x-4 whitespace-nowrap">
                                         <button onClick={() => setSelectedFaculty(member)} className="text-sm font-semibold text-blue-600 hover:underline">View Details</button>
+                                        <button onClick={() => handleRemoveFaculty(member.id)} className="text-sm font-semibold text-brand-red hover:underline">Remove</button>
                                     </td>
                                 </tr>
                             ))}
@@ -94,6 +153,7 @@ const ManageFaculty: React.FC = () => {
                     isOpen={!!selectedFaculty}
                     onClose={() => setSelectedFaculty(null)}
                     faculty={selectedFaculty}
+                    onSave={handleSaveFaculty}
                 />
             )}
         </div>

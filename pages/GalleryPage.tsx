@@ -1,15 +1,15 @@
 
 
 import React, { useState, useEffect } from 'react';
-import { GALLERY_IMAGES } from '../constants';
-import type { GalleryImage } from '../types';
+import { GALLERY_IMAGES, VLOGS } from '../constants';
+import type { GalleryImage, Vlog } from '../types';
 
-const ImageModal: React.FC<{
-    image: GalleryImage;
+const MediaModal: React.FC<{
+    item: GalleryImage;
     onClose: () => void;
     onPrev: () => void;
     onNext: () => void;
-}> = ({ image, onClose, onPrev, onNext }) => {
+}> = ({ item, onClose, onPrev, onNext }) => {
     
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -21,6 +21,9 @@ const ImageModal: React.FC<{
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [onClose, onPrev, onNext]);
 
+    // Prioritize localVideoSrc for uploaded content. This ensures <video> tag is used.
+    const isUploadedVideo = !!item.localVideoSrc;
+
     return (
         <div 
             className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 transition-opacity duration-300"
@@ -28,12 +31,29 @@ const ImageModal: React.FC<{
             role="dialog"
             aria-modal="true"
         >
-            <div className="relative max-w-4xl max-h-[90vh] w-full" onClick={e => e.stopPropagation()}>
-                <img 
-                    src={image.src.replace('600/400', '1200/800')} // Load a larger image
-                    alt={image.alt} 
-                    className="w-full h-full object-contain"
-                />
+            <div className="relative max-w-4xl max-h-[90vh] w-full bg-black" onClick={e => e.stopPropagation()}>
+                 {item.type === 'image' ? (
+                    <img 
+                        src={item.src.includes('data:image') ? item.src : item.src.replace('600/400', '1200/800')}
+                        alt={item.alt} 
+                        className="w-full h-full object-contain"
+                    />
+                ) : (
+                    <div className="aspect-video w-full">
+                        {isUploadedVideo ? (
+                            <video src={item.localVideoSrc} controls autoPlay className="w-full h-full object-contain" />
+                        ) : (
+                            <iframe 
+                                src={item.videoUrl} 
+                                title={item.alt}
+                                frameBorder="0" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                allowFullScreen
+                                className="w-full h-full"
+                            ></iframe>
+                        )}
+                    </div>
+                )}
             </div>
              {/* Close Button */}
             <button onClick={onClose} className="absolute top-4 right-4 text-white text-4xl hover:text-gray-300 transition-colors" aria-label="Close image viewer">&times;</button>
@@ -50,28 +70,60 @@ const ImageModal: React.FC<{
 
 const GalleryPage: React.FC = () => {
     const [filter, setFilter] = useState('All');
-    const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+    const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null);
+    const [allMedia, setAllMedia] = useState<GalleryImage[]>([]);
 
-    const categories = ['All', ...Array.from(new Set(GALLERY_IMAGES.map(img => img.category)))];
-    const filteredImages = filter === 'All' ? GALLERY_IMAGES : GALLERY_IMAGES.filter(img => img.category === filter);
+    useEffect(() => {
+        let galleryData: GalleryImage[] = GALLERY_IMAGES;
+        let vlogsData: Vlog[] = VLOGS;
 
-    const handleOpenModal = (image: GalleryImage) => {
-        const index = filteredImages.findIndex(img => img.id === image.id);
-        setSelectedImageIndex(index);
+        try {
+            const storedData = localStorage.getItem('siteContent');
+            if (storedData) {
+                const content = JSON.parse(storedData);
+                if (content.gallery) galleryData = content.gallery;
+                if (content.vlogs) vlogsData = content.vlogs;
+            }
+        } catch (error) {
+            console.error("Failed to parse gallery/vlogs from localStorage", error);
+        }
+
+        const vlogsAsGalleryItems: GalleryImage[] = vlogsData.map((vlog: Vlog, index: number) => ({
+            id: galleryData.length + index + 1, // Create unique IDs
+            type: 'video',
+            src: vlog.thumbnailUrl,
+            alt: vlog.title,
+            category: 'Vlogs',
+            videoUrl: vlog.sourceType === 'upload' ? vlog.localVideoSrc : vlog.videoUrl,
+            localVideoSrc: vlog.sourceType === 'upload' ? vlog.localVideoSrc : undefined,
+        }));
+        
+        // Combine all gallery items (images and videos) with vlogs.
+        setAllMedia([...galleryData, ...vlogsAsGalleryItems]);
+    }, []);
+
+
+    const categories = ['All', ...Array.from(new Set(allMedia.map(item => item.category)))];
+    
+    const filteredMedia = filter === 'All' ? allMedia : allMedia.filter(item => item.category === filter);
+
+    const handleOpenModal = (item: GalleryImage) => {
+        const index = filteredMedia.findIndex(mediaItem => mediaItem.id === item.id);
+        setSelectedItemIndex(index);
     };
 
     const handleCloseModal = () => {
-        setSelectedImageIndex(null);
+        setSelectedItemIndex(null);
     };
 
     const handleNext = () => {
-        if (selectedImageIndex === null) return;
-        setSelectedImageIndex((prevIndex) => (prevIndex! + 1) % filteredImages.length);
+        if (selectedItemIndex === null) return;
+        setSelectedItemIndex((prevIndex) => (prevIndex! + 1) % filteredMedia.length);
     };
     
     const handlePrev = () => {
-        if (selectedImageIndex === null) return;
-        setSelectedImageIndex((prevIndex) => (prevIndex! - 1 + filteredImages.length) % filteredImages.length);
+        if (selectedItemIndex === null) return;
+        setSelectedItemIndex((prevIndex) => (prevIndex! - 1 + filteredMedia.length) % filteredMedia.length);
     };
     
 
@@ -79,8 +131,8 @@ const GalleryPage: React.FC = () => {
          <div className="bg-white">
             <div className="bg-brand-dark text-white py-12 md:py-20">
                 <div className="container mx-auto px-6 text-center">
-                    <h1 className="text-3xl md:text-4xl font-bold">Gallery</h1>
-                    <p className="mt-4 text-lg max-w-3xl mx-auto">A glimpse into life at Learners Academy.</p>
+                    <h1 className="text-3xl md:text-4xl font-bold">Gallery & Vlogs</h1>
+                    <p className="mt-4 text-lg max-w-3xl mx-auto">A glimpse into life at Learners Academy through photos, videos, and vlogs.</p>
                 </div>
             </div>
             <div className="container mx-auto px-6 py-12 md:py-20">
@@ -102,24 +154,36 @@ const GalleryPage: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {filteredImages.map((image) => (
+                    {filteredMedia.map((item) => (
                         <div 
-                            key={image.id} 
-                            className="overflow-hidden rounded-lg shadow-lg group cursor-pointer"
-                            onClick={() => handleOpenModal(image)}
+                            key={item.id} 
+                            className="overflow-hidden rounded-lg shadow-lg group cursor-pointer relative"
+                            onClick={() => handleOpenModal(item)}
                         >
                             <img 
-                                src={image.src} 
-                                alt={image.alt} 
-                                className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                                src={item.src} 
+                                alt={item.alt} 
+                                className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500 aspect-[3/2]"
                             />
+                             {item.type === 'video' && (
+                                <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                    <svg className="w-16 h-16 text-white opacity-80" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                            )}
+                            {item.category === 'Vlogs' && (
+                                <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black to-transparent">
+                                    <h3 className="text-white font-semibold text-sm truncate">{item.alt}</h3>
+                                </div>
+                            )}
                         </div>
                     ))}
                 </div>
             </div>
-            {selectedImageIndex !== null && (
-                <ImageModal 
-                    image={filteredImages[selectedImageIndex]}
+            {selectedItemIndex !== null && (
+                <MediaModal 
+                    item={filteredMedia[selectedItemIndex]}
                     onClose={handleCloseModal}
                     onPrev={handlePrev}
                     onNext={handleNext}

@@ -1,16 +1,60 @@
-
-
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { STUDENTS } from '../../constants';
 import type { Student } from '../../types';
 import StudentDetailModal from '../../components/admin-portal/StudentDetailModal';
 
 const ManageStudents: React.FC = () => {
-    const [students, setStudents] = useState<Student[]>(STUDENTS);
+    const [students, setStudents] = useState<Student[]>(() => {
+        try {
+            const saved = localStorage.getItem('students');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed)) {
+                    return parsed;
+                }
+            }
+        } catch (e) {
+            console.error(`Failed to load students from localStorage`, e);
+        }
+        return STUDENTS;
+    });
+
+    const [archivedStudents, setArchivedStudents] = useState<Student[]>(() => {
+        try {
+            const saved = localStorage.getItem('archivedStudents');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed)) {
+                    return parsed;
+                }
+            }
+        } catch (e) {
+            console.error(`Failed to load archivedStudents from localStorage`, e);
+        }
+        return [];
+    });
+
+
     const [searchTerm, setSearchTerm] = useState('');
     const [levelFilter, setLevelFilter] = useState('All');
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem('students', JSON.stringify(students));
+        } catch (error) {
+            console.error("Failed to save students to localStorage", error);
+        }
+    }, [students]);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem('archivedStudents', JSON.stringify(archivedStudents));
+        } catch (error) {
+            console.error("Failed to save archived students to localStorage", error);
+        }
+    }, [archivedStudents]);
+
 
     const filteredStudents = students
         .filter(student =>
@@ -28,6 +72,21 @@ const ManageStudents: React.FC = () => {
 
     const handleCloseModal = () => {
         setSelectedStudent(null);
+    };
+
+    const handleSaveStudent = (updatedStudent: Student) => {
+        setStudents(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s));
+        setSelectedStudent(null);
+    };
+
+    const handleRemoveStudent = (studentId: number) => {
+        if (window.confirm('Are you sure you want to remove this student? Their records will be archived for future reference.')) {
+            const studentToRemove = students.find(s => s.id === studentId);
+            if (studentToRemove) {
+                setArchivedStudents(prev => [...prev, studentToRemove]);
+                setStudents(prev => prev.filter(s => s.id !== studentId));
+            }
+        }
     };
 
 
@@ -84,8 +143,9 @@ const ManageStudents: React.FC = () => {
                                     <td className="p-4 font-mono text-sm">{student.studentId}</td>
                                     <td className="p-4 text-sm">{student.email}</td>
                                     <td className="p-4 text-sm">{student.currentLevel}</td>
-                                    <td className="p-4">
+                                    <td className="p-4 space-x-4 whitespace-nowrap">
                                         <button onClick={() => handleViewDetails(student)} className="text-sm font-semibold text-blue-600 hover:underline">View Details</button>
+                                        <button onClick={() => handleRemoveStudent(student.id)} className="text-sm font-semibold text-brand-red hover:underline">Remove</button>
                                     </td>
                                 </tr>
                             ))}
@@ -99,6 +159,7 @@ const ManageStudents: React.FC = () => {
                     isOpen={!!selectedStudent}
                     onClose={handleCloseModal}
                     student={selectedStudent}
+                    onSave={handleSaveStudent}
                 />
             }
         </div>

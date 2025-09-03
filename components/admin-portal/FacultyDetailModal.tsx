@@ -2,15 +2,25 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { FacultyMember, CalendarEvent } from '../../types';
-import { CALENDAR_EVENTS, TEACHER_RATINGS } from '../../constants';
+import { CALENDAR_EVENTS, TEACHER_RATINGS, COURSES } from '../../constants';
 
 interface FacultyDetailModalProps {
     isOpen: boolean;
     onClose: () => void;
     faculty: FacultyMember;
+    onSave: (updatedFaculty: FacultyMember) => void;
 }
 
 type Tab = 'Overview' | 'Teaching Schedule' | 'Student Reviews';
+
+const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = error => reject(error);
+    });
+};
 
 const DetailRow = ({ label, value }: { label: string; value: string }) => (
     <div>
@@ -29,8 +39,10 @@ const StarRating = ({ rating }: { rating: number }) => (
     </div>
 );
 
-const FacultyDetailModal: React.FC<FacultyDetailModalProps> = ({ isOpen, onClose, faculty }) => {
+const FacultyDetailModal: React.FC<FacultyDetailModalProps> = ({ isOpen, onClose, faculty, onSave }) => {
     const [activeTab, setActiveTab] = useState<Tab>('Overview');
+    const [isEditing, setIsEditing] = useState(false);
+    const [formData, setFormData] = useState<FacultyMember>(faculty);
     const modalRef = useRef<HTMLDivElement>(null);
 
     const teachingSchedule = useMemo(() => {
@@ -44,6 +56,8 @@ const FacultyDetailModal: React.FC<FacultyDetailModalProps> = ({ isOpen, onClose
             .filter(rating => rating.teacherId === faculty.id)
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }, [faculty.id]);
+    
+    const allPapers = useMemo(() => COURSES.flatMap(course => course.papers), []);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -51,23 +65,95 @@ const FacultyDetailModal: React.FC<FacultyDetailModalProps> = ({ isOpen, onClose
         };
         if (isOpen) {
             document.addEventListener('keydown', handleKeyDown);
+            setFormData(faculty);
+            setIsEditing(false);
             setActiveTab('Overview');
         }
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [isOpen, onClose]);
+    }, [isOpen, faculty, onClose]);
+
+    const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            const base64 = await fileToBase64(file);
+            setFormData(prev => ({ ...prev, imageUrl: base64 }));
+        }
+    };
+
+    const handlePaperChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+        setFormData(prev => ({ ...prev, assignedPapers: selectedOptions }));
+    };
+
+    const handleSaveClick = () => {
+        onSave(formData);
+        setIsEditing(false);
+    };
+
+    const handleCancelEdit = () => {
+        setFormData(faculty);
+        setIsEditing(false);
+    };
+
 
     if (!isOpen) return null;
 
     const renderTabContent = () => {
         switch (activeTab) {
             case 'Overview':
-                return (
+                return isEditing ? (
+                    <form className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                                <input name="name" value={formData.name} onChange={handleFormChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-white"/>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Qualification</label>
+                                <input name="qualification" value={formData.qualification} onChange={handleFormChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-white"/>
+                            </div>
+                             <div>
+                                <label className="block text-sm font-medium text-gray-700">Email Address</label>
+                                <input name="email" type="email" value={formData.email} onChange={handleFormChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-white"/>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Phone</label>
+                                <input name="phone" type="tel" value={formData.phone} onChange={handleFormChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-white"/>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Address</label>
+                            <textarea name="address" value={formData.address} onChange={handleFormChange} rows={2} className="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-white"/>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Biography</label>
+                            <textarea name="bio" value={formData.bio} onChange={handleFormChange} rows={4} className="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-white"/>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Profile Picture</label>
+                            <input type="file" accept="image/*" onChange={handleFileChange} className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-brand-red hover:file:bg-red-100"/>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Assigned Papers</label>
+                            <select multiple value={formData.assignedPapers} onChange={handlePaperChange} className="mt-1 block w-full h-32 p-2 border border-gray-300 rounded-md bg-white">
+                                {allPapers.map(p => <option key={p} value={p}>{p}</option>)}
+                            </select>
+                            <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple faculty.</p>
+                        </div>
+                    </form>
+                ) : (
                     <div className="space-y-6">
                         <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                             <DetailRow label="Full Name" value={faculty.name} />
                             <DetailRow label="Qualification" value={faculty.qualification} />
                             <DetailRow label="Email Address" value={faculty.email} />
                             <DetailRow label="Phone Number" value={faculty.phone} />
+                            <DetailRow label="Address" value={faculty.address} />
                         </dl>
                         <div>
                              <h3 className="font-semibold text-lg mb-2 text-brand-dark border-b pb-2">Biography</h3>
@@ -122,6 +208,7 @@ const FacultyDetailModal: React.FC<FacultyDetailModalProps> = ({ isOpen, onClose
                                         <div className="flex justify-between items-start">
                                             <div>
                                                 <p className="font-semibold text-brand-dark">Feedback from {review.studentName}</p>
+
                                                 <p className="text-sm text-gray-500">{review.classTopic}</p>
                                             </div>
                                             <div className="text-right flex-shrink-0 ml-4">
@@ -156,7 +243,7 @@ const FacultyDetailModal: React.FC<FacultyDetailModalProps> = ({ isOpen, onClose
                 {/* Header */}
                 <div className="p-4 border-b flex items-start justify-between">
                     <div className="flex items-center gap-4">
-                        <img src={faculty.imageUrl} alt={faculty.name} className="w-16 h-16 rounded-full border-2 border-brand-red" />
+                        <img src={isEditing ? formData.imageUrl : faculty.imageUrl} alt={faculty.name} className="w-16 h-16 rounded-full border-2 border-brand-red object-cover" />
                         <div>
                             <h2 className="text-2xl font-bold text-brand-dark">{faculty.name}</h2>
                             <p className="text-gray-500">{faculty.qualification}</p>
@@ -188,6 +275,21 @@ const FacultyDetailModal: React.FC<FacultyDetailModalProps> = ({ isOpen, onClose
                     <div>
                         {renderTabContent()}
                     </div>
+                </div>
+                
+                {/* Footer */}
+                 <div className="p-4 border-t bg-gray-50 flex justify-end gap-4">
+                    {isEditing ? (
+                        <>
+                            <button onClick={handleCancelEdit} className="bg-gray-200 text-gray-700 font-semibold px-4 py-2 rounded-md hover:bg-gray-300">Cancel</button>
+                            <button onClick={handleSaveClick} className="bg-green-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-green-700">Save Changes</button>
+                        </>
+                    ) : (
+                        <>
+                            <button onClick={() => setIsEditing(true)} disabled={activeTab !== 'Overview'} className="bg-blue-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed">Edit Details</button>
+                            <button onClick={onClose} className="bg-gray-200 text-gray-700 font-semibold px-4 py-2 rounded-md hover:bg-gray-300">Close</button>
+                        </>
+                    )}
                 </div>
             </div>
         </div>

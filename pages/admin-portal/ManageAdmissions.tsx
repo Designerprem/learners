@@ -1,38 +1,209 @@
 
 
-
-import React, { useState } from 'react';
-import { PENDING_APPLICATIONS } from '../../constants';
-import type { Application } from '../../types';
+import React, { useState, useEffect } from 'react';
+import { PENDING_APPLICATIONS, STUDENTS } from '../../constants';
+import type { Application, Student } from '../../types';
 import AddStudentModal from '../../components/admin-portal/AddStudentModal';
 import ApplicationDetailModal from '../../components/admin-portal/ApplicationDetailModal';
+import { sendWelcomeEmail } from '../../services/emailService';
 
 type Tab = 'Pending' | 'Approved' | 'Rejected';
 
 const ManageAdmissions: React.FC = () => {
-    const [pending, setPending] = useState<Application[]>(PENDING_APPLICATIONS);
-    const [approved, setApproved] = useState<Application[]>([]);
-    const [rejected, setRejected] = useState<Application[]>([]);
+    const [allStudents, setAllStudents] = useState<Student[]>(() => {
+        try {
+            const saved = localStorage.getItem('students');
+            return saved ? JSON.parse(saved) : STUDENTS;
+        } catch {
+            return STUDENTS;
+        }
+    });
+
+    const [pending, setPending] = useState<Application[]>(() => {
+        try {
+            const saved = localStorage.getItem('pendingApplications');
+            const savedApps: Application[] = saved ? JSON.parse(saved) : [];
+            const combined = [...savedApps];
+            const savedIds = new Set(savedApps.map(app => app.id));
+            PENDING_APPLICATIONS.forEach(app => {
+                if (!savedIds.has(app.id)) {
+                    combined.push(app);
+                }
+            });
+            return combined;
+        } catch {
+            return PENDING_APPLICATIONS;
+        }
+    });
+    
+    const [approved, setApproved] = useState<Application[]>(() => {
+        try {
+            const saved = localStorage.getItem('approvedApplications');
+            return saved ? JSON.parse(saved) : [];
+        } catch { return []; }
+    });
+
+    const [rejected, setRejected] = useState<Application[]>(() => {
+        try {
+            const saved = localStorage.getItem('rejectedApplications');
+            return saved ? JSON.parse(saved) : [];
+        } catch { return []; }
+    });
+
     const [activeTab, setActiveTab] = useState<Tab>('Pending');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
+    const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+
+
+     useEffect(() => {
+        localStorage.setItem('pendingApplications', JSON.stringify(pending));
+    }, [pending]);
     
-    const handleAction = (id: number, newStatus: 'Approved' | 'Rejected') => {
+    useEffect(() => {
+        localStorage.setItem('approvedApplications', JSON.stringify(approved));
+    }, [approved]);
+
+    useEffect(() => {
+        localStorage.setItem('rejectedApplications', JSON.stringify(rejected));
+    }, [rejected]);
+    
+    const getNextStudentId = (): string => {
+        const studentIds = allStudents
+            .map(s => s.studentId)
+            .filter(id => id && id.startsWith('S'))
+            .map(id => parseInt(id.substring(1), 10))
+            .filter(num => !isNaN(num));
+
+        if (studentIds.length === 0) {
+            return 'S12348'; // Fallback starting number
+        }
+
+        const maxId = Math.max(...studentIds);
+        return `S${(maxId + 1).toString().padStart(5, '0')}`;
+    };
+
+    const handleConfirmApproval = async (appId: number, studentId: string, password: string) => {
+        const application = pending.find(app => app.id === appId);
+        if (!application) return;
+
+        setSelectedApplication(null); // Close modal immediately for better UX
+
+        const enrollmentDate = new Date();
+        const dueDate = new Date(enrollmentDate);
+        dueDate.setMonth(dueDate.getMonth() + 1);
+
+        const newStudent: Student = {
+            id: allStudents.length > 0 ? Math.max(...allStudents.map(s => s.id)) + 1 : 1,
+            name: application.fullName,
+            avatarUrl: application.photoUrl || `https://ui-avatars.com/api/?name=${application.fullName.replace(' ', '+')}`,
+            studentId: studentId,
+            password: password,
+            email: application.email,
+            phone: application.phone || 'N/A',
+            address: application.address || 'N/A',
+            dob: 'N/A',
+            enrollmentDate: enrollmentDate.toISOString().split('T')[0],
+            currentLevel: application.program.includes('Knowledge') ? 'Applied Knowledge' : application.program.includes('Skills') ? 'Applied Skills' : 'Strategic Professional',
+            enrolledPapers: application.selectedPapers?.map(p => p.split(':')[0].trim()) || [],
+            totalFee: 0,
+            discount: 0,
+            grades: {},
+            attendance: {},
+            paymentHistory: [],
+            dueDate: dueDate.toISOString().split('T')[0],
+        };
+
+        try {
+            const emailResponse = await sendWelcomeEmail({
+                studentName: newStudent.name,
+                studentEmail: newStudent.email,
+                studentId: newStudent.studentId,
+                password: password,
+            });
+
+            if (emailResponse.success) {
+                const updatedStudents = [...allStudents, newStudent];
+                setAllStudents(updatedStudents);
+                localStorage.setItem('students', JSON.stringify(updatedStudents));
+    
+                setPending(prev => prev.filter(app => app.id !== appId));
+                setApproved(prev => [{ ...application, status: 'Approved', studentId }, ...prev]);
+                
+                setNotification({ type: 'success', message: `Student account for ${newStudent.name} created. ${emailResponse.message}` });
+            } else {
+                 setNotification({ type: 'error', message: `Student not created. Failed to send welcome email. Please try again.` });
+            }
+        } catch (error) {
+            console.error("Error sending welcome email:", error);
+            setNotification({ type: 'error', message: `An error occurred while sending the email. Student not created.` });
+        } finally {
+             setTimeout(() => setNotification(null), 6000); // Hide notification after 6 seconds
+        }
+    };
+
+    const handleReject = (id: number) => {
         const application = pending.find(app => app.id === id);
         if (application) {
             setPending(pending.filter(app => app.id !== id));
-            if (newStatus === 'Approved') {
-                setApproved(prev => [{ ...application, status: 'Approved' }, ...prev]);
-            } else {
-                setRejected(prev => [{ ...application, status: 'Rejected' }, ...prev]);
-            }
+            setRejected(prev => [{ ...application, status: 'Rejected' }, ...prev]);
         }
-        setSelectedApplication(null); // Close modal after action
+        setSelectedApplication(null);
     };
 
-    const handleAddStudent = (newApplication: Application) => {
-        setApproved(prev => [newApplication, ...prev]);
-        setIsAddModalOpen(false);
+    const handleAddStudent = async (newApplication: Application, password: string) => {
+        const { studentId } = newApplication;
+        
+        setIsAddModalOpen(false); // Close modal immediately
+
+        const enrollmentDate = new Date();
+        const dueDate = new Date(enrollmentDate);
+        dueDate.setMonth(dueDate.getMonth() + 1);
+
+        const newStudent: Student = {
+            id: allStudents.length > 0 ? Math.max(...allStudents.map(s => s.id)) + 1 : 1,
+            name: newApplication.fullName,
+            avatarUrl: newApplication.photoUrl || `https://ui-avatars.com/api/?name=${newApplication.fullName.replace(' ', '+')}`,
+            studentId: studentId!,
+            password: password,
+            email: newApplication.email,
+            phone: newApplication.phone || 'N/A',
+            address: newApplication.address || 'N/A',
+            dob: 'N/A',
+            enrollmentDate: enrollmentDate.toISOString().split('T')[0],
+            currentLevel: newApplication.program.includes('Knowledge') ? 'Applied Knowledge' : newApplication.program.includes('Skills') ? 'Applied Skills' : 'Strategic Professional',
+            enrolledPapers: newApplication.selectedPapers?.map(p => p.split(':')[0].trim()) || [],
+            totalFee: 0,
+            discount: 0,
+            grades: {},
+            attendance: {},
+            paymentHistory: [],
+            dueDate: dueDate.toISOString().split('T')[0],
+        };
+       
+        try {
+            const emailResponse = await sendWelcomeEmail({
+                studentName: newStudent.name,
+                studentEmail: newStudent.email,
+                studentId: newStudent.studentId,
+                password: password,
+            });
+
+            if (emailResponse.success) {
+                const updatedStudents = [...allStudents, newStudent];
+                setAllStudents(updatedStudents);
+                localStorage.setItem('students', JSON.stringify(updatedStudents));
+                setApproved(prev => [newApplication, ...prev]);
+                setNotification({ type: 'success', message: `Manual admission for ${newStudent.name} successful. ${emailResponse.message}` });
+            } else {
+                setNotification({ type: 'error', message: `Student created, but failed to send welcome email.` });
+            }
+        } catch (error) {
+            console.error("Error sending welcome email for manual admission:", error);
+            setNotification({ type: 'error', message: `Student created, but an error occurred sending the email.` });
+        } finally {
+            setTimeout(() => setNotification(null), 6000);
+        }
     };
 
     const tabs: { name: Tab, count: number }[] = [
@@ -58,6 +229,13 @@ const ManageAdmissions: React.FC = () => {
                     Manual Admission
                 </button>
             </div>
+
+            {notification && (
+                <div className={`mb-6 p-4 rounded-md text-sm transition-opacity duration-300 ${notification.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`} role="alert">
+                    <p className="font-bold">{notification.type === 'success' ? 'Success' : 'Error'}</p>
+                    <p>{notification.message}</p>
+                </div>
+            )}
             
             <div className="bg-white p-6 rounded-lg shadow-md">
                  <div className="border-b border-gray-200 mb-4">
@@ -132,8 +310,9 @@ const ManageAdmissions: React.FC = () => {
                 <ApplicationDetailModal
                     application={selectedApplication}
                     onClose={() => setSelectedApplication(null)}
-                    onApprove={() => handleAction(selectedApplication.id, 'Approved')}
-                    onReject={() => handleAction(selectedApplication.id, 'Rejected')}
+                    onConfirmApproval={handleConfirmApproval}
+                    onReject={() => handleReject(selectedApplication.id)}
+                    suggestedStudentId={getNextStudentId()}
                 />
             )}
         </div>

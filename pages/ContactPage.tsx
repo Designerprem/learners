@@ -47,14 +47,20 @@ const ContactPage: React.FC = () => {
                     <div className="bg-brand-beige p-6 md:p-8 rounded-lg">
                         <h2 className="text-2xl md:text-3xl font-bold text-brand-dark mb-6">Contact Information</h2>
                         <div className="space-y-4 text-gray-700">
-                             <p><strong>Address:</strong> 123 Education Lane, Kathmandu, Nepal</p>
-                             <p><strong>Phone:</strong> +977 1 1234567</p>
-                             <p><strong>Email:</strong> info@learners.edu.np</p>
+                             <p><strong>Address:</strong> Kathmandu, 44600, Nepal</p>
+                             <p><strong>Phone:</strong> +977-9802394518 / +977-9802394519</p>
+                             <p><strong>Email:</strong> learnersaccademynp@gmail.com</p>
                              <p><strong>Office Hours:</strong> Sun - Fri, 9:00 AM - 5:00 PM</p>
                         </div>
                         <div className="mt-8">
-                            <img src="https://picsum.photos/seed/map/800/400" alt="Map Location" className="w-full h-64 object-cover rounded-md" />
-                            <p className="text-sm text-gray-500 mt-2 text-center">Static map placeholder</p>
+                             <iframe
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3533.921319084803!2d85.3421384!3d27.6865647!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb197a9e0f9951%3A0xee204fd90d8a685c!2sACCA%20%40%20Learners%20Academy!5e0!3m2!1sen!2snp!4v1626882298218!5m2!1sen!2snp"
+                                className="w-full h-64 rounded-md border-0"
+                                allowFullScreen={true}
+                                loading="lazy"
+                                referrerPolicy="no-referrer-when-downgrade"
+                                title="Learners Academy Location"
+                            ></iframe>
                         </div>
                     </div>
                 </div>

@@ -1,6 +1,9 @@
 
+
 import React from 'react';
 import { useState, useRef } from 'react';
+import { useStudent } from '../StudentPortalPage';
+import type { Student } from '../../types';
 
 const ProfileInfoRow = ({ label, value }: { label: string; value: string }) => (
     <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
@@ -30,12 +33,12 @@ const ChangePasswordCard = () => {
             return;
         }
         // In a real app, you'd verify the current password against a server.
-        if (currentPassword !== 'password') { 
+        if (currentPassword !== 'password123') { // MOCK: Check against mock password
             setError("Incorrect current password.");
             return;
         }
 
-        console.log("Password updated successfully!");
+        console.log("Password updated successfully!"); // In a real app, update this in the backend/localStorage
         setSuccessMessage("Your password has been changed successfully.");
         setCurrentPassword('');
         setNewPassword('');
@@ -94,28 +97,14 @@ const ChangePasswordCard = () => {
 
 
 const Profile: React.FC = () => {
+    const { student } = useStudent();
     const [updateMessage, setUpdateMessage] = useState('');
-    
-    const initialStudentInfo = {
-        fullName: 'Alex Doe',
-        studentId: 'S12345',
-        email: 'alex.doe@example.com',
-        phone: '+977 9801234567',
-        dob: 'January 15, 2003',
-        address: '123 Learning Lane, Kathmandu, Nepal',
-        emergencyContact: 'Jane Doe (Mother) - +977 9807654321',
-        enrolledSince: 'September 1, 2023',
-        avatarUrl: 'https://picsum.photos/seed/alex/200/200',
-        academicStanding: 'Good',
-        currentLevel: 'ACCA Applied Skills',
-    };
-    
-    const [studentInfo, setStudentInfo] = useState(initialStudentInfo);
+    const [studentInfo, setStudentInfo] = useState<Student>(student);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleUpdateRequest = () => {
         setUpdateMessage('Your update request has been sent to the administration office.');
-        setTimeout(() => setUpdateMessage(''), 5000); // Message disappears after 5 seconds
+        setTimeout(() => setUpdateMessage(''), 5000);
     };
     
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -124,10 +113,15 @@ const Profile: React.FC = () => {
             const reader = new FileReader();
             reader.onloadend = () => {
                 setStudentInfo(prev => ({ ...prev, avatarUrl: reader.result as string }));
+                // In a real app, you would save this change.
             };
             reader.readAsDataURL(newImageFile);
         }
     };
+
+    if (!studentInfo) {
+        return <div>Loading...</div>
+    }
 
     return (
         <div>
@@ -137,7 +131,7 @@ const Profile: React.FC = () => {
                 <div className="lg:col-span-1">
                     <div className="bg-white p-6 rounded-lg shadow-md text-center">
                         <div className="relative w-32 h-32 mx-auto">
-                             <img src={studentInfo.avatarUrl} alt="Alex Doe" className="w-32 h-32 rounded-full border-4 border-brand-red object-cover" />
+                             <img src={studentInfo.avatarUrl} alt={studentInfo.name} className="w-32 h-32 rounded-full border-4 border-brand-red object-cover" />
                              <button
                                 onClick={() => fileInputRef.current?.click()}
                                 className="absolute bottom-0 right-0 bg-brand-dark text-white rounded-full p-2 hover:bg-opacity-80 transition-colors"
@@ -153,10 +147,10 @@ const Profile: React.FC = () => {
                                 accept="image/*"
                             />
                         </div>
-                        <h2 className="text-2xl font-bold mt-4">{studentInfo.fullName}</h2>
+                        <h2 className="text-2xl font-bold mt-4">{studentInfo.name}</h2>
                         <p className="text-gray-500">{studentInfo.studentId}</p>
                         <p className="mt-2 bg-green-100 text-green-700 text-sm font-semibold px-3 py-1 rounded-full inline-block">
-                            Academic Standing: {studentInfo.academicStanding}
+                            Academic Standing: Good
                         </p>
                     </div>
                 </div>
@@ -171,13 +165,13 @@ const Profile: React.FC = () => {
                         </div>
                          {updateMessage && <p className="mt-4 text-sm text-blue-600 bg-blue-50 p-3 rounded-md">{updateMessage}</p>}
                         <dl className="divide-y divide-gray-200">
-                           <ProfileInfoRow label="Full Name" value={studentInfo.fullName} />
+                           <ProfileInfoRow label="Full Name" value={studentInfo.name} />
                            <ProfileInfoRow label="Email Address" value={studentInfo.email} />
                            <ProfileInfoRow label="Phone Number" value={studentInfo.phone} />
                            <ProfileInfoRow label="Date of Birth" value={studentInfo.dob} />
                            <ProfileInfoRow label="Address" value={studentInfo.address} />
-                           <ProfileInfoRow label="Emergency Contact" value={studentInfo.emergencyContact} />
-                           <ProfileInfoRow label="Enrolled Since" value={studentInfo.enrolledSince} />
+                           <ProfileInfoRow label="Emergency Contact" value="Jane Doe (Mother) - +977 9807654321" />
+                           <ProfileInfoRow label="Enrolled Since" value={studentInfo.enrollmentDate} />
                            <ProfileInfoRow label="Current Level" value={studentInfo.currentLevel} />
                         </dl>
                     </div>

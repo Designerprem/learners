@@ -1,12 +1,13 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { Application } from '../../types';
 import { COURSES } from '../../constants';
 
 interface AddStudentModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onAddStudent: (newApplication: Application) => void;
+    onAddStudent: (newApplication: Application, password: string) => void;
 }
 
 const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClose, onAddStudent }) => {
@@ -14,14 +15,41 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClose, onAd
         fullName: '',
         email: '',
         phone: '',
+        address: '',
         program: COURSES[0].title,
         password: '',
+        studentId: '',
     };
     const [formData, setFormData] = useState(initialState);
+    const [selectedPapers, setSelectedPapers] = useState<string[]>([]);
+    const [studentIdError, setStudentIdError] = useState('');
     const [documentFile, setDocumentFile] = useState<File | null>(null);
     const [photoFile, setPhotoFile] = useState<File | null>(null);
     const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
     const modalRef = useRef<HTMLDivElement>(null);
+
+    const studentIdRegex = /^S\d{5}$/;
+
+    const selectedCourse = useMemo(() => {
+        return COURSES.find(c => c.title === formData.program);
+    }, [formData.program]);
+
+    useEffect(() => {
+        setSelectedPapers([]);
+    }, [formData.program]);
+
+    const validateStudentId = (id: string) => {
+        if (!id) {
+            setStudentIdError('Student ID is required.');
+            return false;
+        }
+        if (!studentIdRegex.test(id)) {
+            setStudentIdError("Student ID must start with 'S' followed by 5 digits (e.g., S12345).");
+            return false;
+        }
+        setStudentIdError('');
+        return true;
+    };
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -30,6 +58,8 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClose, onAd
         if (isOpen) {
             document.addEventListener('keydown', handleKeyDown);
             setFormData(initialState); // Reset form when modal opens
+            setSelectedPapers([]);
+            setStudentIdError('');
             setDocumentFile(null);
             setPhotoFile(null);
             setPhotoPreviewUrl(null);
@@ -37,8 +67,32 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClose, onAd
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, [isOpen, onClose]);
     
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+        if (name === 'studentId') {
+            validateStudentId(value);
+        }
+    };
+
+    const handlePaperSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { value, checked } = e.target;
+        
+        if (selectedCourse?.options && selectedCourse?.maxOptions) {
+            const currentOptions = selectedPapers.filter(p => selectedCourse.options!.includes(p));
+             if (checked && currentOptions.length >= selectedCourse.maxOptions) {
+                e.preventDefault();
+                return;
+            }
+        }
+
+        setSelectedPapers(prev => {
+            if (checked) {
+                return [...prev, value];
+            } else {
+                return prev.filter(p => p !== value);
+            }
+        });
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,19 +112,35 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClose, onAd
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const { password, ...applicationData } = formData;
-        console.log(`Creating student ${applicationData.fullName} with password: ${password}`); // Handle password securely in a real app
+        
+        if (!validateStudentId(formData.studentId)) {
+            return;
+        }
 
+        const { password, ...applicationData } = formData;
+        
         const newApplication: Application = {
             id: Date.now(),
-            ...applicationData,
+            fullName: applicationData.fullName,
+            email: applicationData.email,
+            phone: applicationData.phone,
+            address: applicationData.address,
+            program: applicationData.program,
+            selectedPapers: selectedPapers,
+            studentId: applicationData.studentId,
             submittedDate: new Date().toISOString().split('T')[0],
             status: 'Approved',
             documentUrl: documentFile ? '#' : undefined, // Placeholder URL
             photoUrl: photoPreviewUrl || `https://picsum.photos/seed/${formData.fullName}/200/200`
         };
-        onAddStudent(newApplication);
+        onAddStudent(newApplication, password);
     };
+    
+    const maxOptionsReached = useMemo(() => {
+        if (!selectedCourse?.options || !selectedCourse?.maxOptions) return false;
+        const currentOptions = selectedPapers.filter(p => selectedCourse.options!.includes(p));
+        return currentOptions.length >= selectedCourse.maxOptions;
+    }, [selectedPapers, selectedCourse]);
 
     if (!isOpen) return null;
 
@@ -103,6 +173,27 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClose, onAd
                                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white" 
                             />
                         </div>
+
+                        <div>
+                            <label htmlFor="studentId" className="block text-sm font-medium text-gray-700">Student ID</label>
+                            <input
+                                type="text"
+                                name="studentId"
+                                id="studentId"
+                                required
+                                value={formData.studentId}
+                                onChange={handleChange}
+                                className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none bg-white ${
+                                    studentIdError
+                                        ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                        : 'border-gray-300 focus:ring-brand-red focus:border-brand-red'
+                                }`}
+                                aria-invalid={!!studentIdError}
+                                aria-describedby="studentId-error"
+                            />
+                            {studentIdError && <p id="studentId-error" className="mt-2 text-sm text-red-600">{studentIdError}</p>}
+                        </div>
+
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email Address</label>
                             <input 
@@ -139,6 +230,10 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClose, onAd
                                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white" 
                             />
                         </div>
+                         <div>
+                            <label htmlFor="address" className="block text-sm font-medium text-gray-700">Address</label>
+                            <textarea name="address" id="address" rows={2} required value={formData.address} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white"></textarea>
+                        </div>
                         <div>
                             <label htmlFor="program" className="block text-sm font-medium text-gray-700">Program</label>
                             <select 
@@ -154,6 +249,52 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClose, onAd
                                 ))}
                             </select>
                         </div>
+                        {selectedCourse?.papers && (
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Select Papers</label>
+                                <div className="mt-2 border p-3 rounded-md bg-gray-50 max-h-32 overflow-y-auto">
+                                    {selectedCourse.options && (
+                                        <div>
+                                            <h4 className="font-semibold text-sm text-gray-600 mb-2">
+                                                Select Papers {selectedCourse.maxOptions ? `(Choose up to ${selectedCourse.maxOptions})` : ''}
+                                            </h4>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                {selectedCourse.options.map(paper => (
+                                                    <label key={paper} className={`flex items-center space-x-2 ${maxOptionsReached && !selectedPapers.includes(paper) ? 'cursor-not-allowed text-gray-400' : ''}`}>
+                                                        <input
+                                                            type="checkbox"
+                                                            value={paper}
+                                                            checked={selectedPapers.includes(paper)}
+                                                            onChange={handlePaperSelection}
+                                                            disabled={maxOptionsReached && !selectedPapers.includes(paper)}
+                                                            className="rounded border-gray-300 text-brand-red shadow-sm focus:border-brand-red focus:ring focus:ring-offset-0 focus:ring-red-200 focus:ring-opacity-50 disabled:bg-gray-200"
+                                                        />
+                                                        <span>{paper}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {!selectedCourse.essentials && !selectedCourse.options && (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                            {selectedCourse.papers.map(paper => (
+                                                <label key={paper} className="flex items-center space-x-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        value={paper}
+                                                        checked={selectedPapers.includes(paper)}
+                                                        onChange={handlePaperSelection}
+                                                        className="rounded border-gray-300 text-brand-red shadow-sm"
+                                                    />
+                                                    <span>{paper}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                          <div>
                             <label className="block text-sm font-medium text-gray-700">Student Photo</label>
                             <div className="mt-1 flex items-center gap-4">

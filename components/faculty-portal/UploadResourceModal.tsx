@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import type { CourseMaterial, RecordedLecture } from '../../types';
 
 interface ResourceModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (resource: (CourseMaterial | RecordedLecture) & { id?: number }) => void;
+    onSave: (resources: ((CourseMaterial | RecordedLecture) & { id?: number })[]) => void;
     paper: string;
     resourceToEdit?: CourseMaterial | RecordedLecture | null;
 }
@@ -17,7 +16,7 @@ const ResourceModal: React.FC<ResourceModalProps> = ({ isOpen, onClose, onSave, 
 
     const [resourceType, setResourceType] = useState<ResourceType>('PDF');
     const [title, setTitle] = useState('');
-    const [file, setFile] = useState<File | null>(null);
+    const [files, setFiles] = useState<File[]>([]);
     const [videoUrl, setVideoUrl] = useState('');
 
     const modalRef = useRef<HTMLDivElement>(null);
@@ -33,11 +32,11 @@ const ResourceModal: React.FC<ResourceModalProps> = ({ isOpen, onClose, onSave, 
                 setResourceType(isLecture ? 'Recorded Lecture' : (resourceToEdit as CourseMaterial).type);
                 setTitle(isLecture ? (resourceToEdit as RecordedLecture).topic : (resourceToEdit as CourseMaterial).title);
                 setVideoUrl(isLecture ? (resourceToEdit as RecordedLecture).videoUrl : '');
-                setFile(null); // File uploads need to be re-selected by user for security
+                setFiles([]); // File uploads need to be re-selected by user for security
             } else { // If adding new, reset form
                 setResourceType('PDF');
                 setTitle('');
-                setFile(null);
+                setFiles([]);
                 setVideoUrl('');
             }
         }
@@ -48,24 +47,39 @@ const ResourceModal: React.FC<ResourceModalProps> = ({ isOpen, onClose, onSave, 
         e.preventDefault();
 
         if (resourceType === 'Recorded Lecture') {
-            const newLecture: Omit<RecordedLecture, 'id'> & { id?: number } = {
+            const lecture: (RecordedLecture & { id?: number }) = {
                 id: isEditing ? resourceToEdit!.id : undefined,
                 paper: paper,
                 topic: title,
                 date: isEditing ? (resourceToEdit as RecordedLecture).date : new Date().toISOString().split('T')[0],
                 videoUrl: videoUrl,
             };
-            onSave(newLecture as RecordedLecture & { id?: number });
+            onSave([lecture]);
         } else {
-            const newMaterial: Omit<CourseMaterial, 'id'> & { id?: number } = {
-                id: isEditing ? resourceToEdit!.id : undefined,
-                paper: paper,
-                title: title, // Use the title from the input field
-                type: resourceType,
-                uploadDate: isEditing ? (resourceToEdit as CourseMaterial).uploadDate : new Date().toISOString().split('T')[0],
-                downloadLink: '#', // Placeholder
-            };
-            onSave(newMaterial as CourseMaterial & { id?: number });
+             if (isEditing) {
+                const material: (CourseMaterial & { id?: number }) = {
+                    id: resourceToEdit!.id,
+                    paper,
+                    title,
+                    type: resourceType,
+                    uploadDate: (resourceToEdit as CourseMaterial).uploadDate,
+                    downloadLink: files.length > 0 ? '#' : (resourceToEdit as CourseMaterial).downloadLink, // Update link if new file
+                };
+                onSave([material]);
+            } else {
+                if (files.length === 0) return alert('Please select at least one file to upload.');
+                
+                // FIX: Add a temporary unique ID to each new material to satisfy the CourseMaterial type.
+                const newMaterials: CourseMaterial[] = files.map((file, index) => ({
+                    id: Date.now() + index,
+                    paper,
+                    title: files.length > 1 ? file.name.replace(/\.[^/.]+$/, "") : title,
+                    type: resourceType,
+                    uploadDate: new Date().toISOString().split('T')[0],
+                    downloadLink: '#',
+                }));
+                onSave(newMaterials);
+            }
         }
     };
     
@@ -90,7 +104,8 @@ const ResourceModal: React.FC<ResourceModalProps> = ({ isOpen, onClose, onSave, 
                         </div>
                         <div>
                             <label htmlFor="title" className="block text-sm font-medium text-gray-700">{resourceType === 'Recorded Lecture' ? 'Lecture Topic' : 'Title'}</label>
-                            <input type="text" id="title" required value={title} onChange={e => setTitle(e.target.value)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white" />
+                            <input type="text" id="title" required value={title} onChange={e => setTitle(e.target.value)} disabled={!isEditing && files.length > 1} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white disabled:bg-gray-100" />
+                             {!isEditing && files.length > 1 && <p className="text-xs text-gray-500 mt-1">Titles will be generated from filenames.</p>}
                         </div>
 
                         {resourceType === 'Recorded Lecture' ? (
@@ -100,8 +115,15 @@ const ResourceModal: React.FC<ResourceModalProps> = ({ isOpen, onClose, onSave, 
                             </div>
                         ) : (
                              <div>
-                                <label htmlFor="file" className="block text-sm font-medium text-gray-700">Upload File</label>
-                                <input type="file" id="file" required={!isEditing} onChange={e => setFile(e.target.files ? e.target.files[0] : null)} className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-brand-red hover:file:bg-red-100"/>
+                                <label htmlFor="file" className="block text-sm font-medium text-gray-700">Upload File(s)</label>
+                                <input 
+                                    type="file" 
+                                    id="file"
+                                    multiple={!isEditing} 
+                                    required={!isEditing} 
+                                    onChange={e => setFiles(e.target.files ? Array.from(e.target.files) : [])} 
+                                    className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-brand-red hover:file:bg-red-100"
+                                />
                                 {isEditing && <p className="text-xs text-gray-500 mt-1">Leave blank to keep the existing file.</p>}
                             </div>
                         )}

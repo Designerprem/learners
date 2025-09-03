@@ -1,10 +1,12 @@
 
+
 import React, { useState } from 'react';
-import { FACULTY_MEMBERS, FACULTY_ANNOUNCEMENTS } from '../../constants';
+import { FACULTY_ANNOUNCEMENTS } from '../../constants';
 import type { Announcement } from '../../types';
+import { useFaculty } from '../FacultyPortalPage';
 
 const Announcements: React.FC = () => {
-    const facultyMember = FACULTY_MEMBERS[0];
+    const { facultyMember } = useFaculty();
     const [announcements, setAnnouncements] = useState<Announcement[]>(
         FACULTY_ANNOUNCEMENTS.filter(a => a.author === facultyMember.name)
     );
@@ -24,6 +26,8 @@ const Announcements: React.FC = () => {
         setAnnouncements(prev => [newAnnouncement, ...prev]);
         setIsCreating(false);
     };
+
+    if (!facultyMember) return null;
 
     return (
         <div>

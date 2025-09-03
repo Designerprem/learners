@@ -2,53 +2,30 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { COURSES, TESTIMONIALS, BLOG_POSTS, FACULTY_MEMBERS } from '../constants';
+import { COURSES, TESTIMONIALS, BLOG_POSTS, FACULTY_MEMBERS, HERO_SLIDES } from '../constants';
 import AIAssistant from '../components/AIAssistant';
-
-const slides = [
-    {
-        url: 'https://picsum.photos/seed/hero-campus/1920/1080',
-        alt: 'Vibrant campus life at Learners Academy',
-        title: {
-            main: 'Shape Your Future in Finance with',
-            highlighted: 'Reliant Learners Academy',
-        },
-        subtitle: 'Your premier destination for ACCA qualifications and professional accounting education.',
-        buttons: [
-            { to: '/admissions', text: 'Apply Now', variant: 'primary' },
-            { to: '/courses', text: 'Explore Courses', variant: 'secondary' },
-        ],
-    },
-    {
-        url: 'https://picsum.photos/seed/hero-classroom/1920/1080',
-        alt: 'Students engaged in a modern classroom',
-        title: {
-            main: 'Expert-Led & Interactive',
-            highlighted: 'ACCA Classes',
-        },
-        subtitle: 'Learn from industry veterans in state-of-the-art facilities designed for your success.',
-        buttons: [
-            { to: '/about', text: 'Meet Our Faculty', variant: 'primary' },
-            { to: '/gallery', text: 'View Our Campus', variant: 'secondary' },
-        ],
-    },
-    {
-        url: 'https://picsum.photos/seed/hero-students/1920/1080',
-        alt: 'Successful students celebrating their achievements',
-        title: {
-            main: 'Join a Community of',
-            highlighted: 'Successful Achievers',
-        },
-        subtitle: 'Benefit from our proven high pass rates and dedicated career support to launch your professional journey.',
-        buttons: [
-            { to: '/admissions', text: 'Start Your Journey', variant: 'primary' },
-            { to: '/blog', text: 'Read Success Stories', variant: 'secondary' },
-        ],
-    }
-];
+import PopupNotificationManager from '../components/PopupNotification';
 
 const Hero = () => {
+    const [slides, setSlides] = useState(HERO_SLIDES);
     const [currentIndex, setCurrentIndex] = useState(0);
+    
+    useEffect(() => {
+        try {
+            const storedData = localStorage.getItem('siteContent');
+            if (storedData) {
+                const content = JSON.parse(storedData);
+                if (content.banners && content.banners.length > 0) {
+                    setSlides(content.banners);
+                }
+            }
+        } catch (error) {
+            console.error("Failed to parse hero slides from localStorage", error);
+        }
+    }, []);
+
+    if (slides.length === 0) return null;
+
     const currentSlide = slides[currentIndex];
 
     const goToPrevious = () => {
@@ -66,7 +43,7 @@ const Hero = () => {
     useEffect(() => {
         const timer = setTimeout(goToNext, 7000);
         return () => clearTimeout(timer);
-    }, [currentIndex]);
+    }, [currentIndex, slides.length]);
 
     return (
         <>
@@ -152,22 +129,22 @@ const WhyChooseUs = () => {
         {
             icon: <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10 mx-auto text-brand-red"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-4.67c.12-.24.232-.487.34-.737m-4.118 6.075c.62-1.299 1.154-2.697 1.6-4.125m.001-3.75v.01c0 .218.01.437.028.65m-3.75 0c.056.126.118.25.185.375m-3.75 0a9.348 9.348 0 019-5.334c1.5 0 2.896.398 4.121.952A4.125 4.125 0 009 12.348M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
             title: 'Expert Faculty',
-            description: 'Learn from industry veterans and ACCA-qualified professionals.'
+            description: 'Learn from seasoned professionals and passionate ACCA tutors.'
         },
         {
-            icon: <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10 mx-auto text-brand-red"><path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0l-.07.002z" /></svg>,
-            title: 'ACCA Gold Partner',
-            description: 'Officially recognized for high pass rates and excellent student support.'
+            icon: <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10 mx-auto text-brand-red"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182.553-.44 1.282-.659 2.003-.659c.768 0 1.536.219 2.228.659l.879.659M7.536 18.243A5.002 5.002 0 0112 15c1.45 0 2.757.622 3.716 1.644m-7.432 0A5.002 5.002 0 0112 15c-1.45 0-2.757.622-3.716 1.644" /></svg>,
+            title: 'Affordable Excellence',
+            description: "High-quality ACCA education that is both flexible and student-friendly."
         },
         {
-            icon: <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10 mx-auto text-brand-red"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-3.75-.625m3.75.625l-6.25 3.75M21.75 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-            title: 'Proven Pass Rates',
-            description: 'Our structured curriculum is designed for your exam success.'
+            icon: <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10 mx-auto text-brand-red"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>,
+            title: 'Resource-Rich',
+            description: "Access a wealth of practice questions, revision notes, and study aids."
         },
          {
             icon: <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10 mx-auto text-brand-red"><path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m-7.5-2.952a4.5 4.5 0 011.13-1.853a4.5 4.5 0 011.853-1.13M18 18.72v-7.5M18 18.72c-3.181 0-5.714-2.533-5.714-5.714M12 12.572A4.5 4.5 0 0113.87 11.13a4.5 4.5 0 011.13 1.853M12 12.572v-7.5M12 12.572c-3.181 0-5.714-2.533-5.714-5.714M8.43 18.72c3.181 0 5.714-2.533 5.714-5.714" /></svg>,
-            title: 'Career Support',
-            description: 'Dedicated placement assistance to launch your professional career.'
+            title: 'Community Support',
+            description: "Join a supportive community and connect via webinars, workshops, and events."
         },
     ];
     return (
@@ -309,8 +286,23 @@ const Testimonials = () => (
 );
 
 const LatestBlogPosts = () => {
-    const latestPosts = BLOG_POSTS.slice(0, 3);
+    const [latestPosts, setLatestPosts] = useState(() => BLOG_POSTS.slice(0, 3));
     const facultyMap = new Map(FACULTY_MEMBERS.map(f => [f.id, f]));
+    
+    useEffect(() => {
+        try {
+            const storedData = localStorage.getItem('siteContent');
+            if (storedData) {
+                const content = JSON.parse(storedData);
+                if (content.blogs && content.blogs.length > 0) {
+                    setLatestPosts(content.blogs.slice(0, 3));
+                }
+            }
+        } catch (error) {
+            console.error("Failed to parse blogs from localStorage", error);
+        }
+    }, []);
+
 
     return (
         <section className="py-12 md:py-20 bg-brand-beige">
@@ -326,17 +318,21 @@ const LatestBlogPosts = () => {
                             <div key={post.id} className="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col group">
                                 <img src={post.imageUrl.replace('/1200/800', '/800/600')} alt={post.title} className="w-full h-56 object-cover" />
                                 <div className="p-6 flex flex-col flex-grow">
-                                    <p className="text-sm text-brand-red font-semibold">{post.tags.join(', ')}</p>
-                                    <h3 className="text-xl font-bold mt-2 mb-3 group-hover:text-brand-red transition-colors">{post.title}</h3>
-                                    <p className="text-gray-600 flex-grow">{post.excerpt}</p>
-                                    <div className="mt-6 pt-4 border-t flex items-center">
-                                        {author && <img src={author.imageUrl.replace('/400/400', '/100/100')} alt={author.name} className="w-10 h-10 rounded-full mr-3" />}
-                                        <div>
-                                            <p className="font-semibold text-sm">{author ? author.name : 'Learners Academy'}</p>
-                                            <p className="text-xs text-gray-500">{post.publicationDate}</p>
-                                        </div>
+                                    <div>
+                                        <p className="text-sm text-brand-red font-semibold">{post.tags.join(', ')}</p>
+                                        <h3 className="text-xl font-bold mt-2 mb-3 group-hover:text-brand-red transition-colors min-h-[3.5rem] line-clamp-2">{post.title}</h3>
+                                        <p className="text-gray-600 text-sm line-clamp-3">{post.excerpt}</p>
                                     </div>
-                                    <Link to={`/blog/${post.id}`} className="mt-4 font-semibold text-brand-red self-start">Read More &rarr;</Link>
+                                    <div className="mt-auto pt-6">
+                                        <div className="border-t pt-4 flex items-center">
+                                            {author && <img src={author.imageUrl.replace('/400/400', '/100/100')} alt={author.name} className="w-10 h-10 rounded-full mr-3" />}
+                                            <div>
+                                                <p className="font-semibold text-sm">{author ? author.name : 'Learners Academy'}</p>
+                                                <p className="text-xs text-gray-500">{new Date(post.publicationDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                                            </div>
+                                        </div>
+                                        <Link to={`/blog/${post.id}`} className="mt-4 font-semibold text-brand-red self-start block">Read More &rarr;</Link>
+                                    </div>
                                 </div>
                             </div>
                         );
@@ -372,6 +368,7 @@ const HomePage: React.FC = () => {
             <LatestBlogPosts />
             <CallToAction />
             <AIAssistant />
+            <PopupNotificationManager />
         </div>
     );
 };

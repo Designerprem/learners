@@ -12,22 +12,28 @@ export interface Admin {
 export interface FacultyMember {
   id: number;
   name: string;
+  username: string;
+  password?: string;
   email: string;
   phone: string;
   qualification: string;
   bio: string;
   imageUrl: string;
   assignedPapers: string[];
+  address: string;
 }
 
 export interface Course {
-  id: string;
+  id:string;
   title: string;
   level: 'Applied Knowledge' | 'Applied Skills' | 'Strategic Professional';
   description: string;
   duration: string;
   eligibility: string;
   papers: string[];
+  essentials?: string[];
+  options?: string[];
+  maxOptions?: number;
   syllabus: { topic: string; details: string; }[];
   learningOutcomes: string[];
   facultyIds: number[];
@@ -47,16 +53,44 @@ export interface FAQItem {
   answer: string;
 }
 
+export interface HeroSlide {
+    id: number; // Use a unique ID for management
+    url: string;
+    alt: string;
+    title: {
+        main: string;
+        highlighted: string;
+    };
+    subtitle: string;
+    buttons: {
+        to: string;
+        text: string;
+        variant: 'primary' | 'secondary';
+    }[];
+}
+
+
 export interface GalleryImage {
   id: number;
-  src: string;
+  type: 'image' | 'video';
+  src: string; // URL for image or thumbnail for video
   alt: string;
-  category: 'Campus' | 'Events' | 'Classrooms' | 'Students';
+  category: 'Campus' | 'Events' | 'Classrooms' | 'Students' | 'Vlogs';
+  videoUrl?: string; // URL for the video file or embed link
+  localVideoSrc?: string; // Data URL for uploaded video
 }
 
 export interface Message {
   sender: 'user' | 'ai';
   text: string;
+}
+
+export interface Comment {
+  id: number;
+  authorName: string;
+  authorImageUrl?: string;
+  text: string;
+  timestamp: string;
 }
 
 export interface BlogPost {
@@ -68,14 +102,53 @@ export interface BlogPost {
   content: string; // Could be Markdown in a real app
   imageUrl: string;
   tags: string[];
+  comments?: Comment[];
+}
+
+export interface Vlog {
+    id: number;
+    title: string;
+    description: string;
+    sourceType: 'url' | 'upload';
+    videoUrl?: string; // YouTube embed URL
+    localVideoSrc?: string; // Base64 data URL for uploaded video
+    thumbnailUrl: string; // Can be a URL or a Base64 data URL
+    publicationDate: string;
+}
+
+export interface AccaFeeItem {
+    paper?: string;
+    details: string;
+    ukPounds?: number;
+    ukFeesNrs?: number;
+    collegeFeesNrs?: number;
+    notes?: string;
+}
+
+export interface AccaFeeCategory {
+    level: string;
+    description?: string;
+    items: AccaFeeItem[];
+    subtotals?: {
+        ukFeesNrs?: number;
+        collegeFeesNrs?: number;
+    }
+    notes?: string;
 }
 
 // Student Portal Specific Types
+export interface GradeEntry {
+  score: number;
+  date: string; // e.g., '2024-07-25'
+  examType: 'Mock' | 'Internal' | 'Final';
+}
+
 export interface Student {
   id: number;
   name: string;
   avatarUrl: string;
   studentId: string;
+  password?: string;
   email: string;
   phone: string;
   address: string;
@@ -83,8 +156,13 @@ export interface Student {
   enrollmentDate: string;
   currentLevel: 'Applied Knowledge' | 'Applied Skills' | 'Strategic Professional';
   enrolledPapers: string[];
-  grades?: { [paperCode: string]: number | null };
+  totalFee: number;
+  discount: number;
+  feeRemarks?: string; // Remarks from admin regarding the fee structure
+  grades?: { [paperCode: string]: GradeEntry[] };
   attendance?: { [paperCode: string]: number };
+  paymentHistory?: PaymentHistoryItem[];
+  dueDate: string;
 }
 
 export interface ChatAttachment {
@@ -153,7 +231,13 @@ export interface PaymentHistoryItem {
   invoiceId: string;
   date: string;
   amount: number;
-  status: 'Paid' | 'Pending' | 'Failed';
+  status: 'Paid' | 'Pending Verification' | 'Rejected';
+  method: 'eSewa' | 'Khalti' | 'Mobile Banking' | 'ConnectIPS' | 'Cash';
+  remarks?: string;
+  screenshotUrl?: string; // Base64 data URL for uploaded screenshots
+  rejectionReason?: string; // Reason for rejection by admin
+  verifiedBy?: string; // Admin name
+  verificationDate?: string;
 }
 
 export interface DownloadItem {
@@ -193,7 +277,7 @@ export interface Announcement {
   content: string;
   date: string;
   author: string; // faculty name or 'Admin'
-  audience: 'All Students' | 'All Faculty' | string; // string for specific paper
+  audience: 'All Students' | 'All Faculty' | 'All Students & Faculty' | string; // string for specific paper
 }
 
 export interface Application {
@@ -204,8 +288,12 @@ export interface Application {
     submittedDate: string;
     status: 'Pending' | 'Approved' | 'Rejected';
     phone?: string;
+    address?: string;
+    selectedPapers?: string[];
     photoUrl?: string;
     documentUrl?: string;
+    documentName?: string;
+    studentId?: string;
 }
 
 export interface RecentSubmission {
@@ -228,13 +316,12 @@ export interface TeacherRating {
   date: string;
 }
 
-export interface StudentFeeRecord {
+export interface PopupNotification {
   id: number;
-  studentId: string;
-  studentName: string;
-  totalFees: number;
-  paidAmount: number;
-  outstandingBalance: number;
-  dueDate: string;
-  status: 'Paid' | 'Pending Verification' | 'Overdue' | 'Verified';
+  title: string;
+  content: string;
+  imageUrl: string;
+  isActive: boolean;
+  link?: string;
+  linkText?: string;
 }

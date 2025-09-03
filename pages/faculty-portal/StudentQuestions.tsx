@@ -1,8 +1,7 @@
-
-
 import React, { useState, useEffect, useMemo } from 'react';
-import { TEACHER_QUESTIONS, FACULTY_MEMBERS, STUDENTS } from '../../constants';
-import type { TeacherQuestion, ChatAttachment } from '../../types';
+import { TEACHER_QUESTIONS, STUDENTS } from '../../constants';
+import type { TeacherQuestion, ChatAttachment, Student } from '../../types';
+import { useFaculty } from '../FacultyPortalPage';
 
 type Tab = 'Pending' | 'Answered';
 
@@ -118,7 +117,9 @@ const QuestionCard = ({ question, onAnswer, studentAvatarUrl }: { question: Teac
 
 
 const StudentQuestions: React.FC = () => {
+    const { facultyMember } = useFaculty();
     const [activeTab, setActiveTab] = useState<Tab>('Pending');
+    const [levelFilter, setLevelFilter] = useState('All');
     const [questions, setQuestions] = useState<TeacherQuestion[]>(() => {
         const savedQuestions = localStorage.getItem('teacherQuestions');
         return savedQuestions ? JSON.parse(savedQuestions) : TEACHER_QUESTIONS;
@@ -128,13 +129,9 @@ const StudentQuestions: React.FC = () => {
         localStorage.setItem('teacherQuestions', JSON.stringify(questions));
     }, [questions]);
     
-    const facultyMember = FACULTY_MEMBERS[0]; // Assuming Dr. Jane Smith is logged in
-
     const studentMap = useMemo(() => {
-        const map = new Map<number, { name: string, avatarUrl: string }>();
-        STUDENTS.forEach(student => {
-            map.set(student.id, { name: student.name, avatarUrl: student.avatarUrl });
-        });
+        const map = new Map<number, Student>();
+        STUDENTS.forEach(student => map.set(student.id, student));
         return map;
     }, []);
 
@@ -144,10 +141,18 @@ const StudentQuestions: React.FC = () => {
         ));
     };
 
+    const filteredQuestions = useMemo(() => {
+        return questions.filter(q => {
+            if (levelFilter === 'All') return true;
+            const student = q.studentId ? studentMap.get(q.studentId) : null;
+            return student ? student.currentLevel === levelFilter : false;
+        });
+    }, [questions, levelFilter, studentMap]);
+
     const { pending, answered } = useMemo(() => {
         const pending: TeacherQuestion[] = [];
         const answered: TeacherQuestion[] = [];
-        questions.forEach(q => {
+        filteredQuestions.forEach(q => {
             if (q.status === 'Pending') {
                 pending.push(q);
             } else {
@@ -155,15 +160,17 @@ const StudentQuestions: React.FC = () => {
             }
         });
         return { pending, answered };
-    }, [questions]);
+    }, [filteredQuestions]);
 
     const currentList = activeTab === 'Pending' ? pending : answered;
+
+    if (!facultyMember) return null;
 
     return (
         <div>
             <h1 className="text-4xl font-bold text-brand-dark mb-8">Student Questions</h1>
             <div className="bg-white p-6 rounded-lg shadow-md">
-                <div className="border-b border-gray-200 mb-6">
+                <div className="flex flex-col sm:flex-row justify-between items-center border-b border-gray-200 mb-6">
                     <nav className="-mb-px flex space-x-8" aria-label="Tabs">
                          <button
                             onClick={() => setActiveTab('Pending')}
@@ -186,6 +193,20 @@ const StudentQuestions: React.FC = () => {
                             Answered <span className="bg-gray-200 text-gray-800 ml-2 py-0.5 px-2 rounded-full text-xs">{answered.length}</span>
                         </button>
                     </nav>
+                    <div className="mt-4 sm:mt-0">
+                        <label htmlFor="levelFilter" className="sr-only">Filter by Level</label>
+                        <select
+                            id="levelFilter"
+                            value={levelFilter}
+                            onChange={e => setLevelFilter(e.target.value)}
+                            className="block text-sm border-gray-300 focus:outline-none focus:ring-brand-red focus:border-brand-red rounded-md bg-white"
+                        >
+                            <option value="All">All Levels</option>
+                            <option value="Applied Knowledge">Applied Knowledge</option>
+                            <option value="Applied Skills">Applied Skills</option>
+                            <option value="Strategic Professional">Strategic Professional</option>
+                        </select>
+                    </div>
                 </div>
                 <div className="space-y-4">
                     {currentList.length > 0 ? (
@@ -195,7 +216,7 @@ const StudentQuestions: React.FC = () => {
                         })
                     ) : (
                         <div className="text-center py-12 text-gray-500">
-                            <p>No {activeTab.toLowerCase()} questions.</p>
+                            <p>No {activeTab.toLowerCase()} questions match the current filter.</p>
                         </div>
                     )}
                 </div>

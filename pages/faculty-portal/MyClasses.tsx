@@ -1,15 +1,16 @@
-
 import React, { useState, useEffect } from 'react';
-import { FACULTY_MEMBERS, STUDENTS, COURSE_MATERIALS, RECORDED_LECTURES } from '../../constants';
+import { STUDENTS, COURSE_MATERIALS, RECORDED_LECTURES } from '../../constants';
 import type { Student, CourseMaterial, RecordedLecture } from '../../types';
 import ResourceModal from '../../components/faculty-portal/UploadResourceModal';
+import { useFaculty } from '../FacultyPortalPage';
 
 const BASE_MATERIAL_IDS = new Set(COURSE_MATERIALS.map(m => m.id));
 const BASE_LECTURE_IDS = new Set(RECORDED_LECTURES.map(l => l.id));
 
 const MyClasses: React.FC = () => {
-    const facultyMember = FACULTY_MEMBERS[0]; // Dr. Jane Smith
+    const { facultyMember } = useFaculty();
     const [selectedPaper, setSelectedPaper] = useState(facultyMember.assignedPapers[0]);
+    const [levelFilter, setLevelFilter] = useState('All');
     
     const [materials, setMaterials] = useState<CourseMaterial[]>(() => {
         const savedMaterials = localStorage.getItem('customMaterials');
@@ -40,34 +41,48 @@ const MyClasses: React.FC = () => {
     }, [lectures]);
 
 
-    const studentsForSelectedPaper = STUDENTS.filter(student => 
+    const filteredStudents = STUDENTS.filter(student => 
         student.enrolledPapers.some(p => selectedPaper.startsWith(p))
+    ).filter(student =>
+        levelFilter === 'All' || student.currentLevel === levelFilter
     );
     
     const materialsForSelectedPaper = materials.filter(material => 
-        material.paper === selectedPaper
+        material.paper === selectedPaper.split(':')[0].trim()
     );
     
     const lecturesForSelectedPaper = lectures.filter(lecture => 
-        lecture.paper === selectedPaper
+        lecture.paper === selectedPaper.split(':')[0].trim()
     );
 
-    const handleSaveResource = (resource: (CourseMaterial | RecordedLecture) & { id?: number }) => {
-        if ('videoUrl' in resource) { // It's a RecordedLecture
-            const lectureData = { ...resource, id: resource.id ?? Date.now() } as RecordedLecture;
-            if (resource.id) { // Edit
-                setLectures(prev => prev.map(l => l.id === lectureData.id ? lectureData : l));
-            } else { // Add
-                setLectures(prev => [lectureData, ...prev]);
+    const handleSaveResource = (resources: ((CourseMaterial | RecordedLecture) & { id?: number })[]) => {
+        const newMaterials: CourseMaterial[] = [];
+        const newLectures: RecordedLecture[] = [];
+
+        resources.forEach(resource => {
+            if (resource.id && resourceToEdit) { // Editing existing
+                if ('videoUrl' in resource) {
+                    setLectures(prev => prev.map(l => l.id === resource.id ? resource as RecordedLecture : l));
+                } else {
+                    setMaterials(prev => prev.map(m => m.id === resource.id ? resource as CourseMaterial : m));
+                }
+            } else { // Adding new
+                const newResourceWithId = { ...resource, id: resource.id ?? Date.now() };
+                if ('videoUrl' in newResourceWithId) {
+                    newLectures.push(newResourceWithId as RecordedLecture);
+                } else {
+                    newMaterials.push(newResourceWithId as CourseMaterial);
+                }
             }
-        } else { // It's a CourseMaterial
-            const materialData = { ...resource, id: resource.id ?? Date.now() } as CourseMaterial;
-            if (resource.id) { // Edit
-                setMaterials(prev => prev.map(m => m.id === materialData.id ? materialData : m));
-            } else { // Add
-                setMaterials(prev => [materialData, ...prev]);
-            }
+        });
+
+        if (newMaterials.length > 0) {
+            setMaterials(prev => [...newMaterials, ...prev]);
         }
+        if (newLectures.length > 0) {
+            setLectures(prev => [...newLectures, ...prev]);
+        }
+        
         setIsResourceModalOpen(false);
         setResourceToEdit(null);
     };
@@ -94,6 +109,7 @@ const MyClasses: React.FC = () => {
         setIsResourceModalOpen(true);
     };
 
+    if (!facultyMember) return null;
 
     return (
         <div>
@@ -105,7 +121,7 @@ const MyClasses: React.FC = () => {
                     id="paperSelect"
                     value={selectedPaper}
                     onChange={(e) => setSelectedPaper(e.target.value)}
-                    className="mt-1 block w-full max-w-sm pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-brand-red focus:border-brand-red sm:text-sm rounded-md shadow-sm"
+                    className="mt-1 block w-full max-w-sm pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-brand-red focus:border-brand-red sm:text-sm rounded-md shadow-sm bg-white"
                 >
                     {facultyMember.assignedPapers.map(paper => <option key={paper} value={paper}>{paper}</option>)}
                 </select>
@@ -117,17 +133,29 @@ const MyClasses: React.FC = () => {
                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* Enrolled Students */}
                     <div>
-                        <h3 className="font-bold text-lg text-brand-dark mb-4 border-b pb-2">Enrolled Students ({studentsForSelectedPaper.length})</h3>
+                        <div className="flex justify-between items-center mb-4 border-b pb-2">
+                            <h3 className="font-bold text-lg text-brand-dark">Enrolled Students ({filteredStudents.length})</h3>
+                             <select
+                                value={levelFilter}
+                                onChange={e => setLevelFilter(e.target.value)}
+                                className="block text-sm border-gray-300 focus:outline-none focus:ring-brand-red focus:border-brand-red rounded-md bg-white"
+                            >
+                                <option value="All">All Levels</option>
+                                <option value="Applied Knowledge">Applied Knowledge</option>
+                                <option value="Applied Skills">Applied Skills</option>
+                                <option value="Strategic Professional">Strategic Professional</option>
+                            </select>
+                        </div>
                         <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                           {studentsForSelectedPaper.length > 0 ? studentsForSelectedPaper.map(student => (
+                           {filteredStudents.length > 0 ? filteredStudents.map(student => (
                                <div key={student.id} className="flex items-center p-2 bg-gray-50 rounded-md">
                                    <img src={student.avatarUrl} alt={student.name} className="w-10 h-10 rounded-full mr-3" />
                                    <div>
                                        <p className="font-semibold text-gray-800">{student.name}</p>
-                                       <p className="text-xs text-gray-500">{student.studentId}</p>
+                                       <p className="text-xs text-gray-500">{student.studentId} - {student.currentLevel}</p>
                                    </div>
                                </div>
-                           )) : <p className="text-gray-500">No students enrolled in this paper.</p>}
+                           )) : <p className="text-gray-500">No students match the current filters.</p>}
                         </div>
                     </div>
 
@@ -180,7 +208,7 @@ const MyClasses: React.FC = () => {
                     setResourceToEdit(null);
                 }}
                 onSave={handleSaveResource}
-                paper={selectedPaper}
+                paper={selectedPaper.split(':')[0].trim()}
                 resourceToEdit={resourceToEdit}
             />
         </div>

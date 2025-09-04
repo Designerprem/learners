@@ -12,10 +12,12 @@ interface AddClassModalProps {
 }
 
 const AddClassModal: React.FC<AddClassModalProps> = ({ isOpen, onClose, onSaveClass, assignedPapers, eventToEdit }) => {
+    const today = new Date('2025-08-04T00:00:00Z');
+    
     const initialState = {
         paper: assignedPapers[0] || '',
         title: '',
-        date: new Date().toISOString().split('T')[0],
+        date: today.toISOString().split('T')[0],
         startTime: '09:00',
         endTime: '11:00',
         joinLink: '',
@@ -23,6 +25,11 @@ const AddClassModal: React.FC<AddClassModalProps> = ({ isOpen, onClose, onSaveCl
 
     const [formData, setFormData] = useState(initialState);
     const modalRef = useRef<HTMLDivElement>(null);
+    
+    const oneMonthFromNow = new Date(today);
+    oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1);
+    const minDate = today.toISOString().split('T')[0];
+    const maxDate = oneMonthFromNow.toISOString().split('T')[0];
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -124,7 +131,9 @@ const AddClassModal: React.FC<AddClassModalProps> = ({ isOpen, onClose, onSaveCl
                                 id="date" 
                                 required 
                                 value={formData.date} 
-                                onChange={handleChange} 
+                                onChange={handleChange}
+                                min={minDate}
+                                max={maxDate}
                                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white" 
                             />
                         </div>

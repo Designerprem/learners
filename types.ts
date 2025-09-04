@@ -97,12 +97,16 @@ export interface BlogPost {
   id: string; // This will be the URL slug
   title: string;
   authorId: number;
+  authorType: 'faculty' | 'student';
   publicationDate: string;
   excerpt: string;
   content: string; // Could be Markdown in a real app
   imageUrl: string;
   tags: string[];
   comments?: Comment[];
+  status: 'Published' | 'Draft';
+  isFeatured: boolean;
+  timeToRead: number; // in minutes
 }
 
 export interface Vlog {
@@ -158,6 +162,7 @@ export interface Student {
   enrolledPapers: string[];
   totalFee: number;
   discount: number;
+  feeItems?: { description: string; amount: number; }[];
   feeRemarks?: string; // Remarks from admin regarding the fee structure
   grades?: { [paperCode: string]: GradeEntry[] };
   attendance?: { [paperCode: string]: number };

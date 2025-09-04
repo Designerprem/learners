@@ -374,9 +374,62 @@ export const TEACHER_RATINGS: TeacherRating[] = [
 ];
 
 export const BLOG_POSTS: BlogPost[] = [
-    { id: 'mastering-sbl', title: '5 Tips for Mastering the Strategic Business Leader (SBL) Exam', authorId: 2, publicationDate: '2024-07-18', excerpt: 'The SBL exam is unique. It\'s not about memorizing facts, but about applying your knowledge in a real-world context. Here are five tips to help you succeed.', content: '<h3>Understand the Syllabus</h3><p>The SBL syllabus is vast, covering governance, risk, ethics, and strategy. Break it down into manageable chunks and focus on understanding the core concepts rather than rote learning. Create mind maps to connect different areas of the syllabus.</p><h3>Practice, Practice, Practice</h3><p>There is no substitute for practicing past exam papers. This helps you get used to the format, timing, and the type of questions asked. Pay close attention to the professional skills marks, as they can make a significant difference to your final score.</p>', imageUrl: 'https://picsum.photos/seed/blog-sbl/1200/800', tags: ['SBL', 'Strategic Professional', 'Exam Tips'] },
-    { id: 'fr-vs-sbr', title: 'Financial Reporting (FR) vs. Strategic Business Reporting (SBR)', authorId: 1, publicationDate: '2024-06-25', excerpt: 'Many students wonder about the jump from FR to SBR. While both deal with reporting, their focus and depth are quite different. Let\'s explore the key distinctions.', content: '<h3>Depth of Knowledge</h3><p>FR focuses on the application of accounting standards to produce financial statements. SBR, on the other hand, requires you to evaluate and advise on the reporting implications of transactions and ethical issues. It is less about calculation and more about judgement.</p>', imageUrl: 'https://picsum.photos/seed/blog-fr-sbr/1200/800', tags: ['FR', 'SBR', 'Syllabus'] },
-    { id: 'acca-career-paths', title: 'Top Career Paths for ACCA Graduates in Nepal', authorId: 3, publicationDate: '2024-05-30', excerpt: 'Completing your ACCA qualification opens up a world of opportunities. Here are some of the most promising career paths for ACCA members in the current Nepali market.', content: '<h3>Audit and Assurance</h3><p>This is a traditional and highly respected career path. Working for an audit firm, you will be responsible for examining the financial records of companies to ensure they are accurate and comply with regulations.</p>', imageUrl: 'https://picsum.photos/seed/blog-career/1200/800', tags: ['Career', 'ACCA', 'Nepal'] },
+    { 
+        id: 'mastering-sbl', 
+        title: '5 Tips for Mastering the Strategic Business Leader (SBL) Exam', 
+        authorId: 2,
+        authorType: 'faculty', 
+        publicationDate: '2024-07-18', 
+        excerpt: 'The SBL exam is unique. It\'s not about memorizing facts, but about applying your knowledge in a real-world context. Here are five tips to help you succeed.', 
+        content: '<h3>Understand the Syllabus</h3><p>The SBL syllabus is vast, covering governance, risk, ethics, and strategy. Break it down into manageable chunks and focus on understanding the core concepts rather than rote learning. Create mind maps to connect different areas of the syllabus.</p><h3>Practice, Practice, Practice</h3><p>There is no substitute for practicing past exam papers. This helps you get used to the format, timing, and the type of questions asked. Pay close attention to the professional skills marks, as they can make a significant difference to your final score.</p>', 
+        imageUrl: 'https://picsum.photos/seed/blog-sbl/1200/800', 
+        tags: ['SBL', 'Strategic Professional', 'Exam Tips'],
+        status: 'Published',
+        isFeatured: true,
+        timeToRead: 3
+    },
+    { 
+        id: 'fr-vs-sbr', 
+        title: 'Financial Reporting (FR) vs. Strategic Business Reporting (SBR)', 
+        authorId: 1, 
+        authorType: 'faculty',
+        publicationDate: '2024-06-25', 
+        excerpt: 'Many students wonder about the jump from FR to SBR. While both deal with reporting, their focus and depth are quite different. Let\'s explore the key distinctions.', 
+        content: '<h3>Depth of Knowledge</h3><p>FR focuses on the application of accounting standards to produce financial statements. SBR, on the other hand, requires you to evaluate and advise on the reporting implications of transactions and ethical issues. It is less about calculation and more about judgement.</p>', 
+        imageUrl: 'https://picsum.photos/seed/blog-fr-sbr/1200/800', 
+        tags: ['FR', 'SBR', 'Syllabus'],
+        status: 'Published',
+        isFeatured: false,
+        timeToRead: 2
+    },
+    { 
+        id: 'acca-career-paths', 
+        title: 'Top Career Paths for ACCA Graduates in Nepal', 
+        authorId: 3, 
+        authorType: 'faculty',
+        publicationDate: '2024-05-30', 
+        excerpt: 'Completing your ACCA qualification opens up a world of opportunities. Here are some of the most promising career paths for ACCA members in the current Nepali market.', 
+        content: '<h3>Audit and Assurance</h3><p>This is a traditional and highly respected career path. Working for an audit firm, you will be responsible for examining the financial records of companies to ensure they are accurate and comply with regulations.</p>', 
+        imageUrl: 'https://picsum.photos/seed/blog-career/1200/800', 
+        tags: ['Career', 'ACCA', 'Nepal'],
+        status: 'Published',
+        isFeatured: false,
+        timeToRead: 4
+    },
+    { 
+        id: 'draft-post-example', 
+        title: 'The Future of AI in Accounting (Draft)', 
+        authorId: 1, 
+        authorType: 'faculty',
+        publicationDate: '2024-07-25', 
+        excerpt: 'Exploring how artificial intelligence is set to revolutionize the accounting profession, from automation to predictive analysis.', 
+        content: '<h3>Introduction to AI</h3><p>AI is more than just a buzzword. It\'s a powerful tool that will change how we work.</p>', 
+        imageUrl: 'https://picsum.photos/seed/blog-ai/1200/800', 
+        tags: ['AI', 'Future', 'Technology'],
+        status: 'Draft',
+        isFeatured: false,
+        timeToRead: 1
+    }
 ];
 
 export const VLOGS: Vlog[] = [

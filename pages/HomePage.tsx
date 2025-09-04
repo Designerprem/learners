@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { COURSES, TESTIMONIALS, BLOG_POSTS, FACULTY_MEMBERS, HERO_SLIDES } from '../constants';
+import { COURSES, TESTIMONIALS, BLOG_POSTS, FACULTY_MEMBERS, HERO_SLIDES, STUDENTS } from '../constants';
 import AIAssistant from '../components/AIAssistant';
 import PopupNotificationManager from '../components/PopupNotification';
 
@@ -288,6 +288,7 @@ const Testimonials = () => (
 const LatestBlogPosts = () => {
     const [latestPosts, setLatestPosts] = useState(() => BLOG_POSTS.slice(0, 3));
     const facultyMap = new Map(FACULTY_MEMBERS.map(f => [f.id, f]));
+    const studentMap = new Map(STUDENTS.map(s => [s.id, s]));
     
     useEffect(() => {
         try {
@@ -313,7 +314,12 @@ const LatestBlogPosts = () => {
                 </div>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {latestPosts.map(post => {
-                        const author = facultyMap.get(post.authorId);
+                        const author = post.authorType === 'student'
+                            ? studentMap.get(post.authorId)
+                            : facultyMap.get(post.authorId);
+                        const authorName = author ? author.name : 'Learners Academy';
+                        const authorImageUrl = author ? ('imageUrl' in author ? author.imageUrl : author.avatarUrl) : '';
+
                         return (
                             <div key={post.id} className="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col group">
                                 <img src={post.imageUrl.replace('/1200/800', '/800/600')} alt={post.title} className="w-full h-56 object-cover" />
@@ -325,9 +331,9 @@ const LatestBlogPosts = () => {
                                     </div>
                                     <div className="mt-auto pt-6">
                                         <div className="border-t pt-4 flex items-center">
-                                            {author && <img src={author.imageUrl.replace('/400/400', '/100/100')} alt={author.name} className="w-10 h-10 rounded-full mr-3" />}
+                                            {author && <img src={authorImageUrl.replace('/400/400', '/100/100')} alt={authorName} className="w-10 h-10 rounded-full mr-3" />}
                                             <div>
-                                                <p className="font-semibold text-sm">{author ? author.name : 'Learners Academy'}</p>
+                                                <p className="font-semibold text-sm">{authorName}</p>
                                                 <p className="text-xs text-gray-500">{new Date(post.publicationDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                                             </div>
                                         </div>

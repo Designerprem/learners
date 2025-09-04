@@ -48,8 +48,8 @@ const AgendaItem = ({ event, onEdit, onDelete }: { event: CalendarEvent, onEdit:
 
 const Schedule: React.FC = () => {
     const { facultyMember } = useFaculty();
-    const [currentDate, setCurrentDate] = useState(new Date('2024-07-22T10:00:00Z'));
-    const [selectedDate, setSelectedDate] = useState(new Date('2024-07-22T10:00:00Z'));
+    const [currentDate, setCurrentDate] = useState(new Date('2025-08-04T10:00:00Z'));
+    const [selectedDate, setSelectedDate] = useState(new Date('2025-08-04T10:00:00Z'));
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
     
@@ -74,7 +74,7 @@ const Schedule: React.FC = () => {
     }
     
     const isSameDay = (d1: Date, d2: Date) => d1.toDateString() === d2.toDateString();
-    const isToday = (d: Date) => isSameDay(d, new Date('2024-07-22T10:00:00Z'));
+    const isToday = (d: Date) => isSameDay(d, new Date('2025-08-04T10:00:00Z'));
 
     const changeMonth = (offset: number) => {
         setCurrentDate(current => {

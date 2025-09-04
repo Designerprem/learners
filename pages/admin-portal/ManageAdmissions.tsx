@@ -1,13 +1,53 @@
 
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PENDING_APPLICATIONS, STUDENTS } from '../../constants';
 import type { Application, Student } from '../../types';
 import AddStudentModal from '../../components/admin-portal/AddStudentModal';
 import ApplicationDetailModal from '../../components/admin-portal/ApplicationDetailModal';
-import { sendWelcomeEmail } from '../../services/emailService';
+import { sendWelcomeEmail, DEFAULT_WELCOME_EMAIL_TEMPLATE } from '../../services/emailService';
 
 type Tab = 'Pending' | 'Approved' | 'Rejected';
+
+const EmailEditorModal: React.FC<{ onClose: () => void; }> = ({ onClose }) => {
+    const [template, setTemplate] = useState(localStorage.getItem('welcomeEmailTemplate') || DEFAULT_WELCOME_EMAIL_TEMPLATE);
+
+    const handleSave = () => {
+        localStorage.setItem('welcomeEmailTemplate', template);
+        onClose();
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4" onClick={onClose}>
+            <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+                <div className="p-4 border-b flex justify-between items-center">
+                    <h2 className="text-2xl font-bold text-brand-dark">Customize Welcome Email</h2>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-6">
+                    <p className="text-sm text-gray-600 mb-4">
+                        Edit the template below. Use the following placeholders to include dynamic student information:
+                        {/* FIX: Corrected JSX syntax for displaying literal strings. */}
+                        <code className="bg-gray-200 text-sm p-1 rounded-md mx-1">{`{{studentName}}`}</code>
+                        <code className="bg-gray-200 text-sm p-1 rounded-md mx-1">{`{{studentId}}`}</code>
+                        <code className="bg-gray-200 text-sm p-1 rounded-md mx-1">{`{{password}}`}</code>
+                    </p>
+                    <textarea
+                        value={template}
+                        onChange={(e) => setTemplate(e.target.value)}
+                        rows={15}
+                        className="w-full p-2 border border-gray-300 rounded-md font-mono text-sm bg-white"
+                    />
+                </div>
+                <div className="p-4 border-t bg-gray-50 flex justify-end gap-4">
+                    <button type="button" onClick={onClose} className="bg-gray-200 text-gray-700 font-semibold px-4 py-2 rounded-md hover:bg-gray-300">Cancel</button>
+                    <button onClick={handleSave} className="bg-brand-red text-white font-semibold px-4 py-2 rounded-md hover:bg-red-700">Save Template</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 
 const ManageAdmissions: React.FC = () => {
     const [allStudents, setAllStudents] = useState<Student[]>(() => {
@@ -52,6 +92,7 @@ const ManageAdmissions: React.FC = () => {
 
     const [activeTab, setActiveTab] = useState<Tab>('Pending');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
     const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
     const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
@@ -222,12 +263,20 @@ const ManageAdmissions: React.FC = () => {
          <div>
             <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
                 <h1 className="text-3xl md:text-4xl font-bold text-brand-dark">Manage Admissions</h1>
-                 <button
-                    onClick={() => setIsAddModalOpen(true)}
-                    className="bg-brand-red text-white font-semibold px-4 py-2 rounded-md hover:bg-red-700 transition-colors w-full md:w-auto"
-                >
-                    Manual Admission
-                </button>
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => setIsEmailModalOpen(true)}
+                        className="bg-blue-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-blue-700 transition-colors w-full md:w-auto"
+                    >
+                        Customize Welcome Email
+                    </button>
+                    <button
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="bg-brand-red text-white font-semibold px-4 py-2 rounded-md hover:bg-red-700 transition-colors w-full md:w-auto"
+                    >
+                        Manual Admission
+                    </button>
+                </div>
             </div>
 
             {notification && (
@@ -315,6 +364,7 @@ const ManageAdmissions: React.FC = () => {
                     suggestedStudentId={getNextStudentId()}
                 />
             )}
+            {isEmailModalOpen && <EmailEditorModal onClose={() => setIsEmailModalOpen(false)} />}
         </div>
     );
 };

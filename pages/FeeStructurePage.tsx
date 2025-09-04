@@ -1,5 +1,4 @@
 import React from 'react';
-// FIX: Corrected import from FEE_STRUCTURE_ACCA to ACCA_FEE_STRUCTURE.
 import { ACCA_FEE_STRUCTURE } from '../constants';
 import type { AccaFeeCategory } from '../types';
 

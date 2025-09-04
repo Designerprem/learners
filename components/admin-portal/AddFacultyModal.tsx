@@ -11,7 +11,6 @@ interface AddFacultyModalProps {
 }
 
 const AddFacultyModal: React.FC<AddFacultyModalProps> = ({ isOpen, onClose, onAddFaculty }) => {
-    // FIX: Added 'username' to the initial state to satisfy the FacultyMember type.
     const initialState = {
         name: '',
         username: '',
@@ -100,7 +99,6 @@ const AddFacultyModal: React.FC<AddFacultyModalProps> = ({ isOpen, onClose, onAd
                     <h2 className="text-2xl font-bold text-brand-dark">Register New Faculty</h2>
                 </div>
                 <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
-                    {/* FIX: Added a username field and reorganized the form for better UX. */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label htmlFor="name" className="block text-sm font-medium text-gray-700">Full Name</label>

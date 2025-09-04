@@ -1,4 +1,5 @@
 
+
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import NewsTicker from './NewsTicker';
@@ -11,6 +12,7 @@ const navLinksList = [
     { to: "/gallery", text: "Gallery" },
     { to: "/faq", text: "FAQ" },
     { to: "/blog", text: "Blog" },
+    { to: "/vlogs", text: "Vlogs" },
     { to: "/contact", text: "Contact" },
 ];
 

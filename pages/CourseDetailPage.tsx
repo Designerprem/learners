@@ -1,8 +1,8 @@
 
 
+
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-// FIX: Corrected import from FEE_STRUCTURE_ACCA to ACCA_FEE_STRUCTURE.
 import { COURSES, FACULTY_MEMBERS, ACCA_FEE_STRUCTURE } from '../constants';
 import type { FacultyMember, AccaFeeCategory } from '../types';
 
@@ -135,7 +135,6 @@ const CourseDetailPage: React.FC = () => {
     };
 
     const relevantFeeLevels = courseLevelMapping[course.level] || [];
-    // FIX: Corrected variable name from FEE_STRUCTURE_ACCA to ACCA_FEE_STRUCTURE.
     const courseFeeCategories = ACCA_FEE_STRUCTURE.filter(cat => relevantFeeLevels.includes(cat.level));
 
 

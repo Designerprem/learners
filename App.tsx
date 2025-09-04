@@ -1,6 +1,7 @@
 
 
 
+
 import React from 'react';
 import { HashRouter, Routes, Route, Outlet } from 'react-router-dom';
 import Header from './components/Header';
@@ -21,6 +22,7 @@ import AdminPortalPage from './pages/AdminPortalPage';
 import BlogPage from './pages/BlogPage';
 import BlogPostPage from './pages/BlogPostPage';
 import FeeStructurePage from './pages/FeeStructurePage';
+import VlogsPage from './pages/VlogsPage';
 
 const MainLayout = () => (
     <>
@@ -51,6 +53,7 @@ const App: React.FC = () => {
                         <Route path="/faq" element={<FAQPage />} />
                         <Route path="/blog" element={<BlogPage />} />
                         <Route path="/blog/:postId" element={<BlogPostPage />} />
+                        <Route path="/vlogs" element={<VlogsPage />} />
                         <Route path="/contact" element={<ContactPage />} />
                     </Route>
                     

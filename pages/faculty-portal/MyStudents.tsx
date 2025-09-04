@@ -1,5 +1,4 @@
 
-
 import React, { useState, useMemo } from 'react';
 import { STUDENTS } from '../../constants';
 import type { Student } from '../../types';
@@ -8,16 +7,22 @@ import { useFaculty } from '../FacultyPortalPage';
 
 const MyStudents: React.FC = () => {
     const { facultyMember } = useFaculty();
-    const [selectedPaper, setSelectedPaper] = useState(facultyMember.assignedPapers[0]);
+    const [selectedPaper, setSelectedPaper] = useState('All');
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
     const studentsForPaper = useMemo(() => {
+        if (selectedPaper === 'All') {
+            const facultyPaperCodes = facultyMember.assignedPapers.map(p => p.split(':')[0].trim());
+            return STUDENTS.filter(student =>
+                student.enrolledPapers.some(studentPaperCode => facultyPaperCodes.includes(studentPaperCode))
+            );
+        }
         const paperCode = selectedPaper.split(':')[0].trim();
         return STUDENTS.filter(student =>
             student.enrolledPapers.includes(paperCode)
         );
-    }, [selectedPaper]);
+    }, [selectedPaper, facultyMember.assignedPapers]);
 
     const filteredStudents = useMemo(() => {
         if (!searchTerm) return studentsForPaper;
@@ -42,6 +47,7 @@ const MyStudents: React.FC = () => {
                         onChange={(e) => setSelectedPaper(e.target.value)}
                         className="mt-1 block w-full max-w-sm pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-brand-red focus:border-brand-red sm:text-sm rounded-md shadow-sm bg-white"
                     >
+                        <option value="All">All My Papers</option>
                         {facultyMember.assignedPapers.map(paper => <option key={paper} value={paper}>{paper}</option>)}
                     </select>
                 </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { STUDENTS } from '../../constants';
 import type { Student, PaymentHistoryItem } from '../../types';
 import { useStudent } from '../StudentPortalPage';
+import { compressImage } from '../../services/imageCompressionService';
 
 const paymentMethods: PaymentHistoryItem['method'][] = ['eSewa', 'Khalti', 'Mobile Banking', 'ConnectIPS'];
 
@@ -12,15 +13,6 @@ const getStudentsFromStorage = (): Student[] => {
     } catch {
         return STUDENTS;
     }
-};
-
-const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = error => reject(error);
-    });
 };
 
 const FeePayment: React.FC = () => {
@@ -74,7 +66,7 @@ const FeePayment: React.FC = () => {
             return;
         }
 
-        const screenshotUrl = await fileToBase64(screenshot);
+        const screenshotUrl = await compressImage(screenshot, { maxWidth: 800, maxHeight: 800, quality: 0.7 });
 
         const newPayment: PaymentHistoryItem = {
             invoiceId: `INV-${Date.now()}`,

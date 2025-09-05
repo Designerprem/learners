@@ -120,6 +120,13 @@ const StudentQuestions: React.FC = () => {
     const { facultyMember } = useFaculty();
     const [activeTab, setActiveTab] = useState<Tab>('Pending');
     const [levelFilter, setLevelFilter] = useState('All');
+    const [allStudents, setAllStudents] = useState<Student[]>([]);
+
+    useEffect(() => {
+        const storedStudents = localStorage.getItem('students');
+        setAllStudents(storedStudents ? JSON.parse(storedStudents) : STUDENTS);
+    }, []);
+
     const [questions, setQuestions] = useState<TeacherQuestion[]>(() => {
         const savedQuestions = localStorage.getItem('teacherQuestions');
         return savedQuestions ? JSON.parse(savedQuestions) : TEACHER_QUESTIONS;
@@ -131,9 +138,9 @@ const StudentQuestions: React.FC = () => {
     
     const studentMap = useMemo(() => {
         const map = new Map<number, Student>();
-        STUDENTS.forEach(student => map.set(student.id, student));
+        allStudents.forEach(student => map.set(student.id, student));
         return map;
-    }, []);
+    }, [allStudents]);
 
     const handleAnswerQuestion = (id: number, answer: string, attachment?: ChatAttachment) => {
         setQuestions(prev => prev.map(q => 

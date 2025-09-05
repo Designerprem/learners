@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import type { PopupNotification } from '../types';
+import { getItems } from '../services/dataService';
 
 const PopupNotificationModal: React.FC<{ notification: PopupNotification; onClose: () => void; }> = ({ notification, onClose }) => {
     return (
@@ -39,26 +39,18 @@ const PopupNotificationManager: React.FC = () => {
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
-        try {
-            const storedData = localStorage.getItem('siteContent');
-            if (storedData) {
-                const content = JSON.parse(storedData);
-                const popups: PopupNotification[] = content.popups || [];
-                const activePopups = popups.filter(p => p.isActive);
+        const popups = getItems<PopupNotification[]>('popups', []);
+        const activePopups = popups.filter(p => p.isActive);
 
-                if (activePopups.length > 0) {
-                    const hasSeenPopup = sessionStorage.getItem('hasSeenPopup');
-                    if (!hasSeenPopup) {
-                        // Select a random popup to display
-                        const randomPopup = activePopups[Math.floor(Math.random() * activePopups.length)];
-                        setNotification(randomPopup);
-                        // A small delay to let the page load before showing the popup
-                        setTimeout(() => setIsVisible(true), 1500);
-                    }
-                }
+        if (activePopups.length > 0) {
+            const hasSeenPopup = sessionStorage.getItem('hasSeenPopup');
+            if (!hasSeenPopup) {
+                // Select a random popup to display
+                const randomPopup = activePopups[Math.floor(Math.random() * activePopups.length)];
+                setNotification(randomPopup);
+                // A small delay to let the page load before showing the popup
+                setTimeout(() => setIsVisible(true), 1500);
             }
-        } catch (error) {
-            console.error("Failed to parse popup notification from localStorage", error);
         }
     }, []);
 

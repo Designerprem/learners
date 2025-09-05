@@ -1,7 +1,9 @@
 
 
+
 import React, { useState } from 'react';
-import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
+// FIX: Split react-router-dom imports to resolve module export errors.
+import { Routes, Route, Navigate, Outlet } from 'react-router';
 import AdminSidebar from '../components/admin-portal/AdminSidebar';
 import Dashboard from './admin-portal/Dashboard';
 import ManageStudents from './admin-portal/ManageStudents';

@@ -1,5 +1,5 @@
-
 import React, { useState } from 'react';
+import AnimatedSection from '../components/AnimatedSection.tsx';
 
 const ContactPage: React.FC = () => {
     const [isSubmitted, setIsSubmitted] = useState(false);
@@ -12,13 +12,13 @@ const ContactPage: React.FC = () => {
     return (
         <div className="bg-white">
             <div className="bg-brand-dark text-white py-12 md:py-20">
-                <div className="container mx-auto px-6 text-center">
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 text-center">
                     <h1 className="text-3xl md:text-4xl font-bold">Contact Us</h1>
                     <p className="mt-4 text-lg max-w-3xl mx-auto">We're here to help. Reach out to us with any questions or inquiries.</p>
                 </div>
             </div>
-            <div className="container mx-auto px-6 py-12 md:py-20">
-                <div className="grid md:grid-cols-2 gap-12">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 py-12 md:py-20">
+                <AnimatedSection className="grid md:grid-cols-2 gap-12">
                     <div>
                         <h2 className="text-2xl md:text-3xl font-bold text-brand-red mb-6">Send us a Message</h2>
                          {isSubmitted ? (
@@ -63,7 +63,7 @@ const ContactPage: React.FC = () => {
                             ></iframe>
                         </div>
                     </div>
-                </div>
+                </AnimatedSection>
             </div>
         </div>
     );

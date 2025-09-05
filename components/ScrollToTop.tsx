@@ -1,6 +1,8 @@
 
+
 import { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+// FIX: Changed import from react-router-dom to react-router for core hook.
+import { useLocation } from 'react-router';
 
 const ScrollToTop = () => {
     const { pathname } = useLocation();

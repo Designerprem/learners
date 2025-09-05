@@ -1,12 +1,8 @@
-
 import { GoogleGenAI } from "@google/genai";
-import type { Message } from '../types';
+import type { Message } from '../types.ts';
 
-if (!process.env.API_KEY) {
-  console.warn("API_KEY environment variable not set. AI Assistant will not function.");
-}
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+// FIX: Per coding guidelines, switched to using process.env.API_KEY and removed the explicit check for its existence, resolving the 'import.meta.env' error.
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const systemInstruction = `You are an expert career counselor for Learners Academy, a college specializing in ACCA and professional accounting education. Your role is to provide helpful, encouraging, and accurate information to prospective and current students.
 - Only answer questions related to accounting, finance, ACCA qualifications, and career paths in these fields.
@@ -16,10 +12,7 @@ const systemInstruction = `You are an expert career counselor for Learners Acade
 - Be friendly and professional. Start the conversation by introducing yourself.`;
 
 export const getAIResponse = async (history: Message[]): Promise<string> => {
-  if (!process.env.API_KEY) {
-    return "The AI Assistant is currently unavailable. Please check the API key configuration.";
-  }
-  
+  // FIX: Removed API key availability check to align with the guideline assumption that it is always present.
   try {
     const chat = ai.chats.create({
       model: 'gemini-2.5-flash',

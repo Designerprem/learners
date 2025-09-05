@@ -1,27 +1,26 @@
-
-
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { COURSES, TESTIMONIALS, BLOG_POSTS, FACULTY_MEMBERS, HERO_SLIDES, STUDENTS } from '../constants';
-import AIAssistant from '../components/AIAssistant';
-import PopupNotificationManager from '../components/PopupNotification';
+import { COURSES, TESTIMONIALS, BLOG_POSTS, FACULTY_MEMBERS, HERO_SLIDES, STUDENTS, HIGH_ACHIEVERS } from '../constants.ts';
+import PopupNotificationManager from '../components/PopupNotification.tsx';
+import AnimatedSection from '../components/AnimatedSection.tsx';
+import type { BlogPost, FacultyMember, Student, Testimonial, HighAchiever, HeroSlide } from '../types.ts';
+import { getItems } from '../services/dataService.ts';
 
 const Hero = () => {
-    const [slides, setSlides] = useState(HERO_SLIDES);
+    const [slides, setSlides] = useState<HeroSlide[]>(() => getItems('banners', HERO_SLIDES));
     const [currentIndex, setCurrentIndex] = useState(0);
     
     useEffect(() => {
-        try {
-            const storedData = localStorage.getItem('siteContent');
-            if (storedData) {
-                const content = JSON.parse(storedData);
-                if (content.banners && content.banners.length > 0) {
-                    setSlides(content.banners);
-                }
+        const handleStorageChange = (event: StorageEvent) => {
+            if (event.key === 'banners') {
+                setSlides(getItems('banners', HERO_SLIDES));
             }
-        } catch (error) {
-            console.error("Failed to parse hero slides from localStorage", error);
-        }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+        };
     }, []);
 
     if (slides.length === 0) return null;
@@ -34,16 +33,16 @@ const Hero = () => {
         setCurrentIndex(newIndex);
     };
 
-    const goToNext = () => {
+    const goToNext = useCallback(() => {
         const isLastSlide = currentIndex === slides.length - 1;
         const newIndex = isLastSlide ? 0 : currentIndex + 1;
         setCurrentIndex(newIndex);
-    };
+    }, [currentIndex, slides.length]);
     
     useEffect(() => {
         const timer = setTimeout(goToNext, 7000);
         return () => clearTimeout(timer);
-    }, [currentIndex, slides.length]);
+    }, [currentIndex, slides.length, goToNext]);
 
     return (
         <>
@@ -67,7 +66,7 @@ const Hero = () => {
                     animation-delay: 0.6s;
                 }
             `}</style>
-            <div className="relative bg-brand-dark h-[50vh] md:h-[70vh] w-full group">
+            <div className="relative bg-brand-dark h-[60vh] md:h-[70vh] w-full group">
                 {/* Background Images */}
                 <div className="w-full h-full">
                     {slides.map((slide, slideIndex) => (
@@ -79,7 +78,7 @@ const Hero = () => {
 
                 {/* Content Overlay */}
                 <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-                     <div key={currentIndex} className="relative container mx-auto px-6 py-16 md:py-32 text-center text-white hero-content-container">
+                     <div key={currentIndex} className="relative container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 py-16 text-center text-white hero-content-container">
                         <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-tight mb-4">
                             {currentSlide.title.main}<br/> <span className="text-red-400">{currentSlide.title.highlighted}</span>
                         </h1>
@@ -148,8 +147,8 @@ const WhyChooseUs = () => {
         },
     ];
     return (
-        <section className="py-8 md:py-16 bg-white">
-            <div className="container mx-auto px-6">
+        <section className="py-12 md:py-20 bg-white">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20">
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 text-center">
                     {features.map(feature => (
                         <div key={feature.title}>
@@ -219,9 +218,59 @@ const StatCounter = ({ end, duration = 2000, label, suffix = '' }: { end: number
     );
 };
 
+const OutstandingStudents = () => {
+    const [highAchievers, setHighAchievers] = useState<HighAchiever[]>(() => getItems('highAchievers', HIGH_ACHIEVERS));
+
+    useEffect(() => {
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === 'highAchievers') {
+                setHighAchievers(getItems('highAchievers', HIGH_ACHIEVERS));
+            }
+        };
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
+
+    if (highAchievers.length === 0) return null;
+
+    return (
+        <div className="mt-16 text-center">
+            <style>{`
+                @keyframes fade-in-scale-up-student {
+                    from { opacity: 0; transform: scale(0.9); }
+                    to { opacity: 1; transform: scale(1); }
+                }
+                .student-card {
+                    opacity: 0;
+                    animation: fade-in-scale-up-student 0.6s ease-out forwards;
+                }
+            `}</style>
+            <h3 className="text-3xl font-bold text-white mb-8">Meet Our High Achievers</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-8">
+                {highAchievers.map((student, index) => (
+                    <div
+                        key={student.id}
+                        className="student-card flex flex-col items-center"
+                        style={{ animationDelay: `${index * 100}ms` }}
+                    >
+                        <img
+                            src={student.avatarUrl}
+                            alt={student.name}
+                            className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-brand-red object-cover shadow-lg transform transition-transform hover:scale-110"
+                        />
+                        <p className="mt-4 font-bold text-white text-lg">{student.name}</p>
+                        <p className="text-sm text-red-300 text-center">{student.achievement}</p>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+
 const ProvenRecords = () => (
     <section className="py-12 md:py-20 bg-brand-dark">
-        <div className="container mx-auto px-6">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20">
             <div className="text-center mb-12">
                 <h2 className="text-3xl md:text-4xl font-bold text-white">Our Proven Records</h2>
                 <p className="text-gray-400 mt-2 max-w-2xl mx-auto">Decades of dedication, reflected in numbers.</p>
@@ -232,6 +281,7 @@ const ProvenRecords = () => (
                 <StatCounter end={10} suffix="+" label="Years of Excellence" />
                 <StatCounter end={98} suffix="%" label="Student Satisfaction" />
             </div>
+            <OutstandingStudents />
         </div>
     </section>
 );
@@ -239,7 +289,7 @@ const ProvenRecords = () => (
 
 const ACCAPrograms = () => (
      <section className="py-12 md:py-20 bg-brand-beige">
-        <div className="container mx-auto px-6">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20">
             <div className="text-center mb-12">
                 <h2 className="text-3xl md:text-4xl font-bold">Your Pathway to ACCA Qualification</h2>
                 <p className="text-gray-600 mt-2 max-w-2xl mx-auto">We provide a clear, structured path from foundational knowledge to professional expertise, ensuring you are exam-ready at every stage.</p>
@@ -262,15 +312,32 @@ const ACCAPrograms = () => (
 );
 
 
-const Testimonials = () => (
+const Testimonials = () => {
+    const [testimonials, setTestimonials] = useState<Testimonial[]>(() => getItems('testimonials', TESTIMONIALS));
+
+    useEffect(() => {
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === 'testimonials') {
+                setTestimonials(getItems('testimonials', TESTIMONIALS));
+            }
+        };
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
+
+    if (testimonials.length === 0) {
+        return null;
+    }
+    
+    return (
      <section className="py-12 md:py-20 bg-white">
-        <div className="container mx-auto px-6">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20">
             <div className="text-center mb-12">
                 <h2 className="text-3xl md:text-4xl font-bold">What Our Students Say</h2>
                 <p className="text-gray-600 mt-2">Real stories from our successful alumni.</p>
             </div>
             <div className="grid md:grid-cols-3 gap-8 pt-12">
-                {TESTIMONIALS.map(t => (
+                {testimonials.map(t => (
                     <div key={t.id} className="bg-brand-beige p-8 rounded-lg text-center shadow-lg relative">
                         <img src={t.imageUrl} alt={t.name} className="w-24 h-24 rounded-full mx-auto absolute -top-12 left-1/2 -translate-x-1/2 border-4 border-white shadow-md" />
                         <div className="mt-14">
@@ -283,31 +350,49 @@ const Testimonials = () => (
             </div>
         </div>
     </section>
-);
+    );
+};
 
 const LatestBlogPosts = () => {
-    const [latestPosts, setLatestPosts] = useState(() => BLOG_POSTS.slice(0, 3));
-    const facultyMap = new Map(FACULTY_MEMBERS.map(f => [f.id, f]));
-    const studentMap = new Map(STUDENTS.map(s => [s.id, s]));
+    const [latestPosts, setLatestPosts] = useState<BlogPost[]>([]);
+    const [faculty, setFaculty] = useState<FacultyMember[]>([]);
+    const [students, setStudents] = useState<Student[]>([]);
     
-    useEffect(() => {
-        try {
-            const storedData = localStorage.getItem('siteContent');
-            if (storedData) {
-                const content = JSON.parse(storedData);
-                if (content.blogs && content.blogs.length > 0) {
-                    setLatestPosts(content.blogs.slice(0, 3));
-                }
-            }
-        } catch (error) {
-            console.error("Failed to parse blogs from localStorage", error);
-        }
+    const facultyMap = new Map(faculty.map(f => [f.id, f]));
+    const studentMap = new Map(students.map(s => [s.id, s]));
+    
+    const loadPosts = useCallback(() => {
+        const blogContent = getItems('blogs', BLOG_POSTS);
+        const facultyData = getItems('faculty', FACULTY_MEMBERS);
+        const studentData = getItems('students', STUDENTS);
+
+        setFaculty(facultyData);
+        setStudents(studentData);
+        
+        const published = blogContent.filter(p => p.status === 'Published');
+        setLatestPosts(published.slice(0, 3));
     }, []);
+
+    useEffect(() => {
+        loadPosts(); // Initial load
+
+        const handleStorageChange = (event: StorageEvent) => {
+            if (event.key === 'blogs' || event.key === 'faculty' || event.key === 'students') {
+                loadPosts();
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+        };
+    }, [loadPosts]);
 
 
     return (
         <section className="py-12 md:py-20 bg-brand-beige">
-            <div className="container mx-auto px-6">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20">
                 <div className="text-center mb-12">
                     <h2 className="text-3xl md:text-4xl font-bold">From Our Blog</h2>
                     <p className="text-gray-600 mt-2">Get the latest insights, tips, and news from our experts.</p>
@@ -354,7 +439,7 @@ const LatestBlogPosts = () => {
 
 const CallToAction = () => (
     <section className="bg-brand-red text-white">
-        <div className="container mx-auto px-6 py-16 text-center">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 py-16 text-center">
             <h2 className="text-3xl font-bold mb-2">Ready to Start Your ACCA Journey?</h2>
             <p className="mb-6 max-w-2xl mx-auto">Join hundreds of successful students who chose Reliant Learners Academy for their professional accounting career. Apply today to secure your spot for the next intake.</p>
             <Link to="/admissions" className="bg-white text-brand-red px-10 py-3 rounded-md font-bold hover:bg-gray-200 transition-transform hover:scale-105 shadow-lg">Apply Now</Link>
@@ -367,13 +452,12 @@ const HomePage: React.FC = () => {
     return (
         <div>
             <Hero />
-            <WhyChooseUs />
-            <ProvenRecords />
-            <ACCAPrograms />
-            <Testimonials />
-            <LatestBlogPosts />
-            <CallToAction />
-            <AIAssistant />
+            <AnimatedSection><WhyChooseUs /></AnimatedSection>
+            <AnimatedSection><ProvenRecords /></AnimatedSection>
+            <AnimatedSection><ACCAPrograms /></AnimatedSection>
+            <AnimatedSection><Testimonials /></AnimatedSection>
+            <AnimatedSection><LatestBlogPosts /></AnimatedSection>
+            <AnimatedSection><CallToAction /></AnimatedSection>
             <PopupNotificationManager />
         </div>
     );

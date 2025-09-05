@@ -12,6 +12,13 @@ const MyClasses: React.FC = () => {
     const [selectedPaper, setSelectedPaper] = useState(facultyMember.assignedPapers[0]);
     const [levelFilter, setLevelFilter] = useState('All');
     
+    const [allStudents, setAllStudents] = useState<Student[]>([]);
+
+    useEffect(() => {
+        const storedStudents = localStorage.getItem('students');
+        setAllStudents(storedStudents ? JSON.parse(storedStudents) : STUDENTS);
+    }, []);
+
     const [materials, setMaterials] = useState<CourseMaterial[]>(() => {
         const savedMaterials = localStorage.getItem('customMaterials');
         const customMaterials: CourseMaterial[] = savedMaterials ? JSON.parse(savedMaterials) : [];
@@ -41,7 +48,7 @@ const MyClasses: React.FC = () => {
     }, [lectures]);
 
 
-    const filteredStudents = STUDENTS.filter(student => 
+    const filteredStudents = allStudents.filter(student => 
         student.enrolledPapers.some(p => selectedPaper.startsWith(p))
     ).filter(student =>
         levelFilter === 'All' || student.currentLevel === levelFilter

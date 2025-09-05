@@ -1,10 +1,9 @@
-
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { HERO_SLIDES, GALLERY_IMAGES, VLOGS, BLOG_POSTS, NEWS_TICKER_MESSAGES, FACULTY_MEMBERS, POPUP_NOTIFICATION, STUDENTS } from '../../constants';
-import type { HeroSlide, GalleryImage, Vlog, BlogPost, PopupNotification } from '../../types';
+import { HERO_SLIDES, GALLERY_IMAGES, VLOGS, BLOG_POSTS, NEWS_TICKER_MESSAGES, FACULTY_MEMBERS, POPUP_NOTIFICATION, STUDENTS, TESTIMONIALS } from '../../constants';
+import type { HeroSlide, GalleryImage, Vlog, BlogPost, PopupNotification, Testimonial, Student, FacultyMember } from '../../types';
+import { compressImage } from '../../services/imageCompressionService';
 
-type Tab = 'Banners' | 'Gallery' | 'Vlogs' | 'Blogs' | 'News Ticker' | 'Popup';
+type Tab = 'Banners' | 'Gallery' | 'Vlogs' | 'Blogs' | 'News Ticker' | 'Popup' | 'Testimonials';
 
 // Helper to create a unique ID for new items
 const generateId = () => Date.now();
@@ -18,7 +17,7 @@ const calculateTimeToRead = (htmlContent: string): number => {
 };
 
 // ==========================================================
-// File to Base64 Converter
+// File to Base64 Converter (for non-image files like videos)
 // ==========================================================
 const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -126,7 +125,7 @@ const ManageBanners = ({ banners, onUpdate }: { banners: HeroSlide[], onUpdate: 
     const handleSave = async (formData: Omit<HeroSlide, 'id'>, imageFile: File | null) => {
         let imageUrl = formData.url;
         if (imageFile) {
-            imageUrl = await fileToBase64(imageFile);
+            imageUrl = await compressImage(imageFile, { maxWidth: 1920, maxHeight: 1080, quality: 0.8 });
         }
         const finalData = { ...formData, url: imageUrl };
 
@@ -175,7 +174,7 @@ const ManageBanners = ({ banners, onUpdate }: { banners: HeroSlide[], onUpdate: 
 // ==========================================================
 // Gallery Components
 // ==========================================================
-const GalleryForm = ({ item, onSave, onCancel }: { item: GalleryImage | null, onSave: (data: Omit<GalleryImage, 'id'>, imageFiles: File[], videoFile: File | null) => void, onCancel: () => void }) => {
+const GalleryForm = ({ item, onSave, onCancel }: { item: GalleryImage | null, onSave: (data: Omit<GalleryImage, 'id'>, imageFiles: File[]) => void, onCancel: () => void }) => {
     const [formState, setFormState] = useState<Omit<GalleryImage, 'id'>>(() => {
         if (item) {
             const { id, ...rest } = item;
@@ -184,23 +183,9 @@ const GalleryForm = ({ item, onSave, onCancel }: { item: GalleryImage | null, on
         return { type: 'image', src: '', alt: '', category: 'Campus' };
     });
     const [imageFiles, setImageFiles] = useState<File[]>([]);
-    const [videoFile, setVideoFile] = useState<File | null>(null);
-    const [videoSourceType, setVideoSourceType] = useState<'url' | 'upload'>(() => {
-        return item?.localVideoSrc ? 'upload' : 'url';
-    });
-
-    const handleVideoSourceChange = (type: 'url' | 'upload') => {
-        setVideoSourceType(type);
-        if (type === 'url') {
-            setFormState(prev => ({ ...prev, localVideoSrc: undefined }));
-            setVideoFile(null);
-        } else {
-            setFormState(prev => ({ ...prev, videoUrl: undefined }));
-        }
-    };
 
     return (
-        <form onSubmit={(e) => { e.preventDefault(); onSave(formState, imageFiles, videoFile); }} className="flex-1 overflow-y-auto">
+        <form onSubmit={(e) => { e.preventDefault(); onSave(formState, imageFiles); }} className="flex-1 overflow-y-auto">
             <div className="p-6 space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -228,23 +213,11 @@ const GalleryForm = ({ item, onSave, onCancel }: { item: GalleryImage | null, on
 
                 {formState.type === 'video' && (
                     <div className="p-4 border rounded-md bg-gray-50 space-y-4">
-                        <label className="block text-sm font-medium mb-2">Video Source</label>
-                        <div className="flex gap-4">
-                            <label className="flex items-center"><input type="radio" name="videoSourceType" value="url" checked={videoSourceType === 'url'} onChange={() => handleVideoSourceChange('url')} className="mr-2"/> Embed URL</label>
-                            <label className="flex items-center"><input type="radio" name="videoSourceType" value="upload" checked={videoSourceType === 'upload'} onChange={() => handleVideoSourceChange('upload')} className="mr-2"/> Upload Video</label>
+                         <p className="text-sm text-gray-600">Only YouTube embed URLs are supported for gallery videos to ensure optimal performance and avoid storage issues.</p>
+                         <div>
+                            <label className="block text-sm font-medium">YouTube Embed URL</label>
+                            <input value={formState.videoUrl || ''} onChange={e => setFormState({...formState, videoUrl: e.target.value, localVideoSrc: undefined })} className="mt-1 block w-full p-2 border rounded-md bg-white" placeholder="https://www.youtube.com/embed/..." required={!item?.videoUrl} />
                         </div>
-
-                         {videoSourceType === 'upload' ? (
-                            <div>
-                                <label className="block text-sm font-medium">Video File (Max 5MB)</label>
-                                <input type="file" accept="video/*" onChange={e => setVideoFile(e.target.files ? e.target.files[0] : null)} className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-brand-red hover:file:bg-red-100" required={!item?.localVideoSrc} />
-                            </div>
-                        ) : (
-                             <div>
-                                <label className="block text-sm font-medium">YouTube Embed URL</label>
-                                <input value={formState.videoUrl || ''} onChange={e => setFormState({...formState, videoUrl: e.target.value})} className="mt-1 block w-full p-2 border rounded-md bg-white" placeholder="https://www.youtube.com/embed/..." required={!item?.videoUrl} />
-                            </div>
-                        )}
                     </div>
                 )}
                 
@@ -301,32 +274,21 @@ const ManageGallery = ({ gallery, onUpdate }: { gallery: GalleryImage[], onUpdat
         setIsModalOpen(true);
     };
 
-    const handleSave = async (formData: Omit<GalleryImage, 'id'>, imageFiles: File[], videoFile: File | null) => {
+    const handleSave = async (formData: Omit<GalleryImage, 'id'>, imageFiles: File[]) => {
         if (editingItem) {
             // Logic to edit a single item
             let newSrc = formData.src;
             if (imageFiles[0]) {
-                newSrc = await fileToBase64(imageFiles[0]);
+                newSrc = await compressImage(imageFiles[0], { maxWidth: 800, maxHeight: 600, quality: 0.8 });
             }
-            const updatedItemData = { ...formData, src: newSrc };
-            if (updatedItemData.type === 'video') {
-                if (videoFile) {
-                    updatedItemData.localVideoSrc = await fileToBase64(videoFile);
-                    updatedItemData.videoUrl = undefined;
-                } else if (updatedItemData.videoUrl) {
-                    updatedItemData.localVideoSrc = undefined;
-                }
-            } else {
-                updatedItemData.localVideoSrc = undefined;
-                updatedItemData.videoUrl = undefined;
-            }
+            const updatedItemData = { ...formData, src: newSrc, localVideoSrc: undefined };
             onUpdate(gallery.map(g => g.id === editingItem.id ? { ...updatedItemData, id: editingItem.id } : g));
         } else {
             // Logic to add new items
             if (formData.type === 'image' && imageFiles.length > 0) {
                 const newItems: GalleryImage[] = await Promise.all(
                     imageFiles.map(async file => {
-                        const src = await fileToBase64(file);
+                        const src = await compressImage(file, { maxWidth: 800, maxHeight: 600, quality: 0.8 });
                         const alt = imageFiles.length > 1 ? file.name.replace(/\.[^/.]+$/, "") : formData.alt;
                         return {
                             id: generateId(),
@@ -339,16 +301,12 @@ const ManageGallery = ({ gallery, onUpdate }: { gallery: GalleryImage[], onUpdat
                 );
                 onUpdate([...gallery, ...newItems]);
             } else if (formData.type === 'video' && imageFiles[0]) {
-                const thumbnailSrc = await fileToBase64(imageFiles[0]);
-                let localVideo = undefined;
-                if (videoFile) {
-                    localVideo = await fileToBase64(videoFile);
-                }
+                const thumbnailSrc = await compressImage(imageFiles[0], { maxWidth: 600, maxHeight: 400, quality: 0.7 });
                 const newItem: GalleryImage = {
                     ...formData,
                     id: generateId(),
                     src: thumbnailSrc,
-                    localVideoSrc: localVideo,
+                    localVideoSrc: undefined,
                 };
                 onUpdate([...gallery, newItem]);
             }
@@ -392,13 +350,18 @@ const ManageGallery = ({ gallery, onUpdate }: { gallery: GalleryImage[], onUpdat
 // ==========================================================
 // Vlogs Components
 // ==========================================================
-const VlogForm = ({ vlog, onSave, onCancel }: { vlog: Vlog | null, onSave: (data: Omit<Vlog, 'id' | 'publicationDate'>, thumbnailFile: File | null, videoFile: File | null) => void, onCancel: () => void }) => {
-    const [formState, setFormState] = useState(vlog || { title: '', description: '', sourceType: 'url' as 'url' | 'upload', videoUrl: '', thumbnailUrl: '', localVideoSrc: '' });
+const VlogForm = ({ vlog, onSave, onCancel }: { vlog: Vlog | null, onSave: (data: Omit<Vlog, 'id' | 'publicationDate'>, thumbnailFile: File | null) => void, onCancel: () => void }) => {
+    const [formState, setFormState] = useState(vlog || { title: '', description: '', sourceType: 'url' as const, videoUrl: '', thumbnailUrl: '' });
     const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
-    const [videoFile, setVideoFile] = useState<File | null>(null);
     
+    useEffect(() => {
+        if (formState.sourceType !== 'url') {
+            setFormState(prev => ({ ...prev, sourceType: 'url', localVideoSrc: undefined }));
+        }
+    }, [formState.sourceType]);
+
     return (
-         <form onSubmit={(e) => { e.preventDefault(); onSave(formState, thumbnailFile, videoFile); }} className="flex-1 overflow-y-auto">
+         <form onSubmit={(e) => { e.preventDefault(); onSave(formState, thumbnailFile); }} className="flex-1 overflow-y-auto">
             <div className="p-6 space-y-4">
                 <input type="hidden" value={formState.sourceType}/>
                 <div>
@@ -409,25 +372,11 @@ const VlogForm = ({ vlog, onSave, onCancel }: { vlog: Vlog | null, onSave: (data
                     <label className="block text-sm font-medium">Description</label>
                     <textarea value={formState.description} onChange={e => setFormState({...formState, description: e.target.value})} rows={3} className="mt-1 block w-full p-2 border rounded-md bg-white" required />
                 </div>
+                <p className="text-sm text-gray-600 bg-blue-50 p-3 rounded-md">Note: For stability and performance, all vlogs must be hosted on a service like YouTube. Please provide the embed URL below.</p>
                 <div>
-                    <label className="block text-sm font-medium mb-2">Video Source</label>
-                    <div className="flex gap-4">
-                       <label className="flex items-center"><input type="radio" name="sourceType" value="url" checked={formState.sourceType === 'url'} onChange={() => setFormState({...formState, sourceType: 'url'})} className="mr-2"/> Embed URL</label>
-                       <label className="flex items-center"><input type="radio" name="sourceType" value="upload" checked={formState.sourceType === 'upload'} onChange={() => setFormState({...formState, sourceType: 'upload'})} className="mr-2"/> Upload Video</label>
-                    </div>
+                    <label className="block text-sm font-medium">YouTube Embed URL</label>
+                    <input value={formState.videoUrl} onChange={e => setFormState({...formState, videoUrl: e.target.value, localVideoSrc: undefined, sourceType: 'url'})} className="mt-1 block w-full p-2 border rounded-md bg-white" placeholder="https://www.youtube.com/embed/..." required />
                 </div>
-                
-                {formState.sourceType === 'url' ? (
-                     <div>
-                        <label className="block text-sm font-medium">YouTube Embed URL</label>
-                        <input value={formState.videoUrl} onChange={e => setFormState({...formState, videoUrl: e.target.value, localVideoSrc: ''})} className="mt-1 block w-full p-2 border rounded-md bg-white" placeholder="https://www.youtube.com/embed/..." required />
-                    </div>
-                ) : (
-                    <div>
-                        <label className="block text-sm font-medium">Video File (Max 5MB)</label>
-                        <input type="file" accept="video/*" onChange={e => { setVideoFile(e.target.files ? e.target.files[0] : null); setFormState({...formState, videoUrl: ''}); }} className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-brand-red hover:file:bg-red-100" required={!vlog || !vlog.localVideoSrc} />
-                    </div>
-                )}
                  
                 <div>
                     <label className="block text-sm font-medium">Thumbnail Image</label>
@@ -463,23 +412,14 @@ const ManageVlogs = ({ vlogs, onUpdate }: { vlogs: Vlog[], onUpdate: (data: Vlog
         setIsModalOpen(true);
     };
 
-    const handleSave = async (formData: Omit<Vlog, 'id' | 'publicationDate'>, thumbnailFile: File | null, videoFile: File | null) => {
+    const handleSave = async (formData: Omit<Vlog, 'id' | 'publicationDate'>, thumbnailFile: File | null) => {
         let thumbnailUrl = formData.thumbnailUrl;
-        let localVideoSrc = formData.localVideoSrc;
 
         if (thumbnailFile) {
-            thumbnailUrl = await fileToBase64(thumbnailFile);
+            thumbnailUrl = await compressImage(thumbnailFile, { maxWidth: 600, maxHeight: 400, quality: 0.7 });
         }
 
-        if (videoFile) {
-            if (videoFile.size > 5 * 1024 * 1024) { // 5MB limit
-                alert("Video file is too large. Please upload a file smaller than 5MB.");
-                return;
-            }
-            localVideoSrc = await fileToBase64(videoFile);
-        }
-
-        const finalData = { ...formData, thumbnailUrl, localVideoSrc };
+        const finalData = { ...formData, thumbnailUrl, sourceType: 'url' as const, localVideoSrc: undefined };
 
         if (editingVlog) {
             onUpdate(vlogs.map(v => v.id === editingVlog.id ? { ...editingVlog, ...finalData } : v));
@@ -520,16 +460,46 @@ const ManageVlogs = ({ vlogs, onUpdate }: { vlogs: Vlog[], onUpdate: (data: Vlog
 // Blogs Components
 // ==========================================================
 const BlogForm = ({ blog, onSave, onCancel }: { blog: BlogPost | null, onSave: (data: Omit<BlogPost, 'id'|'publicationDate'>, imageFile: File | null) => void, onCancel: () => void }) => {
-    // FIX: Define an explicit type for the initial state to ensure all required properties are present and correctly typed.
+    const [students, setStudents] = useState<Student[]>([]);
+    const [faculty, setFaculty] = useState<FacultyMember[]>([]);
+
+    useEffect(() => {
+        const storedStudents = localStorage.getItem('students');
+        setStudents(storedStudents ? JSON.parse(storedStudents) : STUDENTS);
+
+        const storedFaculty = localStorage.getItem('faculty');
+        setFaculty(storedFaculty ? JSON.parse(storedFaculty) : FACULTY_MEMBERS);
+    }, []);
+
     const [formState, setFormState] = useState(() => {
         if (blog) {
             const { id, publicationDate, ...editableData } = blog;
             return editableData;
         }
+
+        // Safely determine the initial author
+        let initialAuthorId: number = 0;
+        let initialAuthorType: 'faculty' | 'student' = 'faculty';
+
+        const facultyFromStorage = localStorage.getItem('faculty');
+        const allFaculty = facultyFromStorage ? JSON.parse(facultyFromStorage) : FACULTY_MEMBERS;
+        
+        const studentsFromStorage = localStorage.getItem('students');
+        const allStudents = studentsFromStorage ? JSON.parse(studentsFromStorage) : STUDENTS;
+
+
+        if (allFaculty.length > 0) {
+            initialAuthorId = allFaculty[0].id;
+            initialAuthorType = 'faculty';
+        } else if (allStudents.length > 0) {
+            initialAuthorId = allStudents[0].id;
+            initialAuthorType = 'student';
+        }
+        
         const initialState: Omit<BlogPost, 'id' | 'publicationDate'> = {
             title: '',
-            authorId: FACULTY_MEMBERS[0].id,
-            authorType: 'faculty',
+            authorId: initialAuthorId,
+            authorType: initialAuthorType,
             excerpt: '',
             content: '',
             imageUrl: '',
@@ -576,10 +546,10 @@ const BlogForm = ({ blog, onSave, onCancel }: { blog: BlogPost | null, onSave: (
                             }} 
                             className="mt-1 block w-full p-2 border rounded-md bg-white">
                             <optgroup label="Faculty">
-                                {FACULTY_MEMBERS.map(f => <option key={`faculty-${f.id}`} value={`faculty-${f.id}`}>{f.name}</option>)}
+                                {faculty.map(f => <option key={`faculty-${f.id}`} value={`faculty-${f.id}`}>{f.name}</option>)}
                             </optgroup>
                             <optgroup label="Students">
-                                {STUDENTS.map(s => <option key={`student-${s.id}`} value={`student-${s.id}`}>{s.name} ({s.studentId})</option>)}
+                                {students.map(s => <option key={`student-${s.id}`} value={`student-${s.id}`}>{s.name} ({s.studentId})</option>)}
                             </optgroup>
                         </select>
                     </div>
@@ -647,7 +617,7 @@ const ManageBlogs = ({ blogs, onUpdate }: { blogs: BlogPost[], onUpdate: (data: 
     const handleSave = async (formData: Omit<BlogPost, 'id' | 'publicationDate'>, imageFile: File | null) => {
         let imageUrl = formData.imageUrl;
         if (imageFile) {
-            imageUrl = await fileToBase64(imageFile);
+            imageUrl = await compressImage(imageFile, { maxWidth: 1200, maxHeight: 800, quality: 0.8 });
         }
 
         const timeToRead = calculateTimeToRead(formData.content);
@@ -835,7 +805,7 @@ const ManagePopup = ({ popups, onUpdate }: { popups: PopupNotification[], onUpda
     const handleSave = async (formData: Omit<PopupNotification, 'id'>, imageFile: File | null) => {
         let imageUrl = formData.imageUrl;
         if (imageFile) {
-            imageUrl = await fileToBase64(imageFile);
+            imageUrl = await compressImage(imageFile, { maxWidth: 600, maxHeight: 400, quality: 0.7 });
         }
 
         const finalData = { ...formData, imageUrl };
@@ -880,6 +850,113 @@ const ManagePopup = ({ popups, onUpdate }: { popups: PopupNotification[], onUpda
 };
 
 // ==========================================================
+// Testimonials Components
+// ==========================================================
+const TestimonialForm = ({ testimonial, onSave, onCancel }: { testimonial: Testimonial | null, onSave: (data: Omit<Testimonial, 'id'>, imageFile: File | null) => void, onCancel: () => void }) => {
+    const [formState, setFormState] = useState(testimonial || { name: '', program: '', quote: '', imageUrl: '' });
+    const [imageFile, setImageFile] = useState<File | null>(null);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        setFormState({ ...formState, [e.target.name]: e.target.value });
+    };
+
+    return (
+        <form onSubmit={(e) => { e.preventDefault(); onSave(formState, imageFile); }} className="flex-1 overflow-y-auto">
+            <div className="p-6 space-y-4">
+                <div>
+                    <label className="block text-sm font-medium">Student Name</label>
+                    <input name="name" value={formState.name} onChange={handleChange} className="mt-1 block w-full p-2 border rounded-md bg-white" required />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium">Program (e.g., ACCA Strategic Professional)</label>
+                    <input name="program" value={formState.program} onChange={handleChange} className="mt-1 block w-full p-2 border rounded-md bg-white" required />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium">Quote</label>
+                    <textarea name="quote" value={formState.quote} onChange={handleChange} rows={4} className="mt-1 block w-full p-2 border rounded-md bg-white" required />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium">Student Photo</label>
+                    <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files ? e.target.files[0] : null)} className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-brand-red hover:file:bg-red-100" />
+                    {formState.imageUrl && !imageFile && <img src={formState.imageUrl} alt="current photo" className="w-20 h-20 object-cover mt-2 rounded-full" />}
+                </div>
+            </div>
+            <div className="p-4 border-t bg-gray-50 flex justify-end gap-4">
+                <button type="button" onClick={onCancel} className="bg-gray-200 text-gray-700 font-semibold px-4 py-2 rounded-md hover:bg-gray-300">Cancel</button>
+                <button type="submit" className="bg-brand-red text-white font-semibold px-4 py-2 rounded-md hover:bg-red-700">Save Testimonial</button>
+            </div>
+        </form>
+    );
+};
+
+const ManageTestimonials = ({ testimonials, onUpdate }: { testimonials: Testimonial[], onUpdate: (data: Testimonial[]) => void }) => {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingTestimonial, setEditingTestimonial] = useState<Testimonial | null>(null);
+
+    const handleDelete = (id: number) => {
+        if (window.confirm('Are you sure you want to delete this testimonial?')) {
+            onUpdate(testimonials.filter(item => item.id !== id));
+        }
+    };
+
+    const handleAddNew = () => {
+        setEditingTestimonial(null);
+        setIsModalOpen(true);
+    };
+
+    const handleEdit = (testimonial: Testimonial) => {
+        setEditingTestimonial(testimonial);
+        setIsModalOpen(true);
+    };
+
+    const handleSave = async (formData: Omit<Testimonial, 'id'>, imageFile: File | null) => {
+        let imageUrl = formData.imageUrl;
+        if (imageFile) {
+            imageUrl = await compressImage(imageFile, { maxWidth: 200, maxHeight: 200, quality: 0.8 });
+        } else if (!editingTestimonial) {
+            imageUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.name)}&background=random&color=fff`;
+        }
+
+        const finalData = { ...formData, imageUrl };
+
+        if (editingTestimonial) {
+            onUpdate(testimonials.map(t => t.id === editingTestimonial.id ? { ...editingTestimonial, ...finalData } : t));
+        } else {
+            onUpdate([{ ...finalData, id: generateId() }, ...testimonials]);
+        }
+        setIsModalOpen(false);
+    };
+
+    return (
+        <div className="space-y-4">
+            <div className="text-right">
+                <button onClick={handleAddNew} className="bg-brand-red text-white font-semibold px-4 py-2 rounded-md hover:bg-red-700">Add New Testimonial</button>
+            </div>
+            {testimonials.map(testimonial => (
+                <div key={testimonial.id} className="flex items-center gap-4 border p-2 rounded-lg bg-white">
+                    <img src={testimonial.imageUrl} alt={testimonial.name} className="w-16 h-16 object-cover rounded-full" />
+                    <div className="flex-grow">
+                        <p className="font-bold">{testimonial.name}</p>
+                        <p className="text-sm text-gray-500">{testimonial.program}</p>
+                        <p className="text-xs text-gray-600 italic mt-1 line-clamp-1">"{testimonial.quote}"</p>
+                    </div>
+                    <div className="text-sm space-x-2">
+                        <button onClick={() => handleEdit(testimonial)} className="text-blue-600 hover:underline">Edit</button>
+                        <button onClick={() => handleDelete(testimonial.id)} className="text-red-600 hover:underline">Delete</button>
+                    </div>
+                </div>
+            ))}
+            {isModalOpen && (
+                <Modal title={editingTestimonial ? 'Edit Testimonial' : 'Add New Testimonial'} onClose={() => setIsModalOpen(false)}>
+                    <TestimonialForm testimonial={editingTestimonial} onSave={handleSave} onCancel={() => setIsModalOpen(false)} />
+                </Modal>
+            )}
+        </div>
+    );
+};
+
+
+// ==========================================================
 // Main Component
 // ==========================================================
 const ManageContentPage: React.FC = () => {
@@ -887,13 +964,12 @@ const ManageContentPage: React.FC = () => {
 
     const loadFromLocalStorage = <T,>(key: string, defaultValue: T): T => {
         try {
-            const storedData = localStorage.getItem('siteContent');
+            const storedData = localStorage.getItem(key);
             if (storedData) {
-                const parsed = JSON.parse(storedData);
-                return parsed[key] || defaultValue;
+                return JSON.parse(storedData);
             }
         } catch (e) {
-            console.error(`Failed to parse ${key} from localStorage`, e);
+            console.error(`Failed to load ${key} from localStorage`, e);
         }
         return defaultValue;
     };
@@ -904,15 +980,46 @@ const ManageContentPage: React.FC = () => {
     const [blogs, setBlogs] = useState<BlogPost[]>(() => loadFromLocalStorage('blogs', BLOG_POSTS));
     const [newsTicker, setNewsTicker] = useState<string[]>(() => loadFromLocalStorage('newsTicker', NEWS_TICKER_MESSAGES));
     const [popups, setPopups] = useState<PopupNotification[]>(() => loadFromLocalStorage('popups', POPUP_NOTIFICATION));
+    const [testimonials, setTestimonials] = useState<Testimonial[]>(() => loadFromLocalStorage('testimonials', TESTIMONIALS));
 
     useEffect(() => {
-        try {
-            const siteContent = { banners, gallery, vlogs, blogs, newsTicker, popups };
-            localStorage.setItem('siteContent', JSON.stringify(siteContent));
-        } catch (e) {
-            console.error("Failed to save site content to localStorage", e);
-        }
-    }, [banners, gallery, vlogs, blogs, newsTicker, popups]);
+        try { localStorage.setItem('banners', JSON.stringify(banners)); } 
+        catch (e) { console.error("Failed to save banners to localStorage", e); }
+    }, [banners]);
+    
+    useEffect(() => {
+        try { localStorage.setItem('gallery', JSON.stringify(gallery)); }
+        catch (e) { console.error("Failed to save gallery to localStorage", e); }
+    }, [gallery]);
+
+    useEffect(() => {
+        try { localStorage.setItem('vlogs', JSON.stringify(vlogs)); }
+        catch (e) { console.error("Failed to save vlogs to localStorage", e); }
+    }, [vlogs]);
+
+    useEffect(() => {
+        try { localStorage.setItem('blogs', JSON.stringify(blogs)); }
+        catch (e) { console.error("Failed to save blogs to localStorage", e); }
+    }, [blogs]);
+
+    useEffect(() => {
+        try { localStorage.setItem('newsTicker', JSON.stringify(newsTicker)); }
+        catch (e) { console.error("Failed to save news ticker to localStorage", e); }
+    }, [newsTicker]);
+
+    useEffect(() => {
+        try { localStorage.setItem('popups', JSON.stringify(popups)); }
+        catch (e) { console.error("Failed to save popups to localStorage", e); }
+    }, [popups]);
+    
+    useEffect(() => {
+        try { localStorage.setItem('testimonials', JSON.stringify(testimonials)); }
+        catch (e) { console.error("Failed to save testimonials to localStorage", e); }
+    }, [testimonials]);
+    
+    useEffect(() => {
+        localStorage.removeItem('siteContent');
+    }, []);
 
     const renderTabContent = () => {
         switch (activeTab) {
@@ -922,6 +1029,7 @@ const ManageContentPage: React.FC = () => {
             case 'Blogs': return <ManageBlogs blogs={blogs} onUpdate={setBlogs} />;
             case 'News Ticker': return <ManageNewsTicker messages={newsTicker} onUpdate={setNewsTicker} />;
             case 'Popup': return <ManagePopup popups={popups} onUpdate={setPopups} />;
+            case 'Testimonials': return <ManageTestimonials testimonials={testimonials} onUpdate={setTestimonials} />;
             default: return null;
         }
     };
@@ -931,9 +1039,9 @@ const ManageContentPage: React.FC = () => {
             <h1 className="text-3xl md:text-4xl font-bold text-brand-dark mb-8">Manage Site Content</h1>
 
             <div className="bg-white p-6 rounded-lg shadow-md">
-                <div className="border-b border-gray-200 mb-6">
-                    <nav className="-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto" aria-label="Tabs">
-                        {(['Banners', 'Gallery', 'Vlogs', 'Blogs', 'News Ticker', 'Popup'] as Tab[]).map(tab => (
+                <div className="border-b border-gray-200 mb-6 overflow-x-auto">
+                    <nav className="-mb-px flex space-x-4 sm:space-x-8" aria-label="Tabs">
+                        {(['Banners', 'Gallery', 'Vlogs', 'Blogs', 'News Ticker', 'Popup', 'Testimonials'] as Tab[]).map(tab => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}

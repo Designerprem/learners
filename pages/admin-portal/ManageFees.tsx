@@ -436,55 +436,42 @@ const ManageFees: React.FC = () => {
                 <StatCard title="Pending Verifications" value={summaryStats.pendingVerifications} color="text-yellow-600" icon={<svg className="w-6 h-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>} />
                 <StatCard title="Students Overdue" value={summaryStats.studentsWithOverdue} color="text-purple-600" icon={<svg className="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>} />
             </div>
-
+            
             <div className="bg-white p-6 rounded-lg shadow-md">
-                <div className="space-y-4">
-                     <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                        <div className="flex gap-2 flex-wrap">
-                            <button onClick={openReminderModal} disabled={selectedStudents.size === 0} className="bg-blue-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed text-sm">
-                                Send Reminder ({selectedStudents.size})
-                            </button>
-                            <button onClick={() => setIsBulkUpdateModalOpen(true)} disabled={selectedStudents.size === 0} className="bg-yellow-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-yellow-700 disabled:bg-yellow-300 disabled:cursor-not-allowed text-sm">
-                                Bulk Update ({selectedStudents.size})
-                            </button>
-                        </div>
-                    </div>
-                    <div className="bg-gray-50 p-4 rounded-lg border flex flex-col md:flex-row gap-4 items-center flex-wrap">
-                        <span className="font-semibold text-gray-700 flex-shrink-0">Filter by:</span>
-                        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="w-full md:w-auto p-2 border rounded-lg bg-white text-sm">
-                            <option value="All">All Statuses</option>
-                            <option value="Outstanding">Outstanding</option>
-                            <option value="Paid">Paid</option>
-                            <option value="Pending Verification">Pending Verification</option>
-                            <option value="Fee Not Set">Fee Not Set</option>
-                        </select>
-                        <select value={filterLevel} onChange={e => setFilterLevel(e.target.value)} className="w-full md:w-auto p-2 border rounded-lg bg-white text-sm">
-                            <option value="All">All Levels</option>
-                            <option value="Applied Knowledge">Applied Knowledge</option>
-                            <option value="Applied Skills">Applied Skills</option>
-                            <option value="Strategic Professional">Strategic Professional</option>
-                        </select>
-                        <select value={filterPaper} onChange={e => setFilterPaper(e.target.value)} className="w-full md:w-auto p-2 border rounded-lg bg-white text-sm">
-                            {allPapers.map(p => <option key={p} value={p}>{p === 'All' ? 'All Papers' : p}</option>)}
-                        </select>
-                        <div className="relative md:ml-auto w-full md:w-auto">
-                           <input type="text" placeholder="Search name or ID..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full md:w-64 p-2 pl-8 border rounded-lg bg-white text-sm" />
-                           <svg className="w-4 h-4 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                        </div>
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                    <input type="text" placeholder="Search by name or ID..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full p-2 border rounded-md bg-white"/>
+                    <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="w-full p-2 border rounded-md bg-white">
+                        <option value="All">All Statuses</option>
+                        <option value="Outstanding">Outstanding/Overdue</option>
+                        <option value="Pending Verification">Pending Verification</option>
+                        <option value="Paid">Paid</option>
+                        <option value="Fee Not Set">Fee Not Set</option>
+                    </select>
+                    <select value={filterLevel} onChange={e => setFilterLevel(e.target.value)} className="w-full p-2 border rounded-md bg-white">
+                        <option value="All">All Levels</option>
+                        <option value="Applied Knowledge">Applied Knowledge</option>
+                        <option value="Applied Skills">Applied Skills</option>
+                        <option value="Strategic Professional">Strategic Professional</option>
+                    </select>
+                    <select value={filterPaper} onChange={e => setFilterPaper(e.target.value)} className="w-full p-2 border rounded-md bg-white">
+                        {allPapers.map(p => <option key={p} value={p}>{p}</option>)}
+                    </select>
                 </div>
-
-                <div className="overflow-x-auto mt-4">
+                 <div className="flex items-center gap-4 mb-4 p-3 bg-gray-50 rounded-md">
+                    <p className="text-sm font-semibold">{selectedStudents.size} selected</p>
+                    <button onClick={openReminderModal} disabled={selectedStudents.size === 0} className="text-sm font-semibold text-blue-600 hover:underline disabled:text-gray-400 disabled:cursor-not-allowed">Send Reminder</button>
+                    <button onClick={() => setIsBulkUpdateModalOpen(true)} disabled={selectedStudents.size === 0} className="text-sm font-semibold text-green-600 hover:underline disabled:text-gray-400 disabled:cursor-not-allowed">Bulk Add Charge</button>
+                </div>
+                <div className="overflow-x-auto">
                     <table className="w-full text-left min-w-[800px]">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="p-4"><input type="checkbox" onChange={handleSelectAll} checked={selectedStudents.size > 0 && selectedStudents.size === filteredStudents.length} /></th>
-                                <th className="p-4 font-semibold text-sm text-gray-600 uppercase">Student</th>
-                                <th className="p-4 font-semibold text-sm text-gray-600 uppercase">Status</th>
-                                <th className="p-4 font-semibold text-sm text-gray-600 uppercase">Outstanding</th>
-                                <th className="p-4 font-semibold text-sm text-gray-600 uppercase">Due Date</th>
-                                <th className="p-4 font-semibold text-sm text-gray-600 uppercase">Last Payment</th>
-                                <th className="p-4 font-semibold text-sm text-gray-600 uppercase">Actions</th>
+                                <th className="p-3"><input type="checkbox" onChange={handleSelectAll} checked={filteredStudents.length > 0 && selectedStudents.size === filteredStudents.length} /></th>
+                                <th className="p-3 font-semibold text-sm">Student</th>
+                                <th className="p-3 font-semibold text-sm">Outstanding</th>
+                                <th className="p-3 font-semibold text-sm">Last Payment</th>
+                                <th className="p-3 font-semibold text-sm">Status</th>
+                                <th className="p-3 font-semibold text-sm">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y">
@@ -493,25 +480,12 @@ const ManageFees: React.FC = () => {
                                 const status = getStudentFeeStatus(student);
                                 return (
                                 <tr key={student.id} className="hover:bg-gray-50">
-                                    <td className="p-4"><input type="checkbox" checked={selectedStudents.has(student.id)} onChange={() => handleSelectOne(student.id)} /></td>
-                                    <td className="p-4">
-                                        <div className="flex items-center">
-                                            <img src={student.avatarUrl} alt={student.name} className="w-10 h-10 rounded-full mr-3 object-cover"/>
-                                            <div>
-                                                <button onClick={() => setSelectedStudentForDetailView(student)} className="font-medium text-left hover:underline">{student.name}</button>
-                                                <p className="text-sm text-gray-500">{student.studentId}</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="p-4">
-                                        <span className={`px-2 py-1 text-xs font-bold rounded-full ${status.color}`}>
-                                            {status.text}
-                                        </span>
-                                    </td>
-                                    <td className={`p-4 font-mono ${outstandingBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>{`NPR ${outstandingBalance.toLocaleString()}`}</td>
-                                    <td className={`p-4 font-mono ${status.text === 'Overdue' ? 'text-red-600 font-bold' : ''}`}>{student.dueDate || 'N/A'}</td>
-                                    <td className="p-4 font-mono">{lastPaymentDate}</td>
-                                    <td className="p-4"><button onClick={() => setSelectedStudentForManage(student)} className="text-sm font-semibold text-blue-600 hover:underline">Manage</button></td>
+                                    <td className="p-3"><input type="checkbox" onChange={() => handleSelectOne(student.id)} checked={selectedStudents.has(student.id)} /></td>
+                                    <td className="p-3"><div className="font-medium">{student.name}</div><div className="text-xs text-gray-500">{student.studentId}</div></td>
+                                    <td className="p-3 font-mono">NPR {outstandingBalance.toLocaleString()}</td>
+                                    <td className="p-3 font-mono text-xs">{lastPaymentDate}</td>
+                                    <td className="p-3"><span className={`px-2 py-1 text-xs font-bold rounded-full ${status.color}`}>{status.text}</span></td>
+                                    <td className="p-3 space-x-2"><button onClick={() => setSelectedStudentForManage(student)} className="text-sm font-semibold text-blue-600 hover:underline">Manage</button><button onClick={() => setSelectedStudentForDetailView(student)} className="text-sm font-semibold text-gray-600 hover:underline">View</button></td>
                                 </tr>
                                 );
                             })}
@@ -520,61 +494,41 @@ const ManageFees: React.FC = () => {
                 </div>
             </div>
 
+            {isReminderModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg shadow-2xl w-full max-w-md p-6">
+                        <h3 className="text-lg font-bold">Confirm Reminders</h3>
+                        <p className="my-4">Are you sure you want to send fee reminders to {selectedStudents.size} selected student(s)?</p>
+                        <div className="flex justify-end gap-4">
+                            <button onClick={() => setIsReminderModalOpen(false)} className="bg-gray-200 px-4 py-2 rounded">Cancel</button>
+                            <button onClick={confirmAndSendReminders} className="bg-brand-red text-white px-4 py-2 rounded">Send</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
+            {isBulkUpdateModalOpen && (
+                 <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg shadow-2xl w-full max-w-md p-6">
+                        <h3 className="text-lg font-bold">Bulk Add Charge</h3>
+                        <p className="text-sm text-gray-600 my-2">This will add the same charge to all {selectedStudents.size} selected students.</p>
+                        <div className="space-y-4 my-4">
+                            <div><label className="text-sm">Amount (NPR)</label><input type="number" value={bulkUpdateInfo.amount} onChange={e => setBulkUpdateInfo({...bulkUpdateInfo, amount: e.target.value})} className="w-full p-2 border rounded" /></div>
+                            <div><label className="text-sm">Remarks</label><input type="text" value={bulkUpdateInfo.remarks} onChange={e => setBulkUpdateInfo({...bulkUpdateInfo, remarks: e.target.value})} className="w-full p-2 border rounded" /></div>
+                        </div>
+                        <div className="flex justify-end gap-4">
+                            <button onClick={() => setIsBulkUpdateModalOpen(false)} className="bg-gray-200 px-4 py-2 rounded">Cancel</button>
+                            <button onClick={handleBulkUpdate} className="bg-green-600 text-white px-4 py-2 rounded">Apply Charge</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {selectedStudentForManage && (
                 <FeeManagementModal student={selectedStudentForManage} onClose={() => setSelectedStudentForManage(null)} onSave={handleSaveStudent} />
             )}
-
             {selectedStudentForDetailView && (
-                <StudentDetailModal
-                    isOpen={!!selectedStudentForDetailView}
-                    onClose={() => setSelectedStudentForDetailView(null)}
-                    student={selectedStudentForDetailView}
-                    onSave={(updatedStudent) => {
-                        handleSaveStudent(updatedStudent);
-                        setSelectedStudentForDetailView(null);
-                    }}
-                />
-            )}
-
-            {isReminderModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg shadow-2xl w-full max-w-lg">
-                        <div className="p-4 border-b"><h3 className="text-lg font-bold">Confirm Reminders</h3></div>
-                        <div className="p-6">
-                            <p>Are you sure you want to send fee reminders to the following {selectedStudents.size} student(s)?</p>
-                            <ul className="list-disc list-inside mt-2 text-sm max-h-40 overflow-y-auto bg-gray-50 p-2 rounded">
-                                {allStudents.filter(s => selectedStudents.has(s.id)).map(s => <li key={s.id}>{s.name}</li>)}
-                            </ul>
-                        </div>
-                        <div className="p-4 bg-gray-50 flex justify-end gap-2">
-                            <button onClick={() => setIsReminderModalOpen(false)} className="bg-gray-200 px-4 py-2 rounded-md">Cancel</button>
-                            <button onClick={confirmAndSendReminders} className="bg-blue-600 text-white px-4 py-2 rounded-md">Confirm & Send</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {isBulkUpdateModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg shadow-2xl w-full max-w-lg">
-                        <div className="p-4 border-b"><h3 className="text-lg font-bold">Bulk Fee Update</h3></div>
-                        <div className="p-6 space-y-4">
-                            <p className="text-sm">This will add a charge to all {selectedStudents.size} selected students.</p>
-                             <div>
-                                <label className="block text-sm font-medium">Charge Amount (NPR)</label>
-                                <input type="number" value={bulkUpdateInfo.amount} onChange={e => setBulkUpdateInfo({ ...bulkUpdateInfo, amount: e.target.value })} className="mt-1 w-full p-2 border rounded-md bg-white"/>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium">Remarks for Charge</label>
-                                <input type="text" value={bulkUpdateInfo.remarks} onChange={e => setBulkUpdateInfo({ ...bulkUpdateInfo, remarks: e.target.value })} className="mt-1 w-full p-2 border rounded-md bg-white"/>
-                            </div>
-                        </div>
-                         <div className="p-4 bg-gray-50 flex justify-end gap-2">
-                            <button onClick={() => setIsBulkUpdateModalOpen(false)} className="bg-gray-200 px-4 py-2 rounded-md">Cancel</button>
-                            <button onClick={handleBulkUpdate} className="bg-yellow-600 text-white px-4 py-2 rounded-md">Apply Update</button>
-                        </div>
-                    </div>
-                </div>
+                <StudentDetailModal isOpen={!!selectedStudentForDetailView} onClose={() => setSelectedStudentForDetailView(null)} student={selectedStudentForDetailView} onSave={handleSaveStudent} />
             )}
         </div>
     );

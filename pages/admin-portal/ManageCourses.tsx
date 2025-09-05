@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { COURSES } from '../../constants';
 import { Link } from 'react-router-dom';
 import type { Course } from '../../types';
 import CourseEditModal from '../../components/admin-portal/CourseEditModal';
+import AddCourseModal from '../../components/admin-portal/AddCourseModal';
 
 const ManageCourses: React.FC = () => {
     const [courses, setCourses] = useState<Course[]>(() => {
@@ -16,6 +16,7 @@ const ManageCourses: React.FC = () => {
     });
 
     const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
     useEffect(() => {
         localStorage.setItem('courses', JSON.stringify(courses));
@@ -31,8 +32,12 @@ const ManageCourses: React.FC = () => {
         if (editingCourse) {
              setCourses(prev => prev.map(c => c.id === updatedCourse.id ? updatedCourse : c));
         }
-        // Add new course logic can be added here if needed
         setEditingCourse(null);
+    };
+
+    const handleAddNewCourse = (newCourse: Course) => {
+        setCourses(prev => [newCourse, ...prev]);
+        setIsAddModalOpen(false);
     };
 
 
@@ -40,8 +45,11 @@ const ManageCourses: React.FC = () => {
         <div>
             <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
                 <h1 className="text-3xl md:text-4xl font-bold text-brand-dark">Manage Courses</h1>
-                <button className="bg-brand-red text-white font-semibold px-4 py-2 rounded-md hover:bg-red-700 transition-colors w-full md:w-auto" disabled>
-                    Add New Course (Not Implemented)
+                <button 
+                    onClick={() => setIsAddModalOpen(true)}
+                    className="bg-brand-red text-white font-semibold px-4 py-2 rounded-md hover:bg-red-700 transition-colors w-full md:w-auto"
+                >
+                    Add New Course
                 </button>
             </div>
 
@@ -86,6 +94,11 @@ const ManageCourses: React.FC = () => {
                     onSave={handleSaveCourse}
                 />
             )}
+            <AddCourseModal 
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+                onSave={handleAddNewCourse}
+            />
         </div>
     );
 };

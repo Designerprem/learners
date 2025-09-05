@@ -1,9 +1,7 @@
-
-
 import React from 'react';
 import { useState, useRef } from 'react';
-import { useStudent } from '../StudentPortalPage';
-import type { Student } from '../../types';
+import { useStudent } from '../StudentPortalPage.tsx';
+import type { Student } from '../../types.ts';
 
 const ProfileInfoRow = ({ label, value }: { label: string; value: string }) => (
     <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4">

@@ -1,8 +1,9 @@
-
-
 import React, { useState, useMemo, useEffect } from 'react';
-import type { Application } from '../types';
-import { COURSES } from '../constants';
+import type { Application } from '../types.ts';
+import { COURSES } from '../constants.ts';
+import { compressImage } from '../services/imageCompressionService.ts';
+import AnimatedSection from '../components/AnimatedSection.tsx';
+import { getItems, saveItems } from '../services/dataService.ts';
 
 const AdmissionsPage: React.FC = () => {
     const [formData, setFormData] = useState({
@@ -75,7 +76,7 @@ const AdmissionsPage: React.FC = () => {
             });
         };
 
-        const photoUrl = formData.photo ? await fileToBase64(formData.photo) : undefined;
+        const photoUrl = formData.photo ? await compressImage(formData.photo, { maxWidth: 200, maxHeight: 200, quality: 0.8 }) : undefined;
         const documentUrl = formData.document ? await fileToBase64(formData.document) : undefined;
         
         const newApplication: Application = {
@@ -93,13 +94,8 @@ const AdmissionsPage: React.FC = () => {
             documentName: formData.document?.name,
         };
         
-        try {
-            const existingApplications: Application[] = JSON.parse(localStorage.getItem('pendingApplications') || '[]');
-            const updatedApplications = [newApplication, ...existingApplications];
-            localStorage.setItem('pendingApplications', JSON.stringify(updatedApplications));
-        } catch (error) {
-            console.error("Failed to save application to localStorage", error);
-        }
+        const existingApplications = getItems<Application[]>('pendingApplications', []);
+        saveItems('pendingApplications', [newApplication, ...existingApplications]);
 
         setIsSubmitting(false);
         setIsSubmitted(true);
@@ -111,14 +107,14 @@ const AdmissionsPage: React.FC = () => {
     return (
         <div className="bg-white">
             <div className="bg-brand-dark text-white py-12 md:py-20">
-                <div className="container mx-auto px-6 text-center">
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 text-center">
                     <h1 className="text-3xl md:text-4xl font-bold">Admissions</h1>
                     <p className="mt-4 text-lg max-w-3xl mx-auto">Start your journey with Reliant Learners Academy today.</p>
                 </div>
             </div>
 
-            <div className="container mx-auto px-6 py-12 md:py-20">
-                <div className="grid md:grid-cols-2 gap-12">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 py-12 md:py-20">
+                <AnimatedSection className="grid md:grid-cols-2 gap-12">
                     <div>
                         <h2 className="text-2xl md:text-3xl font-bold text-brand-red mb-6">Online Application Form</h2>
                         {isSubmitted ? (
@@ -266,7 +262,7 @@ const AdmissionsPage: React.FC = () => {
                             <p><strong>Classes Begin:</strong> September 5, {new Date().getFullYear()}</p>
                         </div>
                     </div>
-                </div>
+                </AnimatedSection>
             </div>
         </div>
     );

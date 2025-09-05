@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import type { GradeEntry } from '../../types';
-import { useStudent } from '../StudentPortalPage';
+import type { GradeEntry } from '../../types.ts';
+import { useStudent } from '../StudentPortalPage.tsx';
 
 
 const Results: React.FC = () => {

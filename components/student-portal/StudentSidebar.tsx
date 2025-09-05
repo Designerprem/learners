@@ -1,9 +1,9 @@
-
-
 import React, { useRef, useEffect } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import type { Student } from '../../types';
-import { logout } from '../../services/authService';
+// FIX: Split react-router-dom imports to resolve module export errors.
+import { NavLink } from 'react-router-dom';
+import { useNavigate } from 'react-router';
+import type { Student } from '../../types.ts';
+import { logout } from '../../services/authService.ts';
 
 const icons = {
     dashboard: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>,

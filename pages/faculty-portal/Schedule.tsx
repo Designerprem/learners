@@ -1,61 +1,62 @@
-
-
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { CALENDAR_EVENTS } from '../../constants';
 import type { CalendarEvent } from '../../types';
-import AddClassModal from '../../components/faculty-portal/AddClassModal';
+import AddEventModal from '../../components/faculty-portal/AddEventModal';
 import { useFaculty } from '../FacultyPortalPage';
 
-const eventColors: { [key in CalendarEvent['type']]: string } = {
-    class: 'bg-blue-500',
-    deadline: 'bg-yellow-500',
-    exam: 'bg-brand-red',
+const eventTypeConfig: { [key in CalendarEvent['type']]: { label: string; color: string; } } = {
+    class: { label: 'Class', color: 'bg-blue-500' },
+    deadline: { label: 'Deadline', color: 'bg-yellow-500' },
+    exam: { label: 'Exam', color: 'bg-brand-red' },
 };
 
-const AgendaItem = ({ event, onEdit, onDelete }: { event: CalendarEvent, onEdit: (event: CalendarEvent) => void, onDelete: (id: number | string) => void }) => (
-    <div className="flex items-start p-3 bg-gray-50 rounded-lg">
-        <div className="w-24 text-right pr-4 flex-shrink-0">
-            <p className="font-bold text-brand-dark">{event.startTime || 'All Day'}</p>
-            {event.endTime && <p className="text-sm text-gray-500">to {event.endTime}</p>}
-        </div>
-        <div className="flex-grow">
-            <div className="flex justify-between items-center">
-                 <div className="flex items-center">
-                    <span className={`w-3 h-3 rounded-full ${eventColors[event.type]} mr-3 flex-shrink-0`}></span>
-                    <div>
-                        <p className="font-semibold text-gray-800">{event.title}</p>
-                        {event.paper && <p className="text-sm text-gray-500">{event.paper}</p>}
-                    </div>
-                </div>
-                <div className="flex items-center space-x-2 flex-shrink-0">
-                    {event.type === 'class' && event.joinLink && (
-                        <a href={event.joinLink} target="_blank" rel="noopener noreferrer" className="bg-brand-red text-white text-xs font-bold py-1 px-3 rounded-full hover:bg-red-700 transition-colors">
-                            Start Class
-                        </a>
-                    )}
-                    {event.type === 'class' && (
-                        <>
-                            <button onClick={() => onEdit(event)} className="text-xs font-semibold text-blue-600 hover:underline">Edit</button>
-                            <button onClick={() => onDelete(event.id)} className="text-xs font-semibold text-brand-red hover:underline">Delete</button>
-                        </>
-                    )}
-                </div>
-            </div>
-        </div>
-    </div>
-);
-
+// Helper to get YYYY-MM-DD from a Date object in local timezone
+const getLocalDateString = (d: Date): string => {
+    const year = d.getFullYear();
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const day = d.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
 
 const Schedule: React.FC = () => {
     const { facultyMember } = useFaculty();
-    const [currentDate, setCurrentDate] = useState(new Date('2025-08-04T10:00:00Z'));
-    const [selectedDate, setSelectedDate] = useState(new Date('2025-08-04T10:00:00Z'));
+    const [view, setView] = useState<'month' | 'agenda'>('month');
+    const [currentDate, setCurrentDate] = useState(new Date());
+    const [selectedDate, setSelectedDate] = useState(new Date());
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
     
-    const facultyEvents = CALENDAR_EVENTS.filter(event => event.instructor === facultyMember.name || event.type === 'deadline');
-    const [events, setEvents] = useState<CalendarEvent[]>(facultyEvents);
+    const [allEvents, setAllEvents] = useState<CalendarEvent[]>(() => {
+        try {
+            const savedEvents = localStorage.getItem('calendarEvents');
+            return savedEvents ? JSON.parse(savedEvents) : CALENDAR_EVENTS;
+        } catch (e) {
+            console.error("Failed to load events from localStorage", e);
+            return CALENDAR_EVENTS;
+        }
+    });
 
+    useEffect(() => {
+        try {
+            localStorage.setItem('calendarEvents', JSON.stringify(allEvents));
+        } catch (e) {
+            console.error("Failed to save events to localStorage", e);
+        }
+    }, [allEvents]);
+
+    const facultyPaperCodes = useMemo(() => {
+        if (!facultyMember) return [];
+        return facultyMember.assignedPapers.map(p => p.split(':')[0].trim());
+    }, [facultyMember]);
+
+    const eventsForDisplay = useMemo(() => {
+        return allEvents.filter(event => {
+            if (!event.paper) return false;
+            const eventPaperCode = event.paper.split(':')[0].trim();
+            // Show events for papers assigned to this faculty member.
+            return facultyPaperCodes.includes(eventPaperCode);
+        });
+    }, [allEvents, facultyPaperCodes]);
 
     const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
@@ -65,7 +66,7 @@ const Schedule: React.FC = () => {
     const endDate = new Date(endOfMonth);
     endDate.setDate(endDate.getDate() + (6 - endDate.getDay()));
     
-    const days = [];
+    const days: Date[] = [];
     let day = new Date(startDate);
 
     while (day <= endDate) {
@@ -74,7 +75,7 @@ const Schedule: React.FC = () => {
     }
     
     const isSameDay = (d1: Date, d2: Date) => d1.toDateString() === d2.toDateString();
-    const isToday = (d: Date) => isSameDay(d, new Date('2025-08-04T10:00:00Z'));
+    const isToday = (d: Date) => isSameDay(d, new Date());
 
     const changeMonth = (offset: number) => {
         setCurrentDate(current => {
@@ -83,18 +84,23 @@ const Schedule: React.FC = () => {
             return newDate;
         });
     };
+    
+    const goToToday = () => {
+        const today = new Date();
+        setCurrentDate(today);
+        setSelectedDate(today);
+    };
 
-    const handleSaveClass = (classData: Omit<CalendarEvent, 'type'>) => {
-        if (classData.id) { // This is an update
-            setEvents(prev => prev.map(e => e.id === classData.id ? { ...e, ...classData, type: 'class' } : e));
+    const handleSaveEvent = (eventData: CalendarEvent) => {
+        if (eventData.id && editingEvent) { // This is an update
+            setAllEvents(prev => prev.map(e => e.id === eventData.id ? eventData : e));
         } else { // This is a new class
              const newEvent: CalendarEvent = {
-                ...classData,
+                ...eventData,
                 id: Date.now(),
-                type: 'class',
                 instructor: facultyMember.name,
             };
-            setEvents(prev => [...prev, newEvent]);
+            setAllEvents(prev => [...prev, newEvent]);
         }
         setIsModalOpen(false);
         setEditingEvent(null);
@@ -106,103 +112,176 @@ const Schedule: React.FC = () => {
     };
 
     const handleDeleteClick = (id: number | string) => {
-        if (window.confirm('Are you sure you want to delete this class? This action cannot be undone.')) {
-            setEvents(prev => prev.filter(e => e.id !== id));
+        if (window.confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+            setAllEvents(prev => prev.filter(e => e.id !== id));
         }
     };
     
-    const selectedDayEvents = events
-        .filter(event => event.date === selectedDate.toISOString().split('T')[0])
+    const selectedDayEvents = eventsForDisplay
+        .filter(event => event.date === getLocalDateString(selectedDate))
         .sort((a, b) => (a.startTime || '00:00').localeCompare(b.startTime || '00:00'));
+        
+    const agendaEvents = useMemo(() => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const thirtyDaysFromNow = new Date(today);
+        thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+
+        return eventsForDisplay
+            .filter(event => {
+                const eventDate = new Date(event.date + 'T00:00:00');
+                return eventDate >= today && eventDate <= thirtyDaysFromNow;
+            })
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime() || (a.startTime || '00:00').localeCompare(b.startTime || '00:00'));
+    }, [eventsForDisplay]);
+    
+    const groupedAgendaEvents = agendaEvents.reduce((acc, event) => {
+        const date = event.date;
+        if (!acc[date]) {
+            acc[date] = [];
+        }
+        acc[date].push(event);
+        return acc;
+    }, {} as Record<string, CalendarEvent[]>);
+
+    const AgendaItem = ({ event, onEdit, onDelete }: { event: CalendarEvent, onEdit: (event: CalendarEvent) => void, onDelete: (id: number | string) => void }) => {
+        const isOwner = event.instructor === facultyMember.name;
+        return (
+            <div className="flex items-start p-3 bg-gray-50 rounded-lg">
+                <div className={`w-3 h-3 rounded-full mt-1.5 mr-4 flex-shrink-0 ${eventTypeConfig[event.type].color}`}></div>
+                <div className="flex-grow">
+                    <p className="font-semibold text-gray-800">{event.title}</p>
+                    <p className="text-sm text-gray-500">{event.paper} - <span className="capitalize">{event.type}</span></p>
+                </div>
+                <div className="flex items-center gap-4 flex-shrink-0">
+                     <div className="text-right">
+                        <p className="font-bold text-sm text-brand-dark">{event.startTime || 'All Day'}</p>
+                        {event.endTime && <p className="text-xs text-gray-500">to {event.endTime}</p>}
+                    </div>
+                    <div className="space-x-2">
+                        {isOwner && (
+                            <>
+                                <button onClick={() => onEdit(event)} className="text-xs font-semibold text-blue-600 hover:underline">Edit</button>
+                                <button onClick={() => onDelete(event.id)} className="text-xs font-semibold text-brand-red hover:underline">Delete</button>
+                            </>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    };
 
     if (!facultyMember) return null;
 
     return (
         <div>
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
                 <h1 className="text-4xl font-bold text-brand-dark">My Schedule</h1>
-                <button
-                    onClick={() => {
-                        setEditingEvent(null);
-                        setIsModalOpen(true);
-                    }}
-                    className="bg-brand-red text-white font-semibold px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
-                >
-                    Schedule New Class
-                </button>
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 p-1 bg-gray-200 rounded-lg">
+                        <button onClick={() => setView('month')} className={`px-4 py-1.5 text-sm font-semibold rounded-md ${view === 'month' ? 'bg-white shadow' : 'text-gray-600'}`}>Month</button>
+                        <button onClick={() => setView('agenda')} className={`px-4 py-1.5 text-sm font-semibold rounded-md ${view === 'agenda' ? 'bg-white shadow' : 'text-gray-600'}`}>Agenda</button>
+                    </div>
+                     <button
+                        onClick={() => { setEditingEvent(null); setIsModalOpen(true); }}
+                        className="bg-brand-red text-white font-semibold px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+                    >
+                        + Add Event
+                    </button>
+                </div>
             </div>
 
             <div className="bg-white p-6 rounded-lg shadow-md">
-                <div className="flex justify-between items-center mb-6">
-                    <button onClick={() => changeMonth(-1)} className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">&larr; Previous</button>
-                    <h2 className="text-2xl font-bold text-brand-dark">
-                        {currentDate.toLocaleString('default', { month: 'long' })} {currentDate.getFullYear()}
-                    </h2>
-                    <button onClick={() => changeMonth(1)} className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">Next &rarr;</button>
-                </div>
-                
-                <div className="grid grid-cols-7 gap-1 text-center font-semibold text-gray-600 mb-2">
-                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => <div key={d}>{d}</div>)}
-                </div>
-
-                <div className="grid grid-cols-7 gap-1">
-                    {days.map((d, i) => {
-                        const isCurrentMonth = d.getMonth() === currentDate.getMonth();
-                        const dateStr = d.toISOString().split('T')[0];
-                        const dayEvents = events.filter(e => e.date === dateStr);
-                        const isSelected = isSameDay(d, selectedDate);
-
-                        return (
-                            <div 
-                                key={i}
-                                onClick={() => setSelectedDate(d)}
-                                className={`h-28 md:h-32 p-2 border rounded-md flex flex-col overflow-hidden cursor-pointer transition-colors ${
-                                    isSelected ? 'bg-red-100 border-brand-red' : 
-                                    isToday(d) ? 'bg-red-50' : 
-                                    isCurrentMonth ? 'bg-white hover:bg-gray-50' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
-                                }`}
-                            >
-                                <span className={`font-bold ${isCurrentMonth ? 'text-gray-800' : 'text-gray-400'}`}>
-                                    {d.getDate()}
-                                </span>
-                                <div className="mt-1 flex-grow overflow-y-auto text-xs space-y-1">
-                                    {dayEvents.map((event, eventIndex) => (
-                                        <div key={eventIndex} className="flex items-center">
-                                            <span className={`w-2 h-2 rounded-full ${eventColors[event.type]} mr-1.5 flex-shrink-0`}></span>
-                                            <span className="truncate">{event.title}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-
-             <div className="mt-8">
-                <div className="bg-white p-6 rounded-lg shadow-md">
-                    <h3 className="text-xl font-bold text-brand-dark border-b pb-2 mb-4">
-                        Agenda for: {selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-                    </h3>
-                     <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
-                        {selectedDayEvents.length > 0 ? (
-                            selectedDayEvents.map(event => <AgendaItem key={event.id} event={event} onEdit={handleEditClick} onDelete={handleDeleteClick} />)
-                        ) : (
-                            <p className="text-gray-500 text-center py-8">No events scheduled for this day.</p>
-                        )}
+                 <div className="flex justify-between items-center mb-6">
+                    <div className="flex items-center gap-4">
+                        <button onClick={() => changeMonth(-1)} className="p-2 bg-gray-100 rounded-md hover:bg-gray-200" aria-label="Previous month">&larr;</button>
+                        <h2 className="text-2xl font-bold text-brand-dark text-center w-48">
+                            {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                        </h2>
+                        <button onClick={() => changeMonth(1)} className="p-2 bg-gray-100 rounded-md hover:bg-gray-200" aria-label="Next month">&rarr;</button>
+                        <button onClick={goToToday} className="px-3 py-2 text-sm font-semibold border rounded-md hover:bg-gray-100">Today</button>
                     </div>
                 </div>
+
+                {view === 'month' ? (
+                     <div className="lg:grid lg:grid-cols-3 lg:gap-8">
+                        <div className="lg:col-span-2">
+                             <div className="grid grid-cols-7 gap-1 text-center font-semibold text-gray-600 mb-2">
+                                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => <div key={d} className="py-2">{d}</div>)}
+                            </div>
+
+                            <div className="grid grid-cols-7 gap-1">
+                                {days.map((d, i) => {
+                                    const isCurrentMonth = d.getMonth() === currentDate.getMonth();
+                                    const dateStr = getLocalDateString(d);
+                                    const dayEvents = eventsForDisplay.filter(e => e.date === dateStr);
+                                    const isSelected = isSameDay(d, selectedDate);
+
+                                    return (
+                                        <div 
+                                            key={i}
+                                            onClick={() => setSelectedDate(d)}
+                                            className={`h-24 sm:h-28 border rounded-md flex flex-col overflow-hidden cursor-pointer transition-all duration-200 ${
+                                                isSelected ? 'bg-red-100 border-brand-red scale-105 shadow-lg z-10' : 
+                                                isToday(d) ? 'bg-red-50' : 
+                                                isCurrentMonth ? 'bg-white hover:bg-gray-50' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
+                                            }`}
+                                        >
+                                            <span className={`font-bold text-xs sm:text-base p-1 sm:p-2 ${isCurrentMonth ? 'text-gray-800' : 'text-gray-400'}`}>
+                                                {d.getDate()}
+                                            </span>
+                                            <div className="flex-grow overflow-hidden px-1 space-y-1">
+                                                {dayEvents.slice(0, 3).map((event) => (
+                                                     <div key={event.id} className={`w-full h-1.5 rounded-full ${eventTypeConfig[event.type].color}`}></div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <div className="mt-8 lg:mt-0">
+                            <div className="sticky top-10">
+                                <h3 className="text-xl font-bold text-brand-dark border-b pb-2 mb-4">
+                                    {selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                                </h3>
+                                 <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+                                    {selectedDayEvents.length > 0 ? (
+                                        selectedDayEvents.map(event => <AgendaItem key={event.id} event={event} onEdit={handleEditClick} onDelete={handleDeleteClick} />)
+                                    ) : (
+                                        <p className="text-gray-500 text-center py-8">No events scheduled.</p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="max-h-[70vh] overflow-y-auto pr-2">
+                        {Object.keys(groupedAgendaEvents).length > 0 ? Object.entries(groupedAgendaEvents).map(([date, dayEvents]) => (
+                            <div key={date} className="mb-6">
+                                <h3 className="font-bold text-brand-dark mb-2 sticky top-0 bg-white py-2 border-b">
+                                    {new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                                </h3>
+                                <div className="space-y-2">
+                                    {dayEvents.map(event => <AgendaItem key={event.id} event={event} onEdit={handleEditClick} onDelete={handleDeleteClick}/>)}
+                                </div>
+                            </div>
+                        )) : <p className="text-gray-500 text-center py-12">No upcoming events in the next 30 days.</p>}
+                    </div>
+                )}
             </div>
 
-            <AddClassModal
+            <AddEventModal
                 isOpen={isModalOpen}
                 onClose={() => {
                     setIsModalOpen(false);
                     setEditingEvent(null);
                 }}
-                onSaveClass={handleSaveClass}
+                onSaveEvent={handleSaveEvent}
                 assignedPapers={facultyMember.assignedPapers}
                 eventToEdit={editingEvent}
+                defaultDate={selectedDate}
             />
         </div>
     );

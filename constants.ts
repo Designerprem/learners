@@ -1,6 +1,4 @@
-
-
-import type { FacultyMember, Course, Testimonial, FAQItem, GalleryImage, Student, ChatMessage, TeacherQuestion, LiveClass, RecordedLecture, CourseMaterial, CalendarEvent, Notification, Admin, Announcement, Application, RecentSubmission, TeacherRating, BlogPost, HeroSlide, Vlog, AccaFeeCategory, PopupNotification, Comment } from './types';
+import type { FacultyMember, Course, Testimonial, FAQItem, GalleryImage, Student, ChatMessage, TeacherQuestion, LiveClass, RecordedLecture, CourseMaterial, CalendarEvent, Notification, Admin, Announcement, Application, RecentSubmission, TeacherRating, BlogPost, HeroSlide, Vlog, AccaFeeCategory, PopupNotification, Comment, HighAchiever } from './types.ts';
 
 export const ACADEMY_LOGO_URL = 'https://scontent.fbhr4-1.fna.fbcdn.net/v/t39.30808-1/529317458_122176712906516643_1248331585587425416_n.jpg?stp=c0.64.1920.1920a_dst-jpg_s200x200_tt6&_nc_cat=104&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=8I2ZS1q_ApEQ7kNvwF37wvl&_nc_oc=Adk2uluXqsn0dXjNMJpxHVBzFmuM74GjLpn7Zg0eLcUG_ywlNUVVs9RvDUpUtNg3-5c&_nc_zt=24&_nc_ht=scontent.fbhr4-1.fna&_nc_gid=ZaRJb_SfrkngjBjjwD8OZQ&oh=00_AfVsUL--_a_dYIsmX724ZUV8imcA4h9Iz6UjupURWsH2AA&oe=68BC2CE7';
 export const ACADEMY_NAME = 'Reliant Learners Academy';
@@ -68,58 +66,32 @@ export const HERO_SLIDES: HeroSlide[] = [
 ];
 
 export const FACULTY_MEMBERS: FacultyMember[] = [
-    { 
-        id: 1, 
-        name: 'Kabin Pyakurel', 
+    {
+        id: 1,
+        name: 'Kabin Pyakurel',
         username: 'kabin.p',
         password: 'password123',
-        email: 'kabin.p@learners.edu', 
-        phone: '+977 9801234567',
-        qualification: 'FCCA, PhD', 
-        bio: 'Specializes in Financial and Corporate Reporting with over 15 years of teaching experience.', 
+        email: 'kabin.p@learners.edu',
+        phone: '+977-9801112221',
+        qualification: 'FCCA, MBA',
+        bio: 'A passionate educator with over 10 years of experience in teaching professional accounting. Specializes in Financial Reporting and Auditing.',
         imageUrl: 'https://picsum.photos/seed/kabin/400/400',
-        assignedPapers: ['FA', 'FR'],
-        address: '123 Faculty Row, Kathmandu',
+        assignedPapers: ['FR: Financial Reporting', 'AA: Audit and Assurance', 'SBR: Strategic Business Reporting'],
+        address: 'Kathmandu, Nepal'
     },
-    { 
-        id: 2, 
-        name: 'Emily White', 
-        username: 'emily.w',
-        password: 'password123',
-        email: 'emily.w@learners.edu', 
-        phone: '+977 9801234568',
-        qualification: 'ACCA, MBA', 
-        bio: 'An expert in Taxation and Business Law, known for her practical and exam-focused teaching methods.', 
-        imageUrl: 'https://picsum.photos/seed/emily/400/400',
-        assignedPapers: ['LW', 'TX'],
-        address: '456 Teacher Lane, Patan',
-    },
-    { 
-        id: 3, 
-        name: 'Robert Brown', 
-        username: 'robert.b',
-        password: 'password123',
-        email: 'robert.b@learners.edu', 
-        phone: '+977 9801234569',
-        qualification: 'CIMA, MSc', 
-        bio: 'Focuses on Performance and Financial Management, helping students master complex calculations and theories.', 
-        imageUrl: 'https://picsum.photos/seed/robert/400/400',
-        assignedPapers: ['PM', 'FM'],
-        address: '789 Professor Street, Bhaktapur',
-    },
-     { 
-        id: 4, 
-        name: 'Susan Bones', 
+    {
+        id: 2,
+        name: 'Susan Bones',
         username: 'susan.b',
         password: 'password123',
-        email: 'susan.b@learners.edu', 
-        phone: '+977 9801234570',
-        qualification: 'ACA', 
-        bio: 'A specialist in Audit and Assurance, bringing real-world audit experience into the classroom.', 
+        email: 'susan.b@learners.edu',
+        phone: '+977-9801112222',
+        qualification: 'ACCA, MSc Finance',
+        bio: 'Expert in Performance Management and Financial Management, with a knack for simplifying complex topics for students.',
         imageUrl: 'https://picsum.photos/seed/susan/400/400',
-        assignedPapers: ['AA'],
-        address: '101 Tutor Avenue, Lalitpur',
-    },
+        assignedPapers: ['PM: Performance Management', 'FM: Financial Management', 'APM: Advanced Performance Management'],
+        address: 'Pokhara, Nepal'
+    }
 ];
 
 
@@ -142,8 +114,8 @@ export const COURSES: Course[] = [
             "Master cost accounting and budgeting techniques.",
             "Prepare and interpret financial statements for single entities."
         ],
-        facultyIds: [1, 2],
-        studentIds: [1, 2, 3]
+        facultyIds: [],
+        studentIds: []
     },
     {
         id: 'applied-skills',
@@ -167,8 +139,8 @@ export const COURSES: Course[] = [
             "Prepare financial statements for groups (consolidated accounts).",
             "Understand the audit process from planning to reporting."
         ],
-        facultyIds: [1, 2, 3, 4],
-        studentIds: [1, 2, 3, 4, 5, 6]
+        facultyIds: [],
+        studentIds: []
     },
     {
         id: 'strategic-professional',
@@ -192,15 +164,33 @@ export const COURSES: Course[] = [
             "Master advanced investment and financing strategies.",
             "Apply strategic management accounting techniques."
         ],
-        facultyIds: [1, 3, 4],
-        studentIds: [4, 5, 6]
+        facultyIds: [],
+        studentIds: []
     }
 ];
 
 export const TESTIMONIALS: Testimonial[] = [
-    { id: 1, name: 'Alex Doe', program: 'ACCA Applied Skills', quote: 'The faculty at Learners Academy are top-notch. Their guidance was instrumental in helping me pass my FR and AA exams on the first attempt!', imageUrl: 'https://picsum.photos/seed/alex/200/200' },
-    { id: 2, name: 'Priya Sharma', program: 'ACCA Strategic Professional', quote: 'I highly recommend Learners Academy for their structured approach and excellent study materials. The SBL case study preparation was particularly outstanding.', imageUrl: 'https://picsum.photos/seed/priya/200/200' },
-    { id: 3, name: 'Binod Chaudhary', program: 'ACCA Applied Knowledge', quote: 'As a beginner, I found the classes easy to follow and very engaging. The tutors are patient and always willing to help. A great start to my ACCA journey.', imageUrl: 'https://picsum.photos/seed/binod/200/200' }
+    {
+        id: 1,
+        name: 'Rohan Thapa',
+        program: 'ACCA Applied Skills',
+        quote: "The faculty at Learners Academy is top-notch. Their guidance and personalized attention were crucial for my success in the FR and AA papers.",
+        imageUrl: 'https://picsum.photos/seed/rohan/200/200',
+    },
+    {
+        id: 2,
+        name: 'Anjali Lama',
+        program: 'ACCA Strategic Professional',
+        quote: "I'm grateful for the supportive learning environment and the extensive mock exam practice. It made a huge difference in my confidence and exam performance.",
+        imageUrl: 'https://picsum.photos/seed/anjali/200/200',
+    },
+    {
+        id: 3,
+        name: 'Bikash Shrestha',
+        program: 'ACCA Foundation',
+        quote: "As a beginner, the foundational courses were explained with such clarity. I built a strong base here which is helping me in the higher levels.",
+        imageUrl: 'https://picsum.photos/seed/bikash/200/200',
+    }
 ];
 
 export const FAQ_DATA: FAQItem[] = [
@@ -224,110 +214,72 @@ export const GALLERY_IMAGES: GalleryImage[] = [
 
 export const STUDENTS: Student[] = [
     {
-        id: 1, name: 'Alex Doe', avatarUrl: 'https://picsum.photos/seed/alex/200/200', studentId: 'S12345', password: 'password123',
-        email: 'alex.doe@example.com', phone: '+977 9801234567', address: '123 Learning Lane, Kathmandu',
-        dob: '2003-01-15', enrollmentDate: '2023-09-01', currentLevel: 'Applied Skills',
-        enrolledPapers: ['LW', 'PM', 'TX', 'FR', 'AA', 'FM'],
-        totalFee: 150000, discount: 10000, feeRemarks: 'Includes 10% scholarship discount.',
+        id: 1,
+        name: 'Aarav Sharma',
+        avatarUrl: 'https://picsum.photos/seed/aarav/100/100',
+        studentId: 'S12345',
+        password: 'password123',
+        email: 'aarav.s@example.com',
+        phone: '+977-9841000001',
+        address: 'Kathmandu, Nepal',
+        dob: '2002-05-15',
+        enrollmentDate: '2023-09-01',
+        currentLevel: 'Applied Skills',
+        enrolledPapers: ['FR', 'AA', 'PM'],
+        totalFee: 150000,
+        discount: 10000,
         grades: {
-            'LW': [{ score: 78, date: '2024-03-10', examType: 'Mock' }],
-            'PM': [{ score: 65, date: '2024-03-12', examType: 'Mock' }],
-            'TX': [{ score: 85, date: '2024-06-15', examType: 'Mock' }],
-            'FR': [{ score: 72, date: '2024-06-18', examType: 'Mock' }],
+            'FR': [{ score: 65, date: '2024-03-10', examType: 'Mock' }],
+            'PM': [{ score: 72, date: '2024-03-12', examType: 'Mock' }],
         },
-        attendance: { 'LW': 95, 'PM': 92, 'TX': 98, 'FR': 91, 'AA': 96, 'FM': 93 },
+        attendance: { 'FR': 95, 'PM': 92 },
         paymentHistory: [
-            { invoiceId: 'INV-2023-001', date: '2023-09-01', amount: 50000, status: 'Paid', method: 'eSewa', remarks: 'First installment.' },
-            { invoiceId: 'INV-2024-005', date: '2024-01-15', amount: 50000, status: 'Paid', method: 'Cash', remarks: 'Second installment.' },
-            { invoiceId: 'INV-2024-011', date: '2024-07-25', amount: 10000, status: 'Rejected', method: 'Khalti', remarks: 'Trying to pay for books.', rejectionReason: 'This payment is for books, not tuition fees.' }
+            { invoiceId: 'INV001', date: '2023-09-01', amount: 70000, status: 'Paid', method: 'eSewa', verifiedBy: 'Admin' },
+            { invoiceId: 'INV002', date: '2024-01-15', amount: 70000, status: 'Paid', method: 'Khalti', verifiedBy: 'Admin' }
         ],
         dueDate: '2024-08-15'
     },
     {
-        id: 2, name: 'Priya Sharma', avatarUrl: 'https://picsum.photos/seed/priya/200/200', studentId: 'S12346', password: 'password123',
-        email: 'priya.sharma@example.com', phone: '+977 9801234568', address: '456 Wisdom Way, Patan',
-        dob: '2002-05-20', enrollmentDate: '2023-09-01', currentLevel: 'Applied Skills',
-        enrolledPapers: ['LW', 'PM', 'TX'],
-        totalFee: 75000, discount: 0,
-        grades: {
-            'LW': [{ score: 82, date: '2024-03-10', examType: 'Mock' }],
-            'PM': [{ score: 75, date: '2024-03-12', examType: 'Mock' }],
-        },
-        attendance: { 'LW': 98, 'PM': 95, 'TX': 97 },
-        paymentHistory: [
-            { invoiceId: 'INV-2023-002', date: '2023-09-02', amount: 75000, status: 'Paid', method: 'Khalti' }
-        ],
-        dueDate: '2024-08-15'
-    },
-    {
-        id: 3, name: 'Binod Chaudhary', avatarUrl: 'https://picsum.photos/seed/binod/200/200', studentId: 'S12347', password: 'password123',
-        email: 'binod.chaudhary@example.com', phone: '+977 9801234569', address: '789 Success Street, Bhaktapur',
-        dob: '2004-03-10', enrollmentDate: '2024-01-15', currentLevel: 'Applied Knowledge',
+        id: 2,
+        name: 'Priya Gurung',
+        avatarUrl: 'https://picsum.photos/seed/priya/100/100',
+        studentId: 'S12346',
+        password: 'password123',
+        email: 'priya.g@example.com',
+        phone: '+977-9841000002',
+        address: 'Lalitpur, Nepal',
+        dob: '2003-01-20',
+        enrollmentDate: '2024-01-10',
+        currentLevel: 'Applied Knowledge',
         enrolledPapers: ['AB', 'MA', 'FA'],
-        totalFee: 60000, discount: 5000, feeRemarks: 'Early bird registration discount.',
-        grades: {},
-        attendance: { 'AB': 90, 'MA': 88, 'FA': 92 },
-        paymentHistory: [
-            { invoiceId: 'INV-2024-001', date: '2024-01-15', amount: 55000, status: 'Paid', method: 'Cash' }
-        ],
-        dueDate: '2024-09-15'
-    },
-    {
-        id: 4, name: 'Sita Rai', avatarUrl: 'https://picsum.photos/seed/sita/200/200', studentId: 'S12348', password: 'password123',
-        email: 'sita.rai@example.com', phone: '+977 9801234570', address: '101 Knowledge Ave, Lalitpur',
-        dob: '2003-08-25', enrollmentDate: '2023-09-01', currentLevel: 'Strategic Professional',
-        enrolledPapers: ['SBL', 'SBR'],
-        totalFee: 90000, discount: 0,
-        grades: {},
-        attendance: { 'SBL': 94, 'SBR': 91 },
-        paymentHistory: [
-            { invoiceId: 'INV-2023-004', date: '2023-09-01', amount: 45000, status: 'Paid', method: 'Mobile Banking' }
-        ],
-        dueDate: '2024-09-15'
-    },
-    {
-        id: 5, name: 'Hari Thapa', avatarUrl: 'https://picsum.photos/seed/hari/200/200', studentId: 'S12349', password: 'password123',
-        email: 'hari.thapa@example.com', phone: '+977 9801234571', address: '222 Scholar Road, Kathmandu',
-        dob: '2002-11-30', enrollmentDate: '2023-03-01', currentLevel: 'Strategic Professional',
-        enrolledPapers: ['AFM', 'APM'],
-        totalFee: 90000, discount: 15000,
+        totalFee: 65000,
+        discount: 5000,
         grades: {
-            'AFM': [{ score: 68, date: '2024-06-20', examType: 'Mock' }]
+            'AB': [{ score: 85, date: '2024-06-05', examType: 'Mock' }],
         },
-        attendance: { 'AFM': 89, 'APM': 93 },
+        attendance: { 'AB': 98 },
         paymentHistory: [
-            { invoiceId: 'INV-2023-005', date: '2023-03-01', amount: 45000, status: 'Paid', method: 'eSewa' },
-            { invoiceId: 'INV-2024-002', date: '2024-03-01', amount: 30000, status: 'Paid', method: 'Cash' }
+            { invoiceId: 'INV003', date: '2024-01-10', amount: 60000, status: 'Paid', method: 'Cash', verifiedBy: 'Admin' }
         ],
-        dueDate: '2024-10-15'
-    },
-    {
-        id: 6, name: 'Gita Gurung', avatarUrl: 'https://picsum.photos/seed/gita/200/200', studentId: 'S12350', password: 'password123',
-        email: 'gita.gurung@example.com', phone: '+977 9801234572', address: '333 University Blvd, Patan',
-        dob: '2003-06-05', enrollmentDate: '2023-03-01', currentLevel: 'Strategic Professional',
-        enrolledPapers: ['ATX', 'AAA'],
-        totalFee: 90000, discount: 0,
-        grades: {},
-        attendance: { 'ATX': 96, 'AAA': 90 },
-        paymentHistory: [
-            { invoiceId: 'INV-2023-006', date: '2023-03-01', amount: 45000, status: 'Paid', method: 'ConnectIPS' },
-            { invoiceId: 'INV-2024-010', date: '2024-07-20', amount: 45000, status: 'Pending Verification', method: 'eSewa', remarks: 'Final installment payment.', screenshotUrl: 'https://i.imgur.com/g2yEV1g.png' }
-        ],
-        dueDate: '2024-08-01'
+        dueDate: '2024-09-10'
     }
 ];
 
-export const CHAT_MESSAGES: ChatMessage[] = [
-    { id: 1, studentId: 2, text: "Hey everyone, did anyone finish the FR assignment?", timestamp: "10:30 AM" },
-    { id: 2, studentId: 1, text: "Almost done! Section B is a bit tricky.", timestamp: "10:31 AM" },
-    { id: 3, studentId: 3, text: "I'm stuck on question 2. Any hints?", timestamp: "10:35 AM" },
-    { id: 4, studentId: 1, text: "Check chapter 5 again, the example on leases is very similar.", timestamp: "10:36 AM", attachment: { type: 'link', url: 'https://example-resource.com/leases' } },
+export const HIGH_ACHIEVERS: HighAchiever[] = [
+    { id: 1, name: 'Aarav Sharma', avatarUrl: 'https://picsum.photos/seed/aarav/200/200', achievement: 'Scored 85 in AB' },
+    { id: 2, name: 'Rohan Thapa', avatarUrl: 'https://picsum.photos/seed/rohan/200/200', achievement: 'Scored 91 in FR' },
+    { id: 3, name: 'Anjali Lama', avatarUrl: 'https://picsum.photos/seed/anjali/200/200', achievement: 'Scored 88 in SBR' },
+    { id: 4, name: 'Bikash Shrestha', avatarUrl: 'https://picsum.photos/seed/bikash/200/200', achievement: 'Scored 95 in TX' },
+    { id: 5, name: 'Sita Rai', avatarUrl: 'https://picsum.photos/seed/sita/200/200', achievement: 'World Rank Holder in PM' },
+    { id: 6, name: 'Gopal Verma', avatarUrl: 'https://picsum.photos/seed/gopal/200/200', achievement: 'Scored 93 in AA' },
+    { id: 7, name: 'Maya Tamang', avatarUrl: 'https://picsum.photos/seed/maya/200/200', achievement: 'Topped Nepal in SBL' },
+    { id: 8, name: 'Hari KC', avatarUrl: 'https://picsum.photos/seed/hari/200/200', achievement: 'Scored 90 in FM' },
 ];
 
-export const TEACHER_QUESTIONS: TeacherQuestion[] = [
-    { id: 1, studentId: 1, studentName: 'Alex Doe', paper: 'FR: Financial Reporting', question: 'In the consolidation of financial statements, how do we treat goodwill on acquisition?', status: 'Answered', askedDate: '2024-07-20', answer: 'Goodwill is calculated as the excess of the consideration transferred over the net assets acquired at fair value. It is then tested for impairment annually.', answeredBy: 'Kabin Pyakurel' },
-    { id: 2, studentId: 2, studentName: 'Priya Sharma', paper: 'PM: Performance Management', question: 'Can you explain the difference between absorption and marginal costing in profit reporting?', status: 'Pending', askedDate: '2024-07-21' },
-];
+
+export const CHAT_MESSAGES: ChatMessage[] = [];
+
+export const TEACHER_QUESTIONS: TeacherQuestion[] = [];
 
 export const LIVE_CLASSES: LiveClass[] = [
     { id: 1, paper: 'FR: Financial Reporting', topic: 'Consolidated Statement of Financial Position', instructor: 'Kabin Pyakurel', startTime: '10:00 AM', status: 'Live', joinLink: '#' },
@@ -365,70 +317,42 @@ export const FACULTY_ANNOUNCEMENTS: Announcement[] = [
     { id: 101, title: 'FR Mock Exam Schedule', content: 'Please ensure all mock exam grades for the FR paper are submitted by July 28th.', date: '2024-07-22', author: 'Kabin Pyakurel', audience: 'FR: Financial Reporting' },
 ];
 
-export const PENDING_APPLICATIONS: Application[] = [
-    { id: 1, fullName: 'John Stone', email: 'john.s@example.com', program: 'ACCA Applied Skills', submittedDate: '2024-07-20', status: 'Pending', phone: '+977 9801112233', photoUrl: 'https://picsum.photos/seed/john/200/200' },
-];
+export const PENDING_APPLICATIONS: Application[] = [];
 
-export const TEACHER_RATINGS: TeacherRating[] = [
-    { id: 1, teacherId: 1, teacherName: 'Kabin Pyakurel', studentId: 1, studentName: 'Alex Doe', rating: 5, feedback: 'Excellent explanation of consolidation concepts. Very clear and helpful.', classTopic: 'Consolidated Statement of Financial Position', date: '2024-07-22' }
-];
+export const TEACHER_RATINGS: TeacherRating[] = [];
 
 export const BLOG_POSTS: BlogPost[] = [
-    { 
-        id: 'mastering-sbl', 
-        title: '5 Tips for Mastering the Strategic Business Leader (SBL) Exam', 
-        authorId: 2,
-        authorType: 'faculty', 
-        publicationDate: '2024-07-18', 
-        excerpt: 'The SBL exam is unique. It\'s not about memorizing facts, but about applying your knowledge in a real-world context. Here are five tips to help you succeed.', 
-        content: '<h3>Understand the Syllabus</h3><p>The SBL syllabus is vast, covering governance, risk, ethics, and strategy. Break it down into manageable chunks and focus on understanding the core concepts rather than rote learning. Create mind maps to connect different areas of the syllabus.</p><h3>Practice, Practice, Practice</h3><p>There is no substitute for practicing past exam papers. This helps you get used to the format, timing, and the type of questions asked. Pay close attention to the professional skills marks, as they can make a significant difference to your final score.</p>', 
-        imageUrl: 'https://picsum.photos/seed/blog-sbl/1200/800', 
-        tags: ['SBL', 'Strategic Professional', 'Exam Tips'],
+    {
+        id: '5-tips-for-acca-fr-exam',
+        title: '5 Essential Tips to Ace Your ACCA Financial Reporting (FR) Exam',
+        authorId: 1, // Kabin Pyakurel
+        authorType: 'faculty',
+        publicationDate: '2024-07-20',
+        excerpt: 'The Financial Reporting (FR) exam is a significant step in your ACCA journey. Here are five proven tips from our expert faculty to help you succeed.',
+        content: `<h3>Introduction</h3><p>The ACCA Financial Reporting (FR) exam can be challenging, but with the right preparation, you can pass with confidence. This guide provides five essential tips to help you structure your studies and master the syllabus.</p><h3>1. Master the Accounting Standards</h3><p>A deep understanding of International Financial Reporting Standards (IFRS) is non-negotiable. Don't just memorize them; understand the principles behind each standard. Practice applying them to various scenarios, especially for standards like IFRS 15 (Revenue), IFRS 16 (Leases), and IAS 16 (Property, Plant and Equipment).</p><h3>2. Practice Consolidation Questions Religiously</h3><p>Consolidated financial statements are a cornerstone of the FR exam and often carry significant marks. Ensure you are comfortable with preparing consolidated statements of financial position, profit or loss, and other comprehensive income. Pay close attention to workings for goodwill, non-controlling interest (NCI), and retained earnings.</p><h3>3. Time Management is Key</h3><p>The exam is time-pressured. Practice questions under strict exam conditions to improve your speed and accuracy. Allocate your time based on the marks available for each question—roughly 1.8 minutes per mark. If you get stuck, move on and come back later if time permits.</p>`,
+        imageUrl: 'https://picsum.photos/seed/blog-fr/1200/800',
+        tags: ['ACCA', 'FR', 'Exam Tips'],
         status: 'Published',
         isFeatured: true,
-        timeToRead: 3
+        timeToRead: 5,
+        comments: [
+            { id: 1, authorName: 'Aarav Sharma', text: 'This is super helpful! The consolidation tip is a lifesaver.', timestamp: '2024-07-21T10:00:00Z' }
+        ]
     },
-    { 
-        id: 'fr-vs-sbr', 
-        title: 'Financial Reporting (FR) vs. Strategic Business Reporting (SBR)', 
-        authorId: 1, 
-        authorType: 'faculty',
-        publicationDate: '2024-06-25', 
-        excerpt: 'Many students wonder about the jump from FR to SBR. While both deal with reporting, their focus and depth are quite different. Let\'s explore the key distinctions.', 
-        content: '<h3>Depth of Knowledge</h3><p>FR focuses on the application of accounting standards to produce financial statements. SBR, on the other hand, requires you to evaluate and advise on the reporting implications of transactions and ethical issues. It is less about calculation and more about judgement.</p>', 
-        imageUrl: 'https://picsum.photos/seed/blog-fr-sbr/1200/800', 
-        tags: ['FR', 'SBR', 'Syllabus'],
+    {
+        id: 'a-students-guide-to-performance-management',
+        title: "A Student's Guide to Performance Management (PM)",
+        authorId: 2, // Priya Gurung
+        authorType: 'student',
+        publicationDate: '2024-07-18',
+        excerpt: 'As a student currently tackling the Applied Skills level, I wanted to share my personal strategies for navigating the Performance Management (PM) paper.',
+        content: `<h3>My PM Journey</h3><p>Performance Management (PM) is more than just numbers; it's about understanding how a business measures and manages its success. Initially, I found the breadth of the syllabus daunting, from costing techniques to variance analysis. Here's how I broke it down.</p><h3>Focus on Application, Not Just Theory</h3><p>The key to PM is applying techniques to real-world scenarios. Don't just learn the formula for variance; understand what it tells a manager about the business's performance. The examiner is looking for your ability to interpret the data and provide meaningful advice.</p>`,
+        imageUrl: 'https://picsum.photos/seed/blog-pm/1200/800',
+        tags: ['ACCA', 'PM', 'Student Life'],
         status: 'Published',
         isFeatured: false,
-        timeToRead: 2
-    },
-    { 
-        id: 'acca-career-paths', 
-        title: 'Top Career Paths for ACCA Graduates in Nepal', 
-        authorId: 3, 
-        authorType: 'faculty',
-        publicationDate: '2024-05-30', 
-        excerpt: 'Completing your ACCA qualification opens up a world of opportunities. Here are some of the most promising career paths for ACCA members in the current Nepali market.', 
-        content: '<h3>Audit and Assurance</h3><p>This is a traditional and highly respected career path. Working for an audit firm, you will be responsible for examining the financial records of companies to ensure they are accurate and comply with regulations.</p>', 
-        imageUrl: 'https://picsum.photos/seed/blog-career/1200/800', 
-        tags: ['Career', 'ACCA', 'Nepal'],
-        status: 'Published',
-        isFeatured: false,
-        timeToRead: 4
-    },
-    { 
-        id: 'draft-post-example', 
-        title: 'The Future of AI in Accounting (Draft)', 
-        authorId: 1, 
-        authorType: 'faculty',
-        publicationDate: '2024-07-25', 
-        excerpt: 'Exploring how artificial intelligence is set to revolutionize the accounting profession, from automation to predictive analysis.', 
-        content: '<h3>Introduction to AI</h3><p>AI is more than just a buzzword. It\'s a powerful tool that will change how we work.</p>', 
-        imageUrl: 'https://picsum.photos/seed/blog-ai/1200/800', 
-        tags: ['AI', 'Future', 'Technology'],
-        status: 'Draft',
-        isFeatured: false,
-        timeToRead: 1
+        timeToRead: 4,
+        comments: []
     }
 ];
 

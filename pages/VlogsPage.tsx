@@ -1,7 +1,7 @@
-
 import React from 'react';
 import { VLOGS } from '../constants';
 import type { Vlog } from '../types';
+import { getItems } from '../services/dataService';
 
 const VideoPlayerModal: React.FC<{ vlog: Vlog; onClose: () => void }> = ({ vlog, onClose }) => {
     // Determine if the video is from a local upload or a URL
@@ -36,33 +36,30 @@ const VideoPlayerModal: React.FC<{ vlog: Vlog; onClose: () => void }> = ({ vlog,
 };
 
 const VlogsPage: React.FC = () => {
-    const [vlogs, setVlogs] = React.useState<Vlog[]>(VLOGS);
+    const [vlogs, setVlogs] = React.useState<Vlog[]>(() => getItems('vlogs', VLOGS));
     const [selectedVlog, setSelectedVlog] = React.useState<Vlog | null>(null);
 
      React.useEffect(() => {
-        try {
-            const storedData = localStorage.getItem('siteContent');
-            if (storedData) {
-                const content = JSON.parse(storedData);
-                if (content.vlogs) {
-                    setVlogs(content.vlogs);
-                }
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === 'vlogs') {
+                setVlogs(getItems('vlogs', VLOGS));
             }
-        } catch (error) {
-            console.error("Failed to parse vlogs from localStorage", error);
-        }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
     }, []);
 
 
     return (
         <div className="bg-white">
             <div className="bg-brand-dark text-white py-12 md:py-20">
-                <div className="container mx-auto px-6 text-center">
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 text-center">
                     <h1 className="text-3xl md:text-4xl font-bold">Vlogs</h1>
                     <p className="mt-4 text-lg max-w-3xl mx-auto">See what life is like at Learners Academy. Explore campus tours, student stories, and special events.</p>
                 </div>
             </div>
-            <div className="container mx-auto px-6 py-12 md:py-20">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 py-12 md:py-20">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                     {vlogs.map((vlog) => (
                         <div 

@@ -1,20 +1,20 @@
-
-
 import React, { useState, useRef, useEffect } from 'react';
-import { Routes, Route, Link, Navigate, Outlet, useNavigate, useOutletContext } from 'react-router-dom';
-import FacultySidebar from '../components/faculty-portal/FacultySidebar';
-import Dashboard from './faculty-portal/Dashboard';
-import MyClasses from './faculty-portal/MyClasses';
-import Grading from './faculty-portal/Grading';
-import Announcements from './faculty-portal/Announcements';
-import Schedule from './faculty-portal/Schedule';
-import Profile from './faculty-portal/Profile';
-import StudentQuestions from './faculty-portal/StudentQuestions';
-import AnnouncementPopup from '../components/AnnouncementPopup';
-import type { Notification, Announcement, FacultyMember } from '../types';
-import { GLOBAL_ANNOUNCEMENTS } from '../constants';
-import MyStudents from './faculty-portal/MyStudents';
-import { getLoggedInUser } from '../services/authService';
+// FIX: Split react-router-dom imports to resolve module export errors.
+import { Link } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet, useNavigate, useOutletContext } from 'react-router';
+import FacultySidebar from '../components/faculty-portal/FacultySidebar.tsx';
+import Dashboard from './faculty-portal/Dashboard.tsx';
+import MyClasses from './faculty-portal/MyClasses.tsx';
+import Grading from './faculty-portal/Grading.tsx';
+import Announcements from './faculty-portal/Announcements.tsx';
+import Schedule from './faculty-portal/Schedule.tsx';
+import Profile from './faculty-portal/Profile.tsx';
+import StudentQuestions from './faculty-portal/StudentQuestions.tsx';
+import AnnouncementPopup from '../components/AnnouncementPopup.tsx';
+import type { Notification, Announcement, FacultyMember } from '../types.ts';
+import { GLOBAL_ANNOUNCEMENTS } from '../constants.ts';
+import MyStudents from './faculty-portal/MyStudents.tsx';
+import { getLoggedInUser } from '../services/authService.ts';
 
 
 const FacultyPortalLayout = () => {
@@ -103,7 +103,7 @@ const FacultyPortalLayout = () => {
     return (
         <div className="flex h-screen bg-gray-100 font-sans">
             {/* FIX: Corrected the prop name from setIsOpen to setIsSidebarOpen */}
-            <FacultySidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} facultyMember={facultyMember} />
+            <FacultySidebar isOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} facultyMember={facultyMember} />
             <div className="flex-1 flex flex-col lg:ml-64">
                 <header className="bg-white shadow-sm p-4 flex justify-between lg:justify-end items-center sticky top-0 z-20 border-b">
                     <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden text-gray-500 hover:text-brand-red">

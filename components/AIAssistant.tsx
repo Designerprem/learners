@@ -1,7 +1,6 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-import type { Message } from '../types';
-import { getAIResponse } from '../services/geminiService';
+import type { Message } from '../types.ts';
+import { getAIResponse } from '../services/geminiService.ts';
 
 const AIAssistant: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);

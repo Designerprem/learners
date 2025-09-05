@@ -1,8 +1,10 @@
 
 
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { FacultyMember, CalendarEvent } from '../../types';
 import { CALENDAR_EVENTS, TEACHER_RATINGS, COURSES } from '../../constants';
+import { compressImage } from '../../services/imageCompressionService';
 
 interface FacultyDetailModalProps {
     isOpen: boolean;
@@ -12,15 +14,6 @@ interface FacultyDetailModalProps {
 }
 
 type Tab = 'Overview' | 'Teaching Schedule' | 'Student Reviews';
-
-const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = error => reject(error);
-    });
-};
 
 const DetailRow = ({ label, value }: { label: string; value: string }) => (
     <div>
@@ -80,7 +73,7 @@ const FacultyDetailModal: React.FC<FacultyDetailModalProps> = ({ isOpen, onClose
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            const base64 = await fileToBase64(file);
+            const base64 = await compressImage(file, { maxWidth: 400, maxHeight: 400, quality: 0.8 });
             setFormData(prev => ({ ...prev, imageUrl: base64 }));
         }
     };

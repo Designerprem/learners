@@ -1,10 +1,8 @@
-
-
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+// FIX: Split react-router-dom imports to resolve module export errors.
 import { useParams, Link } from 'react-router-dom';
-import { COURSES, FACULTY_MEMBERS, ACCA_FEE_STRUCTURE } from '../constants';
-import type { FacultyMember, AccaFeeCategory } from '../types';
+import { COURSES, FACULTY_MEMBERS, ACCA_FEE_STRUCTURE } from '../constants.ts';
+import type { FacultyMember, AccaFeeCategory } from '../types.ts';
 
 const SyllabusAccordion: React.FC<{ syllabus: { topic: string; details: string }[] }> = ({ syllabus }) => {
     const [openIndex, setOpenIndex] = React.useState<number | null>(0);
@@ -113,10 +111,16 @@ const CourseFeeStructure: React.FC<{ feeCategories: AccaFeeCategory[] }> = ({ fe
 const CourseDetailPage: React.FC = () => {
     const { courseId } = useParams<{ courseId: string }>();
     const course = COURSES.find(c => c.id === courseId);
+    const [allFaculty, setAllFaculty] = useState<FacultyMember[]>([]);
+
+    useEffect(() => {
+        const storedFaculty = localStorage.getItem('faculty');
+        setAllFaculty(storedFaculty ? JSON.parse(storedFaculty) : FACULTY_MEMBERS);
+    }, []);
     
     if (!course) {
         return (
-            <div className="container mx-auto px-6 py-20 text-center">
+            <div className="container mx-auto px-4 sm:px-6 py-20 text-center">
                 <h1 className="text-3xl font-bold">Course Not Found</h1>
                 <p className="mt-4">The course you are looking for does not exist.</p>
                 <Link to="/courses" className="mt-6 inline-block bg-brand-red text-white px-6 py-2 rounded-md font-semibold hover:bg-red-700">
@@ -126,7 +130,7 @@ const CourseDetailPage: React.FC = () => {
         );
     }
     
-    const courseFaculty = FACULTY_MEMBERS.filter(member => course.facultyIds.includes(member.id));
+    const courseFaculty = allFaculty.filter(member => course.facultyIds.includes(member.id));
     
     const courseLevelMapping: { [key: string]: string[] } = {
         'Applied Knowledge': ['ACCA Knowledge Level'],
@@ -141,13 +145,13 @@ const CourseDetailPage: React.FC = () => {
     return (
         <div className="bg-white">
             <div className="bg-brand-dark text-white py-12 md:py-20">
-                <div className="container mx-auto px-6 text-center">
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 text-center">
                     <h1 className="text-3xl md:text-4xl font-bold">{course.title}</h1>
                     <p className="mt-4 text-lg max-w-3xl mx-auto">{course.level}</p>
                 </div>
             </div>
 
-            <div className="container mx-auto px-6 py-12 md:py-20">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 py-12 md:py-20">
                 <div className="grid lg:grid-cols-3 gap-12">
                     <div className="lg:col-span-2">
                         <section id="description" className="mb-12">

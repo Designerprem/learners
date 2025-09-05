@@ -1,20 +1,20 @@
-
-
 import React, { useState, useRef, useEffect } from 'react';
-import { Routes, Route, Link, Navigate, Outlet, useNavigate, useOutletContext } from 'react-router-dom';
-import StudentSidebar from '../components/student-portal/StudentSidebar';
-import Dashboard from './student-portal/Dashboard';
-import MyCourses from './student-portal/MyCourses';
-import Results from './student-portal/Results';
-import Profile from './student-portal/Profile';
-import Community from './student-portal/Community';
-import LiveClasses from './student-portal/LiveClasses';
-import FeePayment from './student-portal/FeePayment';
-import SchedulePage from './student-portal/SchedulePage';
-import type { Notification, Announcement, Student } from '../types';
-import { NOTIFICATIONS, GLOBAL_ANNOUNCEMENTS } from '../constants';
-import AnnouncementPopup from '../components/AnnouncementPopup';
-import { getLoggedInUser } from '../services/authService';
+// FIX: Split react-router-dom imports to resolve module export errors.
+import { Link } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet, useNavigate, useOutletContext } from 'react-router';
+import StudentSidebar from '../components/student-portal/StudentSidebar.tsx';
+import Dashboard from './student-portal/Dashboard.tsx';
+import MyCourses from './student-portal/MyCourses.tsx';
+import Results from './student-portal/Results.tsx';
+import Profile from './student-portal/Profile.tsx';
+import Community from './student-portal/Community.tsx';
+import LiveClasses from './student-portal/LiveClasses.tsx';
+import FeePayment from './student-portal/FeePayment.tsx';
+import SchedulePage from './student-portal/SchedulePage.tsx';
+import type { Notification, Announcement, Student } from '../types.ts';
+import { NOTIFICATIONS, GLOBAL_ANNOUNCEMENTS } from '../constants.ts';
+import AnnouncementPopup from '../components/AnnouncementPopup.tsx';
+import { getLoggedInUser } from '../services/authService.ts';
 
 const StudentPortalLayout = () => {
     const [student, setStudent] = useState<Student | null>(null);

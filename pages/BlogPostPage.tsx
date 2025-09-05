@@ -1,9 +1,9 @@
 
-
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { BLOG_POSTS, FACULTY_MEMBERS, STUDENTS } from '../constants';
 import type { BlogPost, Comment, FacultyMember, Student } from '../types';
+import { getItems } from '../services/dataService';
 
 const CommentSection: React.FC<{ initialComments: Comment[] }> = ({ initialComments }) => {
     const [comments, setComments] = useState<Comment[]>(initialComments);
@@ -154,43 +154,43 @@ const Sidebar: React.FC<{ post: BlogPost; author: FacultyMember | Student; allPo
     );
 };
 
-
 const BlogPostPage: React.FC = () => {
     const { postId } = useParams<{ postId: string }>();
-    const [allPosts, setAllPosts] = useState<BlogPost[]>(BLOG_POSTS);
+    const [allPosts, setAllPosts] = useState<BlogPost[]>([]);
+    const [faculty, setFaculty] = useState<FacultyMember[]>([]);
+    const [students, setStudents] = useState<Student[]>([]);
+    
+    const loadData = useCallback(() => {
+        setAllPosts(getItems('blogs', BLOG_POSTS));
+        setFaculty(getItems('faculty', FACULTY_MEMBERS));
+        setStudents(getItems('students', STUDENTS));
+    }, []);
 
     useEffect(() => {
-        let posts = BLOG_POSTS;
-        try {
-            const storedData = localStorage.getItem('siteContent');
-            if (storedData) {
-                const content = JSON.parse(storedData);
-                if (content.blogs) {
-                    posts = content.blogs;
-                }
-            }
-        } catch (error) {
-            console.error("Failed to parse blogs from localStorage", error);
-        }
-        setAllPosts(posts);
-    }, [postId]);
-    
+        loadData();
+        window.addEventListener('storage', loadData);
+        return () => window.removeEventListener('storage', loadData);
+    }, [loadData]);
+
     const post = useMemo(() => allPosts.find(p => p.id === postId), [allPosts, postId]);
+    
+    const facultyMap = useMemo(() => new Map(faculty.map(f => [f.id, f])), [faculty]);
+    const studentMap = useMemo(() => new Map(students.map(s => [s.id, s])), [students]);
 
     const author = useMemo(() => {
         if (!post) return null;
-        if (post.authorType === 'student') {
-            return STUDENTS.find(s => s.id === post.authorId);
-        }
-        return FACULTY_MEMBERS.find(f => f.id === post.authorId);
-    }, [post]);
+        return post.authorType === 'student'
+            ? studentMap.get(post.authorId)
+            : facultyMap.get(post.authorId);
+    }, [post, facultyMap, studentMap]);
 
 
-    if (!post || post.status === 'Draft') {
+    if (!post || !author) {
+        // This will show briefly while loading from localStorage, or if post is not found
         return (
-            <div className="container mx-auto px-6 py-20 text-center">
+            <div className="container mx-auto px-4 sm:px-6 py-20 text-center">
                 <h1 className="text-3xl font-bold">Post Not Found</h1>
-                <p className="mt-4">The blog post you are looking for does not exist or has not been published.</p>
+                <p className="mt-4">The post you are looking for does not exist or has been moved.</p>
                 <Link to="/blog" className="mt-6 inline-block bg-brand-red text-white px-6 py-2 rounded-md font-semibold hover:bg-red-700">
                     Back to Blog
                 </Link>
@@ -198,45 +198,82 @@ const BlogPostPage: React.FC = () => {
         );
     }
 
-    if (!author) {
-        return (
-            <div className="container mx-auto px-6 py-20 text-center">
-                <h1 className="text-3xl font-bold">Author Not Found</h1>
-                <p className="mt-4">The author for this post could not be found.</p>
-                <Link to="/blog" className="mt-6 inline-block bg-brand-red text-white px-6 py-2 rounded-md font-semibold hover:bg-red-700">
-                    Back to Blog
-                </Link>
-            </div>
-        );
-    }
-    
     const authorImageUrl = 'imageUrl' in author ? author.imageUrl : author.avatarUrl;
 
     return (
         <div className="bg-white">
-            <div className="container mx-auto px-6 py-12 md:py-20">
-                <div className="grid lg:grid-cols-3 gap-12">
-                    <main className="lg:col-span-2">
-                        <article>
-                            <header className="mb-8">
-                                <div className="mb-4">
-                                    <Link to="/blog" className="text-brand-red font-semibold hover:underline">&larr; Back to Blog</Link>
-                                </div>
-                                <p className="text-sm text-brand-red font-semibold">{post.tags.join(' / ')}</p>
-                                <h1 className="text-4xl md:text-5xl font-black text-brand-dark mt-2 mb-4">{post.title}</h1>
-                                <div className="flex items-center text-sm text-gray-500">
-                                    <img src={authorImageUrl.replace('/400/400', '/100/100')} alt={author.name} className="w-10 h-10 rounded-full mr-3" />
-                                    <span>By <span className="font-semibold">{author.name}</span> on {new Date(post.publicationDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
-                                    <span className="mx-2">·</span>
-                                    <span>{post.timeToRead} min read</span>
-                                </div>
-                            </header>
-                            <img src={post.imageUrl} alt={post.title} className="w-full rounded-lg shadow-lg mb-8" />
-                            <div className="prose lg:prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: post.content }} />
-                        </article>
-                        <CommentSection initialComments={post.comments || []} />
-                    </main>
-                    <Sidebar post={post} author={author} allPosts={allPosts} />
+            <style>{`
+            .prose h1, .prose h2, .prose h3 {
+                color: #000000;
+                font-weight: 800;
+                margin-top: 1.5em;
+                margin-bottom: 0.8em;
+            }
+            .prose p {
+                line-height: 1.75;
+                margin-bottom: 1.25em;
+                color: #333333;
+            }
+            .prose a {
+                color: #B22222;
+                text-decoration: none;
+                font-weight: 600;
+            }
+            .prose a:hover {
+                text-decoration: underline;
+            }
+            .prose ul, .prose ol {
+                padding-left: 1.5em;
+                margin-bottom: 1.25em;
+            }
+            .prose li {
+                margin-bottom: 0.5em;
+            }
+            .prose li > p {
+                margin-bottom: 0.5em;
+            }
+            .prose blockquote {
+                border-left-color: #B22222;
+                color: #333333;
+                font-style: italic;
+            }
+            `}</style>
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 py-12 md:py-20">
+                <div className="max-w-4xl mx-auto mb-8">
+                    <Link to="/blog" className="text-brand-red font-semibold hover:underline mb-4 inline-block">&larr; Back to all posts</Link>
+                    <p className="text-sm text-brand-red font-semibold">{post.tags.join(' / ')}</p>
+                    <h1 className="text-4xl md:text-5xl font-black text-brand-dark my-4 leading-tight">{post.title}</h1>
+                    <div className="flex items-center text-sm text-gray-500">
+                        <img src={authorImageUrl.replace('/400/400', '/100/100')} alt={author.name} className="w-12 h-12 rounded-full mr-4" />
+                        <div>
+                            <p className="font-semibold text-brand-dark">{author.name}</p>
+                            <p>
+                                {new Date(post.publicationDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} · {post.timeToRead} min read
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mb-8">
+                    <img src={post.imageUrl} alt={post.title} className="w-full max-w-5xl mx-auto rounded-lg shadow-lg" />
+                </div>
+                
+                <div className="grid lg:grid-cols-3 gap-12 max-w-6xl mx-auto">
+                    <article
+                        className="lg:col-span-2 prose prose-lg max-w-none"
+                        // In a production app, ensure this HTML content is sanitized
+                        // to prevent XSS attacks if it comes from untrusted sources.
+                        // Here, it's considered safe as it's managed by the admin.
+                        dangerouslySetInnerHTML={{ __html: post.content }}
+                    />
+                    
+                    <div className="lg:col-span-1">
+                        <Sidebar post={post} author={author} allPosts={allPosts} />
+                    </div>
+                </div>
+
+                <div className="max-w-3xl mx-auto">
+                    <CommentSection initialComments={post.comments || []} />
                 </div>
             </div>
         </div>

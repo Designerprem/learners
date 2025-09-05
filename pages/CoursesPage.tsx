@@ -1,9 +1,8 @@
-
-
 import React from 'react';
-import { COURSES } from '../constants';
-import type { Course } from '../types';
+import { COURSES } from '../constants.ts';
+import type { Course } from '../types.ts';
 import { Link } from 'react-router-dom';
+import AnimatedSection from '../components/AnimatedSection.tsx';
 
 const CourseDetailCard: React.FC<{ course: Course }> = ({ course }) => (
     <div className="bg-white p-6 md:p-8 rounded-lg shadow-xl border border-gray-100 mb-12">
@@ -41,14 +40,18 @@ const CoursesPage: React.FC = () => {
     return (
         <div className="bg-brand-beige">
              <div className="bg-brand-dark text-white py-12 md:py-20">
-                <div className="container mx-auto px-6 text-center">
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 text-center">
                     <h1 className="text-3xl md:text-4xl font-bold">ACCA Courses</h1>
                     <p className="mt-4 text-lg max-w-3xl mx-auto">Explore our comprehensive ACCA study pathways and the associated fee structure.</p>
                 </div>
             </div>
 
-            <div className="container mx-auto px-6 py-12 md:py-20">
-                {COURSES.map(course => <CourseDetailCard key={course.id} course={course} />)}
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 py-12 md:py-20">
+                {COURSES.map(course => (
+                    <AnimatedSection key={course.id}>
+                        <CourseDetailCard course={course} />
+                    </AnimatedSection>
+                ))}
             </div>
         </div>
     );

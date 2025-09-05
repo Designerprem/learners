@@ -1,22 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { NEWS_TICKER_MESSAGES } from '../constants';
+import { NEWS_TICKER_MESSAGES } from '../constants.ts';
+import { getItems } from '../services/dataService.ts';
 
 const NewsTicker: React.FC = () => {
-    const [messages, setMessages] = useState<string[]>(NEWS_TICKER_MESSAGES);
+    const [messages, setMessages] = useState<string[]>(() => getItems('newsTicker', NEWS_TICKER_MESSAGES));
     const [currentIndex, setCurrentIndex] = useState(0);
 
     useEffect(() => {
-        try {
-            const storedData = localStorage.getItem('siteContent');
-            if (storedData) {
-                const content = JSON.parse(storedData);
-                if (content.newsTicker && content.newsTicker.length > 0) {
-                    setMessages(content.newsTicker);
-                }
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === 'newsTicker') {
+                setMessages(getItems('newsTicker', NEWS_TICKER_MESSAGES));
             }
-        } catch (error) {
-            console.error("Failed to parse news ticker messages from localStorage", error);
-        }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+
+        return () => window.removeEventListener('storage', handleStorageChange);
     }, []);
 
     useEffect(() => {

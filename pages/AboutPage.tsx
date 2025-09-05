@@ -1,8 +1,22 @@
-
-import React from 'react';
-import { FACULTY_MEMBERS } from '../constants';
+import React, { useState, useEffect } from 'react';
+import { FACULTY_MEMBERS } from '../constants.ts';
+import AnimatedSection from '../components/AnimatedSection.tsx';
+import type { FacultyMember } from '../types.ts';
+import { getItems } from '../services/dataService.ts';
 
 const AboutPage: React.FC = () => {
+    const [faculty, setFaculty] = useState<FacultyMember[]>(() => getItems('faculty', FACULTY_MEMBERS));
+
+    useEffect(() => {
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === 'faculty') {
+                setFaculty(getItems('faculty', FACULTY_MEMBERS));
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
     
     const whatSetsUsApart = [
         {
@@ -30,65 +44,71 @@ const AboutPage: React.FC = () => {
     return (
         <div className="bg-white">
             <div className="bg-brand-dark text-white py-12 md:py-20">
-                <div className="container mx-auto px-6 text-center">
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 text-center">
                     <h1 className="text-3xl md:text-4xl font-bold">About Learners Academy</h1>
                     <p className="mt-4 text-lg max-w-3xl mx-auto">A leading ACCA tutoring institute dedicated to empowering students to succeed in the ACCA qualification — on their first attempt.</p>
                 </div>
             </div>
 
-            <div className="container mx-auto px-6 py-12 md:py-20">
-                <div className="grid md:grid-cols-2 gap-12 items-center">
-                    <div>
-                        <h2 className="text-2xl md:text-3xl font-bold text-brand-red mb-4">Our Vision & Mission</h2>
-                         <p className="text-gray-600 mb-4">
-                            <strong>Vision:</strong> To be the most respected institution for professional accounting education, recognized for our commitment to excellence, integrity, and student success.
-                        </p>
-                        <p className="text-gray-600">
-                            <strong>Mission:</strong> To deliver top-tier ACCA education by combining expert instruction with affordable pricing. We strive to enhance learning for students in business, finance, and accounting through personalized coaching and modern pedagogical methods.
-                        </p>
-                    </div>
-                    <div>
-                        <img src="https://picsum.photos/seed/vision-mission/600/400" alt="Our Mission" className="rounded-lg shadow-lg" />
+            <AnimatedSection>
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 py-12 md:py-20">
+                    <div className="grid md:grid-cols-2 gap-12 items-center">
+                        <div>
+                            <h2 className="text-2xl md:text-3xl font-bold text-brand-red mb-4">Our Vision & Mission</h2>
+                             <p className="text-gray-600 mb-4">
+                                <strong>Vision:</strong> To be the most respected institution for professional accounting education, recognized for our commitment to excellence, integrity, and student success.
+                            </p>
+                            <p className="text-gray-600">
+                                <strong>Mission:</strong> To deliver top-tier ACCA education by combining expert instruction with affordable pricing. We strive to enhance learning for students in business, finance, and accounting through personalized coaching and modern pedagogical methods.
+                            </p>
+                        </div>
+                        <div>
+                            <img src="https://picsum.photos/seed/vision-mission/600/400" alt="Our Mission" className="rounded-lg shadow-lg" />
+                        </div>
                     </div>
                 </div>
-            </div>
+            </AnimatedSection>
 
-            <div className="bg-brand-beige py-12 md:py-20">
-                 <div className="container mx-auto px-6">
-                    <div className="text-center mb-12">
-                        <h2 className="text-2xl md:text-3xl font-bold">What Sets Us Apart</h2>
-                        <p className="text-gray-600 mt-2 max-w-3xl mx-auto">We're more than just an ACCA coaching center — we're your partner in a journey toward professional excellence.</p>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
-                         {whatSetsUsApart.map(feature => (
-                            <div key={feature.title} className="text-center bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
-                                {feature.icon}
-                                <h3 className="text-xl font-bold mt-4 mb-2">{feature.title}</h3>
-                                <p className="text-sm text-gray-600">{feature.description}</p>
-                            </div>
-                        ))}
+            <AnimatedSection>
+                <div className="bg-brand-beige py-12 md:py-20">
+                     <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20">
+                        <div className="text-center mb-12">
+                            <h2 className="text-2xl md:text-3xl font-bold">What Sets Us Apart</h2>
+                            <p className="text-gray-600 mt-2 max-w-3xl mx-auto">We're more than just an ACCA coaching center — we're your partner in a journey toward professional excellence.</p>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+                             {whatSetsUsApart.map(feature => (
+                                <div key={feature.title} className="text-center bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
+                                    {feature.icon}
+                                    <h3 className="text-xl font-bold mt-4 mb-2">{feature.title}</h3>
+                                    <p className="text-sm text-gray-600">{feature.description}</p>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
-            </div>
+            </AnimatedSection>
 
-            <div className="py-12 md:py-20">
-                <div className="container mx-auto px-6">
-                    <div className="text-center mb-12">
-                        <h2 className="text-2xl md:text-3xl font-bold">Meet the Team</h2>
-                        <p className="text-gray-600 mt-2">Our leadership and faculty comprise seasoned professionals passionate about ACCA education.</p>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
-                        {FACULTY_MEMBERS.map(member => (
-                            <div key={member.id} className="text-center bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 border">
-                                <img src={member.imageUrl} alt={member.name} className="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-brand-red" />
-                                <h3 className="text-xl font-bold">{member.name}</h3>
-                                <p className="text-brand-red mb-2 text-sm font-semibold">{member.qualification}</p>
-                                <p className="text-sm text-gray-600">{member.bio}</p>
-                            </div>
-                        ))}
+            <AnimatedSection>
+                <div className="py-12 md:py-20">
+                    <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20">
+                        <div className="text-center mb-12">
+                            <h2 className="text-2xl md:text-3xl font-bold">Meet the Team</h2>
+                            <p className="text-gray-600 mt-2">Our leadership and faculty comprise seasoned professionals passionate about ACCA education.</p>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+                            {faculty.map(member => (
+                                <div key={member.id} className="text-center bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 border">
+                                    <img src={member.imageUrl} alt={member.name} className="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-brand-red" />
+                                    <h3 className="text-xl font-bold">{member.name}</h3>
+                                    <p className="text-brand-red mb-2 text-sm font-semibold">{member.qualification}</p>
+                                    <p className="text-sm text-gray-600">{member.bio}</p>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
-            </div>
+            </AnimatedSection>
         </div>
     );
 };

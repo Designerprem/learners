@@ -1,8 +1,8 @@
-
-
 import React, { useState, useEffect } from 'react';
-import { GALLERY_IMAGES, VLOGS } from '../constants';
-import type { GalleryImage, Vlog } from '../types';
+import { GALLERY_IMAGES, VLOGS } from '../constants.ts';
+import type { GalleryImage, Vlog } from '../types.ts';
+import AnimatedSection from '../components/AnimatedSection.tsx';
+import { getItems } from '../services/dataService.ts';
 
 const MediaModal: React.FC<{
     item: GalleryImage;
@@ -74,19 +74,8 @@ const GalleryPage: React.FC = () => {
     const [allMedia, setAllMedia] = useState<GalleryImage[]>([]);
 
     useEffect(() => {
-        let galleryData: GalleryImage[] = GALLERY_IMAGES;
-        let vlogsData: Vlog[] = VLOGS;
-
-        try {
-            const storedData = localStorage.getItem('siteContent');
-            if (storedData) {
-                const content = JSON.parse(storedData);
-                if (content.gallery) galleryData = content.gallery;
-                if (content.vlogs) vlogsData = content.vlogs;
-            }
-        } catch (error) {
-            console.error("Failed to parse gallery/vlogs from localStorage", error);
-        }
+        const galleryData = getItems('gallery', GALLERY_IMAGES);
+        const vlogsData = getItems('vlogs', VLOGS);
 
         const vlogsAsGalleryItems: GalleryImage[] = vlogsData.map((vlog: Vlog, index: number) => ({
             id: galleryData.length + index + 1, // Create unique IDs
@@ -130,14 +119,14 @@ const GalleryPage: React.FC = () => {
     return (
          <div className="bg-white">
             <div className="bg-brand-dark text-white py-12 md:py-20">
-                <div className="container mx-auto px-6 text-center">
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 text-center">
                     <h1 className="text-3xl md:text-4xl font-bold">Gallery & Vlogs</h1>
                     <p className="mt-4 text-lg max-w-3xl mx-auto">A glimpse into life at Learners Academy through photos, videos, and vlogs.</p>
                 </div>
             </div>
-            <div className="container mx-auto px-6 py-12 md:py-20">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 py-12 md:py-20">
                 {/* Filter Buttons */}
-                <div className="flex justify-center flex-wrap gap-2 md:gap-4 mb-12">
+                <AnimatedSection className="flex justify-center flex-wrap gap-2 md:gap-4 mb-12">
                     {categories.map(category => (
                         <button
                             key={category}
@@ -151,9 +140,9 @@ const GalleryPage: React.FC = () => {
                             {category}
                         </button>
                     ))}
-                </div>
+                </AnimatedSection>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <AnimatedSection className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {filteredMedia.map((item) => (
                         <div 
                             key={item.id} 
@@ -179,7 +168,7 @@ const GalleryPage: React.FC = () => {
                             )}
                         </div>
                     ))}
-                </div>
+                </AnimatedSection>
             </div>
             {selectedItemIndex !== null && (
                 <MediaModal 

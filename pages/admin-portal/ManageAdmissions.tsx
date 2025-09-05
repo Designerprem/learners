@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useRef } from 'react';
 import { PENDING_APPLICATIONS, STUDENTS } from '../../constants';
 import type { Application, Student } from '../../types';
@@ -27,7 +26,6 @@ const EmailEditorModal: React.FC<{ onClose: () => void; }> = ({ onClose }) => {
                 <div className="flex-1 overflow-y-auto p-6">
                     <p className="text-sm text-gray-600 mb-4">
                         Edit the template below. Use the following placeholders to include dynamic student information:
-                        {/* FIX: Corrected JSX syntax for displaying literal strings. */}
                         <code className="bg-gray-200 text-sm p-1 rounded-md mx-1">{`{{studentName}}`}</code>
                         <code className="bg-gray-200 text-sm p-1 rounded-md mx-1">{`{{studentId}}`}</code>
                         <code className="bg-gray-200 text-sm p-1 rounded-md mx-1">{`{{password}}`}</code>
@@ -172,6 +170,7 @@ const ManageAdmissions: React.FC = () => {
                 setApproved(prev => [{ ...application, status: 'Approved', studentId }, ...prev]);
                 
                 setNotification({ type: 'success', message: `Student account for ${newStudent.name} created. ${emailResponse.message}` });
+                setActiveTab('Approved');
             } else {
                  setNotification({ type: 'error', message: `Student not created. Failed to send welcome email. Please try again.` });
             }
@@ -236,6 +235,7 @@ const ManageAdmissions: React.FC = () => {
                 localStorage.setItem('students', JSON.stringify(updatedStudents));
                 setApproved(prev => [newApplication, ...prev]);
                 setNotification({ type: 'success', message: `Manual admission for ${newStudent.name} successful. ${emailResponse.message}` });
+                setActiveTab('Approved');
             } else {
                 setNotification({ type: 'error', message: `Student created, but failed to send welcome email.` });
             }
@@ -287,8 +287,8 @@ const ManageAdmissions: React.FC = () => {
             )}
             
             <div className="bg-white p-6 rounded-lg shadow-md">
-                 <div className="border-b border-gray-200 mb-4">
-                    <nav className="-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto" aria-label="Tabs">
+                 <div className="border-b border-gray-200 mb-4 overflow-x-auto">
+                    <nav className="-mb-px flex space-x-4 sm:space-x-8" aria-label="Tabs">
                         {tabs.map(tab => (
                             <button
                                 key={tab.name}

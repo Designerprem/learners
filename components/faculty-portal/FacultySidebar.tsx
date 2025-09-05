@@ -1,7 +1,10 @@
 
 
+
 import React, { useRef, useEffect } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+// FIX: Split react-router-dom imports to resolve module export errors.
+import { NavLink } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import type { FacultyMember } from '../../types';
 import { logout } from '../../services/authService';
 
@@ -37,37 +40,37 @@ const SidebarLink = ({ to, icon, children, onClick }: { to: string; icon: JSX.El
 
 interface FacultySidebarProps {
     isOpen: boolean;
-    setIsOpen: (isOpen: boolean) => void;
+    setIsSidebarOpen: (isOpen: boolean) => void;
     facultyMember: FacultyMember;
 }
 
-const FacultySidebar: React.FC<FacultySidebarProps> = ({ isOpen, setIsOpen, facultyMember }) => {
+const FacultySidebar: React.FC<FacultySidebarProps> = ({ isOpen, setIsSidebarOpen, facultyMember }) => {
     const navigate = useNavigate();
     const sidebarRef = useRef<HTMLElement>(null);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
-                setIsOpen(false);
+                setIsSidebarOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [setIsOpen]);
+    }, [setIsSidebarOpen]);
 
     const handleLogoutClick = () => {
         logout();
-        setIsOpen(false);
+        setIsSidebarOpen(false);
         navigate('/login?role=faculty');
     };
     
     const handleLinkClick = () => {
-        setIsOpen(false);
+        setIsSidebarOpen(false);
     }
 
     return (
         <>
-            <div className={`fixed inset-0 bg-black bg-opacity-50 z-30 transition-opacity lg:hidden ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsOpen(false)}></div>
+            <div className={`fixed inset-0 bg-black bg-opacity-50 z-30 transition-opacity lg:hidden ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsSidebarOpen(false)}></div>
             <aside
                 ref={sidebarRef}
                 className={`fixed top-0 left-0 h-full w-64 bg-brand-dark text-white flex flex-col p-4 z-40 transition-transform duration-300 ease-in-out

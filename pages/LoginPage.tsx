@@ -1,26 +1,14 @@
 
 import React, { useState } from 'react';
-import { useSearchParams, useNavigate, Link } from 'react-router-dom';
+// FIX: Split react-router-dom imports to resolve module export errors.
+import { useSearchParams, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import type { UserRole, Student, FacultyMember } from '../types';
 import { STUDENTS, FACULTY_MEMBERS } from '../constants';
+import { getItems } from '../services/dataService';
 
-const getStudents = (): Student[] => {
-    try {
-        const saved = localStorage.getItem('students');
-        return saved ? JSON.parse(saved) : STUDENTS;
-    } catch {
-        return STUDENTS;
-    }
-};
-
-const getFaculty = (): FacultyMember[] => {
-    try {
-        const saved = localStorage.getItem('faculty');
-        return saved ? JSON.parse(saved) : FACULTY_MEMBERS;
-    } catch {
-        return FACULTY_MEMBERS;
-    }
-};
+const getStudents = (): Student[] => getItems('students', STUDENTS);
+const getFaculty = (): FacultyMember[] => getItems('faculty', FACULTY_MEMBERS);
 
 
 const LoginPage: React.FC = () => {

@@ -66,12 +66,12 @@ const FeeStructurePage: React.FC = () => {
     return (
         <div className="bg-brand-beige">
             <div className="bg-brand-dark text-white py-12 md:py-20">
-                <div className="container mx-auto px-6 text-center">
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 text-center">
                     <h1 className="text-3xl md:text-4xl font-bold">ACCA Fee Structure</h1>
                     <p className="mt-4 text-lg max-w-3xl mx-auto">A comprehensive breakdown of college tuition fees and external fees payable to ACCA UK.</p>
                 </div>
             </div>
-            <div className="container mx-auto px-6 py-12 md:py-20">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 py-12 md:py-20">
                 <FeeTable feeCategories={ACCA_FEE_STRUCTURE} />
             </div>
         </div>

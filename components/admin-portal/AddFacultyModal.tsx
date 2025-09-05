@@ -1,8 +1,7 @@
-
-
 import React, { useState, useEffect, useRef } from 'react';
-import type { FacultyMember } from '../../types';
+import type { FacultyMember, Course } from '../../types';
 import { COURSES } from '../../constants';
+import { compressImage } from '../../services/imageCompressionService';
 
 interface AddFacultyModalProps {
     isOpen: boolean;
@@ -25,9 +24,15 @@ const AddFacultyModal: React.FC<AddFacultyModalProps> = ({ isOpen, onClose, onAd
     const [selectedPapers, setSelectedPapers] = useState<string[]>([]);
     const [profilePic, setProfilePic] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [allCourses, setAllCourses] = useState<Course[]>([]);
     const modalRef = useRef<HTMLDivElement>(null);
 
-    const allPapers = COURSES.flatMap(course => course.papers);
+    useEffect(() => {
+        const storedCourses = localStorage.getItem('courses');
+        setAllCourses(storedCourses ? JSON.parse(storedCourses) : COURSES);
+    }, [isOpen]);
+
+    const allPapers = allCourses.flatMap(course => course.papers);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -68,14 +73,18 @@ const AddFacultyModal: React.FC<AddFacultyModalProps> = ({ isOpen, onClose, onAd
         }
     };
     
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         console.log(`Creating faculty ${formData.name} with password: ${formData.password}`); // Handle password securely in a real app
+
+        const imageUrl = profilePic
+            ? await compressImage(profilePic, { maxWidth: 400, maxHeight: 400, quality: 0.8 })
+            : `https://picsum.photos/seed/${formData.name.replace(/\s+/g, '')}/400/400`;
 
         const newFaculty: FacultyMember = {
             id: Date.now(),
             ...formData,
-            imageUrl: previewUrl || 'https://picsum.photos/seed/newfaculty/400/400',
+            imageUrl: imageUrl,
             assignedPapers: selectedPapers,
         };
         onAddFaculty(newFaculty);

@@ -1,9 +1,7 @@
-
-
 import React from 'react';
 import { Link } from 'react-router-dom';
-import type { Student } from '../../types';
-import { useStudent } from '../StudentPortalPage';
+import type { Student } from '../../types.ts';
+import { useStudent } from '../StudentPortalPage.tsx';
 
 const StatCard = ({ title, value, colorClass = 'text-green-600' }: {title: string, value: string | number, colorClass?: string}) => (
      <div className="bg-white p-6 rounded-lg shadow-md">

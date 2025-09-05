@@ -1,8 +1,6 @@
-
-
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import NewsTicker from './NewsTicker';
+import NewsTicker from './NewsTicker.tsx';
 
 const navLinksList = [
     { to: "/", text: "Home" },
@@ -12,7 +10,6 @@ const navLinksList = [
     { to: "/gallery", text: "Gallery" },
     { to: "/faq", text: "FAQ" },
     { to: "/blog", text: "Blog" },
-    { to: "/vlogs", text: "Vlogs" },
     { to: "/contact", text: "Contact" },
 ];
 
@@ -43,7 +40,7 @@ const Header: React.FC = () => {
         <>
             <NewsTicker />
             <header className="bg-white shadow-md sticky top-0 z-40">
-                <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 py-4 flex justify-between items-center">
                     <Logo />
                     <div className="flex items-center">
                         <nav className="hidden md:flex items-center space-x-2 lg:space-x-4">

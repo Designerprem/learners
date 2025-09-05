@@ -1,225 +1,93 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { LIVE_CLASSES, RECORDED_LECTURES, COURSE_MATERIALS, COURSES } from '../../constants';
-import type { CourseMaterial, DownloadItem, LiveClass, RecordedLecture } from '../../types';
-import DownloadManager from '../../components/student-portal/DownloadManager';
-import RatingModal from '../../components/student-portal/RatingModal';
-import { useStudent } from '../StudentPortalPage';
+import { LIVE_CLASSES, RECORDED_LECTURES, COURSE_MATERIALS, COURSES } from '../../constants.ts';
+import type { CourseMaterial, DownloadItem, LiveClass, RecordedLecture } from '../../types.ts';
+import DownloadManager from '../../components/student-portal/DownloadManager.tsx';
+import RatingModal from '../../components/student-portal/RatingModal.tsx';
+import { useStudent } from '../StudentPortalPage.tsx';
 
 type ResourceType = 'lectures' | 'notes' | 'assignments';
 
+// FIX: Added 'assignments' property to 'resourceIcons' to match the 'ResourceType' type definition.
 const resourceIcons: { [key in ResourceType]: JSX.Element } = {
     lectures: <svg className="w-5 h-5 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>,
+    // FIX: Set a valid 'strokeLinecap' value of "round" to resolve the SVG error.
     notes: <svg className="w-5 h-5 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>,
-    assignments: <svg className="w-5 h-5 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+    assignments: <svg className="w-5 h-5 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>,
 };
-
-
-const ResourceViewerModal = ({ file, onClose }: { file: CourseMaterial; onClose: () => void; }) => {
-    // A sample public PDF for demonstration
-    const samplePdfUrl = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
-
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onClose();
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [onClose]);
-
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={onClose} role="dialog" aria-modal="true">
-            <div className="bg-white rounded-lg shadow-2xl w-11/12 max-w-4xl h-5/6 flex flex-col" onClick={e => e.stopPropagation()}>
-                <div className="p-4 border-b flex justify-between items-center">
-                    <h3 className="font-bold text-lg text-brand-dark truncate pr-4">{file.title}</h3>
-                    <button onClick={onClose} className="text-gray-500 hover:text-brand-red text-3xl font-light" aria-label="Close viewer">&times;</button>
-                </div>
-                <div className="flex-1 p-2 overflow-auto bg-gray-100">
-                    {file.type === 'PDF' ? (
-                        <iframe src={samplePdfUrl} width="100%" height="100%" title={file.title} className="border-0"></iframe>
-                    ) : (
-                        <div className="p-4 bg-white h-full">
-                            <h4 className="font-bold text-xl mb-2">{file.title}</h4>
-                            <p className="text-gray-700 whitespace-pre-wrap">
-                                This is a placeholder for the {file.type.toLowerCase()} content. In a real application, the actual content would be displayed here.
-                                {'\n\n'}
-                                For assignments, this area might include the assignment brief, questions, and submission guidelines. For notes, it would contain the study material.
-                                {'\n\n'}
-                                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non risus. Suspendisse lectus tortor, dignissim sit amet, adipiscing nec, ultricies sed, dolor. Cras elementum ultrices diam. Maecenas ligula massa, varius a, semper congue, euismod non, mi. Proin porttitor, orci nec nonummy molestie, enim est eleifend mi, non fermentum diam nisl sit amet erat. Duis semper. Duis arcu massa, scelerisque vitae, consequat in, pretium a, enim. Pellentesque congue. Ut in risus volutpat libero pharetra tempor. Cras vestibulum bibendum augue. Praesent egestas leo in pede.
-                            </p>
-                        </div>
-                    )}
-                </div>
-                <div className="p-3 border-t bg-gray-50 text-right">
-                    <a href={file.downloadLink} download className="bg-brand-red text-white font-semibold px-4 py-2 rounded-md hover:bg-red-700 transition-colors">
-                        Download
-                    </a>
-                </div>
-            </div>
-        </div>
-    );
-};
-
 
 const LiveClasses: React.FC = () => {
     const { student } = useStudent();
     const [searchParams] = useSearchParams();
-    const paperFromUrl = searchParams.get('paper');
     
-    const [activeTab, setActiveTab] = useState<ResourceType>('lectures');
-    const [selectedPaper, setSelectedPaper] = useState<string>('All');
-    const [selectedFiles, setSelectedFiles] = useState<Set<number>>(new Set());
-    const [downloadQueue, setDownloadQueue] = useState<DownloadItem[]>([]);
-    const [viewingFile, setViewingFile] = useState<CourseMaterial | null>(null);
-    const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
-    const [classToRate, setClassToRate] = useState<LiveClass | null>(null);
-
-    useEffect(() => {
-        if (student && paperFromUrl) {
-            setSelectedPaper(paperFromUrl);
-        } else if (student) {
-            setSelectedPaper('All');
-        }
-    }, [student, paperFromUrl]);
-
-    const allPapersMap = useMemo(() => {
-        const map = new Map<string, string>();
+    const allStudentPapers = useMemo(() => {
+        const paperMap = new Map<string, string>();
         COURSES.forEach(course => {
-            course.papers.forEach(paper => {
-                const code = paper.split(':')[0].trim();
-                map.set(code, paper);
-            });
-        });
-        return map;
-    }, []);
-    
-    const enrolledPapersWithNames = useMemo(() => {
-        if (!student) return [];
-        return student.enrolledPapers.map(code => allPapersMap.get(code) || code);
-    }, [student, allPapersMap]);
-
-    const liveNow = useMemo(() => {
-        if (!student) return null;
-        return LIVE_CLASSES.find(c => {
-            const paperCode = c.paper.split(':')[0].trim();
-            return c.status === 'Live' && student.enrolledPapers.includes(paperCode);
-        });
-    }, [student]);
-
-    const upcomingClasses = useMemo(() => {
-        if (!student) return [];
-        return LIVE_CLASSES.filter(c => {
-            const paperCode = c.paper.split(':')[0].trim();
-            return c.status === 'Upcoming' && student.enrolledPapers.includes(paperCode);
-        });
-    }, [student]);
-    
-
-    const allCourseMaterials = useMemo(() => {
-        const savedMaterials = localStorage.getItem('customMaterials');
-        const customMaterials: CourseMaterial[] = savedMaterials ? JSON.parse(savedMaterials) : [];
-        const baseIds = new Set(COURSE_MATERIALS.map(m => m.id));
-        const uniqueCustom = customMaterials.filter(m => !baseIds.has(m.id));
-        return [...COURSE_MATERIALS, ...uniqueCustom];
-    }, []);
-
-    const allRecordedLectures = useMemo(() => {
-        const savedLectures = localStorage.getItem('customLectures');
-        const customLectures: RecordedLecture[] = savedLectures ? JSON.parse(savedLectures) : [];
-        const baseIds = new Set(RECORDED_LECTURES.map(l => l.id));
-        const uniqueCustom = customLectures.filter(l => !baseIds.has(l.id));
-        return [...RECORDED_LECTURES, ...uniqueCustom];
-    }, []);
-
-
-    const materialsById = useMemo(() => {
-        const map = new Map<number, CourseMaterial>();
-        allCourseMaterials.forEach(material => map.set(material.id, material));
-        return map;
-    }, [allCourseMaterials]);
-
-    const filteredMaterials = useMemo(() => {
-        if (!student) return [];
-
-        let materials: (CourseMaterial | {id: number, paper: string; title: string; uploadDate: string; downloadLink: string; type: 'lectures'})[] = [];
-        if (activeTab === 'lectures') {
-             materials = allRecordedLectures.map(lec => ({ ...lec, id: lec.id, title: lec.topic, uploadDate: lec.date, downloadLink: lec.videoUrl, type: 'lectures' as const }));
-        } else if (activeTab === 'notes') {
-            materials = allCourseMaterials.filter(m => m.type === 'PDF' || m.type === 'Notes');
-        } else {
-            materials = allCourseMaterials.filter(m => m.type === 'Assignment');
-        }
-        
-        const enrolledMaterials = materials.filter(m => student.enrolledPapers.includes(m.paper));
-
-        if (selectedPaper !== 'All') {
-            const selectedPaperCode = selectedPaper.split(':')[0].trim();
-            return enrolledMaterials.filter(m => m.paper === selectedPaperCode);
-        }
-        return enrolledMaterials.sort((a, b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime());
-    }, [activeTab, selectedPaper, allCourseMaterials, allRecordedLectures, student]);
-
-
-    const handleToggleFileSelection = (fileId: number) => {
-        setSelectedFiles(prevSelected => {
-            const newSelected = new Set(prevSelected);
-            if (newSelected.has(fileId)) {
-                newSelected.delete(fileId);
-            } else {
-                newSelected.add(fileId);
-            }
-            return newSelected;
-        });
-    };
-
-    const handleDownloadSelected = () => {
-        const newDownloads: DownloadItem[] = [];
-        selectedFiles.forEach(id => {
-            const material = materialsById.get(id);
-            if (material && !downloadQueue.some(item => item.id === id)) {
-                newDownloads.push({
-                    id,
-                    title: material.title,
-                    status: 'queued',
-                    progress: 0,
-                    size: Math.floor(Math.random() * (10000 - 500 + 1) + 500), // Random size 500KB-10MB
-                });
-            }
-        });
-        setDownloadQueue(prev => [...prev, ...newDownloads]);
-        setSelectedFiles(new Set());
-    };
-
-    const updateDownloadProgress = (id: number, progress: number, status?: DownloadItem['status']) => {
-        setDownloadQueue(prev => prev.map(item => item.id === id ? { ...item, progress: Math.min(progress, 100), status: status || item.status } : item));
-    };
-
-    const startDownload = (item: DownloadItem) => {
-        const intervalId = setInterval(() => {
-            setDownloadQueue(prev => {
-                const currentItem = prev.find(d => d.id === item.id);
-                if (currentItem && currentItem.status === 'downloading') {
-                    const newProgress = currentItem.progress + Math.random() * 5;
-                    if (newProgress >= 100) {
-                        clearInterval(currentItem.intervalId);
-                        return prev.map(d => d.id === item.id ? { ...d, progress: 100, status: 'completed', intervalId: undefined } : d);
-                    }
-                    return prev.map(d => d.id === item.id ? { ...d, progress: newProgress } : d);
+            course.papers.forEach(paperName => {
+                const paperCode = paperName.split(':')[0].trim();
+                if (student.enrolledPapers.includes(paperCode)) {
+                    paperMap.set(paperName, paperCode);
                 }
-                return prev;
             });
-        }, 200);
-
-        setDownloadQueue(prev => prev.map(d => d.id === item.id ? { ...d, status: 'downloading', intervalId } : d));
-    };
-
-    useEffect(() => {
-        downloadQueue.forEach(item => {
-            if (item.status === 'queued') {
-                startDownload(item);
-            }
         });
+        return Array.from(paperMap.keys());
+    }, [student.enrolledPapers]);
+    
+    const initialPaper = searchParams.get('paper') || allStudentPapers[0] || '';
+    const [selectedPaper, setSelectedPaper] = useState(initialPaper);
+    
+    const [downloadQueue, setDownloadQueue] = useState<DownloadItem[]>([]);
+    const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
+    const [ratingTarget, setRatingTarget] = useState<{ teacherName: string; classTopic: string } | null>(null);
+
+    // Filtered data based on selectedPaper
+    const liveClassesForPaper = LIVE_CLASSES.filter(c => c.paper === selectedPaper);
+    const recordedLecturesForPaper = RECORDED_LECTURES.filter(l => l.paper === selectedPaper.split(':')[0].trim());
+    const courseMaterialsForPaper = COURSE_MATERIALS.filter(m => m.paper === selectedPaper.split(':')[0].trim());
+
+    const resources = [
+        ...recordedLecturesForPaper.map(l => ({ type: 'lectures' as const, data: l })),
+        ...courseMaterialsForPaper.filter(m => m.type === 'Notes' || m.type === 'PDF').map(m => ({ type: 'notes' as const, data: m })),
+        ...courseMaterialsForPaper.filter(m => m.type === 'Assignment').map(m => ({ type: 'assignments' as const, data: m })),
+    ];
+    
+    const handleDownload = (item: CourseMaterial | RecordedLecture) => {
+        const id = item.id;
+        if (downloadQueue.some(d => d.id === id)) return; // Don't add if already in queue
+        
+        const newItem: DownloadItem = {
+            id,
+            title: 'videoUrl' in item ? item.topic : item.title,
+            progress: 0,
+            status: 'queued',
+            size: Math.floor(Math.random() * (20000 - 2000) + 2000), // Random size for simulation
+        };
+        setDownloadQueue(prev => [...prev, newItem]);
+    };
+    
+    useEffect(() => {
+        const activeDownload = downloadQueue.find(d => d.status === 'queued');
+        if (activeDownload) {
+            setDownloadQueue(prev => prev.map(d => d.id === activeDownload.id ? { ...d, status: 'downloading' } : d));
+
+            const intervalId = setInterval(() => {
+                setDownloadQueue(prevQueue => {
+                    const currentItem = prevQueue.find(i => i.id === activeDownload.id);
+                    if (!currentItem || currentItem.status !== 'downloading') {
+                        clearInterval(intervalId);
+                        return prevQueue;
+                    }
+                    if (currentItem.progress >= 100) {
+                        clearInterval(intervalId);
+                        return prevQueue.map(d => d.id === activeDownload.id ? { ...d, status: 'completed' } : d);
+                    }
+                    const newProgress = currentItem.progress + 5;
+                    return prevQueue.map(d => d.id === activeDownload.id ? { ...d, progress: Math.min(newProgress, 100) } : d);
+                });
+            }, 500);
+            
+            setDownloadQueue(prev => prev.map(d => d.id === activeDownload.id ? { ...d, intervalId } : d));
+        }
     }, [downloadQueue]);
 
     const handlePauseDownload = (id: number) => {
@@ -229,14 +97,11 @@ const LiveClasses: React.FC = () => {
             setDownloadQueue(prev => prev.map(d => d.id === id ? { ...d, status: 'paused', intervalId: undefined } : d));
         }
     };
-
-    const handleResumeDownload = (id: number) => {
-        const item = downloadQueue.find(d => d.id === id);
-        if (item && item.status === 'paused') {
-            startDownload(item);
-        }
-    };
     
+    const handleResumeDownload = (id: number) => {
+        setDownloadQueue(prev => prev.map(d => d.id === id ? { ...d, status: 'queued' } : d)); // Re-queue to restart download
+    };
+
     const handleCancelDownload = (id: number) => {
         const item = downloadQueue.find(d => d.id === id);
         if (item && item.intervalId) {
@@ -246,184 +111,93 @@ const LiveClasses: React.FC = () => {
     };
 
     const handleClearCompleted = () => {
-        setDownloadQueue(prev => prev.filter(item => item.status !== 'completed' && item.status !== 'canceled' && item.status !== 'failed'));
-    };
-    
-    const isDownloadableTab = activeTab === 'notes' || activeTab === 'assignments';
-
-    const handleJoinClassClick = (liveClass: LiveClass) => {
-        setClassToRate(liveClass);
-        setIsRatingModalOpen(true);
+        setDownloadQueue(prev => prev.filter(d => d.status !== 'completed'));
     };
 
     const handleRatingSubmit = (rating: number, feedback: string) => {
-        if (!classToRate) return;
-        // In a real application, you would send this data to your backend API
-        console.log({
-            classId: classToRate.id,
-            teacher: classToRate.instructor,
-            topic: classToRate.topic,
-            rating,
-            feedback,
-        });
+        console.log(`Submitted rating: ${rating} stars. Feedback: "${feedback}"`, ratingTarget);
+        // In a real app, send this data to the server
     };
-    
-    if (!student) {
-        return <div>Loading...</div>;
-    }
+
 
     return (
         <div>
             <h1 className="text-4xl font-bold text-brand-dark mb-8">Classes & Resources</h1>
-
-            {liveNow && (
-                <div className="mb-8 bg-red-100 border-l-4 border-brand-red p-6 rounded-r-lg shadow-lg">
-                    <div className="flex items-center">
-                        <span className="relative flex h-3 w-3 mr-4">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-red opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-                        </span>
-                        <div>
-                            <h2 className="text-xl font-bold text-brand-red">LIVE NOW: {liveNow.paper}</h2>
-                            <p className="text-gray-700">{liveNow.topic} with {liveNow.instructor}</p>
-                        </div>
-                         <a href={liveNow.joinLink} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            onClick={() => handleJoinClassClick(liveNow)}
-                            className="ml-auto bg-brand-red text-white font-bold py-2 px-4 rounded-md hover:bg-red-700 transition-colors">
-                            Join Class
-                        </a>
-                    </div>
-                </div>
-            )}
-
-            <div className="mb-8 bg-white p-6 rounded-lg shadow-md">
-                <h2 className="text-xl font-bold text-brand-dark mb-4">Upcoming Classes Today</h2>
-                {upcomingClasses.length > 0 ? (
-                    <ul className="space-y-3">
-                        {upcomingClasses.map(c => (
-                             <li key={c.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
-                                <div>
-                                    <p className="font-semibold">{c.paper}: <span className="font-normal">{c.topic}</span></p>
-                                    <p className="text-sm text-gray-500">{c.instructor}</p>
-                                </div>
-                                 <span className="text-sm font-semibold text-brand-dark bg-gray-200 px-3 py-1 rounded-full">{c.startTime}</span>
-                            </li>
-                        ))}
-                    </ul>
-                ) : <p className="text-gray-500">No more classes scheduled for today.</p>}
+            
+            <div className="mb-6">
+                <label htmlFor="paperSelect" className="block text-sm font-medium text-gray-700">Select a Paper</label>
+                <select 
+                    id="paperSelect"
+                    value={selectedPaper}
+                    onChange={(e) => setSelectedPaper(e.target.value)}
+                    className="mt-1 block w-full max-w-sm pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-brand-red focus:border-brand-red sm:text-sm rounded-md shadow-sm bg-white"
+                >
+                    {allStudentPapers.map(paper => <option key={paper} value={paper}>{paper}</option>)}
+                </select>
             </div>
             
-             <div className="bg-white p-6 rounded-lg shadow-md">
-                <h2 className="text-2xl font-bold text-brand-dark mb-4">Learning Resources</h2>
-                
-                <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-                    <div className="flex border-b">
-                        <button onClick={() => setActiveTab('lectures')} className={`py-2 px-4 font-semibold ${activeTab === 'lectures' ? 'border-b-2 border-brand-red text-brand-red' : 'text-gray-500'}`}>Recorded Lectures</button>
-                        <button onClick={() => setActiveTab('notes')} className={`py-2 px-4 font-semibold ${activeTab === 'notes' ? 'border-b-2 border-brand-red text-brand-red' : 'text-gray-500'}`}>Notes & PDFs</button>
-                        <button onClick={() => setActiveTab('assignments')} className={`py-2 px-4 font-semibold ${activeTab === 'assignments' ? 'border-b-2 border-brand-red text-brand-red' : 'text-gray-500'}`}>Assignments</button>
-                    </div>
-                     <div>
-                        <label htmlFor="paperFilter" className="sr-only">Filter by Paper</label>
-                        <select 
-                            id="paperFilter" 
-                            value={selectedPaper}
-                            onChange={(e) => setSelectedPaper(e.target.value)}
-                            className="mt-1 block w-full pl-3 pr-10 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red"
-                        >
-                            <option value="All">All My Papers</option>
-                            {enrolledPapersWithNames.map(paper => <option key={paper} value={paper}>{paper}</option>)}
-                        </select>
-                    </div>
-                </div>
-
-                {isDownloadableTab && selectedFiles.size > 0 && (
-                     <div className="bg-brand-beige p-3 rounded-md mb-4 flex justify-between items-center">
-                        <p className="font-semibold">{selectedFiles.size} file(s) selected.</p>
-                        <button 
-                            onClick={handleDownloadSelected} 
-                            className="bg-brand-red text-white font-semibold px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
-                        >
-                            Download Selected
-                        </button>
-                    </div>
-                )}
-
-
-                <div className="space-y-3">
-                    {filteredMaterials.length > 0 ? filteredMaterials.map((item) => {
-                        const fullPaperName = allPapersMap.get(item.paper) || item.paper;
-                        return (
-                         <div key={item.id} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-md transition-colors">
-                            <div className="flex items-center">
-                               {isDownloadableTab && (
-                                    <input 
-                                        type="checkbox"
-                                        className="h-4 w-4 mr-4 rounded border-gray-300 text-brand-red focus:ring-brand-red"
-                                        checked={selectedFiles.has(item.id)}
-                                        onChange={() => handleToggleFileSelection(item.id)}
-                                        aria-label={`Select ${item.title}`}
-                                    />
-                                )}
-                                {resourceIcons[activeTab]}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Live Classes Section */}
+                <div className="bg-white p-6 rounded-lg shadow-md">
+                    <h2 className="text-2xl font-bold text-brand-dark mb-4">Live Classes</h2>
+                    <div className="space-y-4">
+                        {liveClassesForPaper.length > 0 ? liveClassesForPaper.map(cls => (
+                            <div key={cls.id} className="p-4 border rounded-lg flex justify-between items-center bg-gray-50">
                                 <div>
-                                    <p className="font-semibold text-brand-dark">{item.title}</p>
-                                    <p className="text-sm text-gray-500">{fullPaperName} - {item.uploadDate}</p>
+                                    <p className="font-bold">{cls.topic}</p>
+                                    <p className="text-sm text-gray-500">{cls.instructor} - {cls.startTime}</p>
                                 </div>
-                            </div>
-                            <div className="flex items-center space-x-4">
-                                {(activeTab === 'notes' || activeTab === 'assignments') && (
-                                    <button 
-                                        onClick={() => setViewingFile(item as CourseMaterial)}
-                                        className="text-sm font-semibold text-blue-600 hover:underline"
-                                    >
-                                        View
-                                    </button>
-                                )}
-                                <a 
-                                    href={item.downloadLink} 
-                                    className="text-sm font-semibold text-brand-red hover:underline"
-                                    {...(activeTab === 'lectures' && { target: '_blank', rel: 'noopener noreferrer' })}
-                                    {...(isDownloadableTab && { download: true })}
-                                >
-                                    {activeTab === 'lectures' ? 'Watch Now' : 'Download'}
+                                <a href={cls.joinLink} className={`px-4 py-2 rounded-md font-semibold text-sm transition-colors ${cls.status === 'Live' ? 'bg-brand-red text-white hover:bg-red-700' : 'bg-gray-200 text-gray-700 cursor-not-allowed'}`}>
+                                    {cls.status === 'Live' ? 'Join Now' : 'Upcoming'}
                                 </a>
                             </div>
-                        </div>
-                    )}) : (
-                         <div className="text-center py-8 text-gray-500">
-                             <p>No resources found for the selected criteria.</p>
-                        </div>
-                    )}
+                        )) : <p className="text-gray-500">No live classes scheduled for this paper.</p>}
+                    </div>
+                </div>
+
+                {/* All Resources Section */}
+                <div className="bg-white p-6 rounded-lg shadow-md">
+                    <h2 className="text-2xl font-bold text-brand-dark mb-4">Class Resources</h2>
+                    <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+                        {resources.map((res, index) => {
+                            const title = 'topic' in res.data ? res.data.topic : res.data.title;
+                            return (
+                                <div key={index} className="flex items-center p-3 hover:bg-gray-100 rounded-md transition-colors">
+                                    {resourceIcons[res.type]}
+                                    <div className="flex-1">
+                                        <p className="font-medium text-gray-800">{title}</p>
+                                        <p className="text-xs text-gray-500">
+                                            {'date' in res.data ? `Date: ${res.data.date}` : `Uploaded: ${res.data.uploadDate}`}
+                                        </p>
+                                    </div>
+                                    <div className="space-x-2">
+                                        {'videoUrl' in res.data && (
+                                            <button onClick={() => setRatingTarget({ teacherName: 'Your Teacher', classTopic: res.data.topic })} className="text-xs font-semibold text-yellow-600 hover:underline">Rate</button>
+                                        )}
+                                        <button onClick={() => handleDownload(res.data)} className="text-xs font-semibold text-blue-600 hover:underline">Download</button>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                        {resources.length === 0 && <p className="text-gray-500">No resources available for this paper yet.</p>}
+                    </div>
                 </div>
             </div>
+
+            <DownloadManager queue={downloadQueue} onPause={handlePauseDownload} onResume={handleResumeDownload} onCancel={handleCancelDownload} onClearCompleted={handleClearCompleted} />
             
-            {downloadQueue.length > 0 && (
-                <DownloadManager 
-                    queue={downloadQueue}
-                    onPause={handlePauseDownload}
-                    onResume={handleResumeDownload}
-                    onCancel={handleCancelDownload}
-                    onClearCompleted={handleClearCompleted}
-                />
-            )}
-
-            {viewingFile && (
-                <ResourceViewerModal file={viewingFile} onClose={() => setViewingFile(null)} />
-            )}
-
-            {classToRate && (
-                 <RatingModal
-                    isOpen={isRatingModalOpen}
-                    onClose={() => setIsRatingModalOpen(false)}
+            {ratingTarget && (
+                <RatingModal
+                    isOpen={!!ratingTarget}
+                    onClose={() => setRatingTarget(null)}
                     onSubmit={handleRatingSubmit}
-                    teacherName={classToRate.instructor}
-                    classTopic={classToRate.topic}
+                    teacherName={ratingTarget.teacherName}
+                    classTopic={ratingTarget.classTopic}
                 />
             )}
         </div>
     );
 };
 
+// FIX: Added default export to resolve module import error in StudentPortalPage.
 export default LiveClasses;

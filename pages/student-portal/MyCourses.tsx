@@ -1,9 +1,7 @@
-
-
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { COURSES } from '../../constants';
-import { useStudent } from '../StudentPortalPage';
+import { COURSES } from '../../constants.ts';
+import { useStudent } from '../StudentPortalPage.tsx';
 
 const MyCourses: React.FC = () => {
     const { student } = useStudent();

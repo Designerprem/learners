@@ -1,4 +1,6 @@
 
+import { getItem, setItem } from './dataService';
+
 export interface WelcomeEmailDetails {
   studentName: string;
   studentEmail: string;
@@ -28,7 +30,7 @@ Reliant Learners Academy`;
  * In a real application, this would make an API call to a backend service.
  */
 export const sendWelcomeEmail = async (details: WelcomeEmailDetails): Promise<{ success: boolean; message: string }> => {
-  const template = localStorage.getItem('welcomeEmailTemplate') || DEFAULT_WELCOME_EMAIL_TEMPLATE;
+  const template = getItem('welcomeEmailTemplate', DEFAULT_WELCOME_EMAIL_TEMPLATE);
   
   const emailBody = template
     .replace(/{{studentName}}/g, details.studentName)

@@ -1,53 +1,97 @@
-
-
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { CALENDAR_EVENTS } from '../../constants';
-import type { CalendarEvent } from '../../types';
+import type { CalendarEvent, Student } from '../../types';
+import { useStudent } from '../StudentPortalPage';
 
-const eventColors: { [key in CalendarEvent['type']]: string } = {
-    class: 'bg-blue-500',
-    deadline: 'bg-yellow-500',
-    exam: 'bg-brand-red',
+const eventTypeConfig: { [key in CalendarEvent['type']]: { label: string; color: string; filterColor: string } } = {
+    class: { label: 'Class', color: 'bg-blue-500', filterColor: 'bg-blue-500' },
+    deadline: { label: 'Deadline', color: 'bg-yellow-500', filterColor: 'bg-yellow-500' },
+    exam: { label: 'Exam', color: 'bg-brand-red', filterColor: 'bg-brand-red' },
 };
 
-const AgendaItem = ({ event }: { event: CalendarEvent }) => (
+// Helper to get YYYY-MM-DD from a Date object in local timezone
+const getLocalDateString = (d: Date): string => {
+    const year = d.getFullYear();
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const day = d.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
+const AgendaItem: React.FC<{ event: CalendarEvent }> = ({ event }) => (
     <div className="flex items-start p-3 bg-gray-50 rounded-lg">
-        <div className="w-24 text-right pr-4 flex-shrink-0">
-            <p className="font-bold text-brand-dark">{event.startTime || 'All Day'}</p>
-            {event.endTime && <p className="text-sm text-gray-500">to {event.endTime}</p>}
-        </div>
+        <div className={`w-3 h-3 rounded-full mt-1.5 mr-4 flex-shrink-0 ${eventTypeConfig[event.type].color}`}></div>
         <div className="flex-grow">
-            <div className="flex justify-between items-center">
-                 <div className="flex items-center">
-                    <span className={`w-3 h-3 rounded-full ${eventColors[event.type]} mr-3 flex-shrink-0`}></span>
-                    <div>
-                        <p className="font-semibold text-gray-800">{event.title}</p>
-                        {event.paper && <p className="text-sm text-gray-500">{event.paper}</p>}
-                    </div>
-                </div>
-                {event.type === 'class' && event.joinLink && (
-                    <a href={event.joinLink} target="_blank" rel="noopener noreferrer" className="bg-brand-red text-white text-xs font-bold py-1 px-3 rounded-full hover:bg-red-700 transition-colors flex-shrink-0">
-                        Join Now
-                    </a>
-                )}
-            </div>
+            <p className="font-semibold text-gray-800">{event.title}</p>
+            <p className="text-sm text-gray-500">{event.paper}</p>
+        </div>
+        <div className="text-right flex-shrink-0">
+            <p className="font-bold text-sm text-brand-dark">{event.startTime || 'All Day'}</p>
+            {event.endTime && <p className="text-xs text-gray-500">to {event.endTime}</p>}
         </div>
     </div>
 );
 
 
 const SchedulePage: React.FC = () => {
-    const [currentDate, setCurrentDate] = useState(new Date('2024-07-22T10:00:00Z'));
-    const [selectedDate, setSelectedDate] = useState(new Date('2024-07-22T10:00:00Z'));
+    const { student } = useStudent();
+    const [view, setView] = useState<'month' | 'agenda'>('month');
+    const [currentDate, setCurrentDate] = useState(new Date());
+    const [selectedDate, setSelectedDate] = useState(new Date());
+    const [filters, setFilters] = useState({
+        class: true,
+        deadline: true,
+        exam: true,
+    });
+    
+    const [allEvents, setAllEvents] = useState<CalendarEvent[]>(() => {
+        try {
+            const savedEvents = localStorage.getItem('calendarEvents');
+            return savedEvents ? JSON.parse(savedEvents) : CALENDAR_EVENTS;
+        } catch (e) {
+            console.error("Failed to load events from localStorage", e);
+            return CALENDAR_EVENTS;
+        }
+    });
+
+    useEffect(() => {
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === 'calendarEvents') {
+                 try {
+                    setAllEvents(e.newValue ? JSON.parse(e.newValue) : CALENDAR_EVENTS);
+                } catch (err) {
+                    console.error("Failed to parse calendar events on storage change", err);
+                    setAllEvents(CALENDAR_EVENTS);
+                }
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+        };
+    }, []);
+
+    const handleFilterChange = (type: CalendarEvent['type']) => {
+        setFilters(prev => ({ ...prev, [type]: !prev[type] }));
+    };
+    
+    const filteredEvents = useMemo(() => {
+        if (!student) return [];
+        const studentPaperCodes = new Set(student.enrolledPapers); // e.g. ['FR', 'AA']
+
+        return allEvents
+            .filter(event => {
+                if (!event.paper) return false; // Only show events tied to a paper
+                const eventPaperCode = event.paper.split(':')[0].trim();
+                return studentPaperCodes.has(eventPaperCode);
+            })
+            .filter(event => filters[event.type]);
+    }, [filters, allEvents, student]);
 
     const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-    
-    // Adjust start date to the beginning of the week (Sunday)
     const startDate = new Date(startOfMonth);
     startDate.setDate(startDate.getDate() - startDate.getDay());
-
-    // Adjust end date to the end of the week (Saturday)
     const endDate = new Date(endOfMonth);
     endDate.setDate(endDate.getDate() + (6 - endDate.getDay()));
     
@@ -59,12 +103,8 @@ const SchedulePage: React.FC = () => {
         day.setDate(day.getDate() + 1);
     }
     
-    const isSameDay = (d1: Date, d2: Date) => 
-        d1.getFullYear() === d2.getFullYear() &&
-        d1.getMonth() === d2.getMonth() &&
-        d1.getDate() === d2.getDate();
-
-    const isToday = (d: Date) => isSameDay(d, new Date('2024-07-22T10:00:00Z'));
+    const isSameDay = (d1: Date, d2: Date) => d1.toDateString() === d2.toDateString();
+    const isToday = (d: Date) => isSameDay(d, new Date());
 
     const changeMonth = (offset: number) => {
         setCurrentDate(current => {
@@ -73,77 +113,141 @@ const SchedulePage: React.FC = () => {
             return newDate;
         });
     };
+
+    const goToToday = () => {
+        const today = new Date();
+        setCurrentDate(today);
+        setSelectedDate(today);
+    };
     
-    const selectedDayEvents = CALENDAR_EVENTS
-        .filter(event => event.date === selectedDate.toISOString().split('T')[0])
+    const selectedDayEvents = filteredEvents
+        .filter(event => event.date === getLocalDateString(selectedDate))
         .sort((a, b) => (a.startTime || '00:00').localeCompare(b.startTime || '00:00'));
+        
+    const agendaEvents = useMemo(() => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const thirtyDaysFromNow = new Date(today);
+        thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+
+        return filteredEvents
+            .filter(event => {
+                const eventDate = new Date(event.date + 'T00:00:00'); // Treat as local time to avoid timezone shift
+                return eventDate >= today && eventDate <= thirtyDaysFromNow;
+            })
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime() || (a.startTime || '00:00').localeCompare(b.startTime || '00:00'));
+    }, [filteredEvents]);
+    
+    const groupedAgendaEvents = agendaEvents.reduce((acc, event) => {
+        const date = event.date;
+        if (!acc[date]) {
+            acc[date] = [];
+        }
+        acc[date].push(event);
+        return acc;
+    }, {} as Record<string, CalendarEvent[]>);
+
+    if (!student) {
+        return <div>Loading schedule...</div>;
+    }
 
     return (
         <div>
-            <h1 className="text-4xl font-bold text-brand-dark mb-8">My Schedule</h1>
-
-            <div className="lg:grid lg:grid-cols-3 lg:gap-8">
-                <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
-                    <div className="flex justify-between items-center mb-6">
-                        <button onClick={() => changeMonth(-1)} className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">&larr; Previous</button>
-                        <h2 className="text-2xl font-bold text-brand-dark">
-                            {currentDate.toLocaleString('default', { month: 'long' })} {currentDate.getFullYear()}
+            <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+                <h1 className="text-4xl font-bold text-brand-dark">My Schedule</h1>
+                <div className="flex items-center gap-2 p-1 bg-gray-200 rounded-lg">
+                    <button onClick={() => setView('month')} className={`px-4 py-1.5 text-sm font-semibold rounded-md ${view === 'month' ? 'bg-white shadow' : 'text-gray-600'}`}>Month</button>
+                    <button onClick={() => setView('agenda')} className={`px-4 py-1.5 text-sm font-semibold rounded-md ${view === 'agenda' ? 'bg-white shadow' : 'text-gray-600'}`}>Agenda</button>
+                </div>
+            </div>
+            
+             <div className="bg-white p-6 rounded-lg shadow-md">
+                 <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
+                    <div className="flex items-center gap-4">
+                        <button onClick={() => changeMonth(-1)} className="p-2 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors" aria-label="Previous month">&larr;</button>
+                        <h2 className="text-2xl font-bold text-brand-dark text-center w-48">
+                            {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
                         </h2>
-                        <button onClick={() => changeMonth(1)} className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">Next &rarr;</button>
+                        <button onClick={() => changeMonth(1)} className="p-2 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors" aria-label="Next month">&rarr;</button>
+                        <button onClick={goToToday} className="px-3 py-2 text-sm font-semibold border rounded-md hover:bg-gray-100 transition-colors">Today</button>
                     </div>
-                    
-                    <div className="grid grid-cols-7 gap-1 text-center font-semibold text-gray-600 mb-2">
-                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => <div key={d}>{d}</div>)}
-                    </div>
-
-                    <div className="grid grid-cols-7 gap-1">
-                        {days.map((d, i) => {
-                            const isCurrentMonth = d.getMonth() === currentDate.getMonth();
-                            const dateStr = d.toISOString().split('T')[0];
-                            const dayEvents = CALENDAR_EVENTS.filter(e => e.date === dateStr);
-                            const isSelected = isSameDay(d, selectedDate);
-
-                            return (
-                                <div 
-                                    key={i}
-                                    onClick={() => setSelectedDate(d)}
-                                    className={`h-28 md:h-32 p-2 border rounded-md flex flex-col overflow-hidden cursor-pointer transition-colors ${
-                                        isSelected ? 'bg-red-100 border-brand-red scale-105 shadow-lg' : 
-                                        isToday(d) ? 'bg-red-50' : 
-                                        isCurrentMonth ? 'bg-white hover:bg-gray-50' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
-                                    }`}
-                                >
-                                    <span className={`font-bold ${isCurrentMonth ? 'text-gray-800' : 'text-gray-400'}`}>
-                                        {d.getDate()}
-                                    </span>
-                                    <div className="mt-1 flex-grow overflow-y-auto text-xs space-y-1">
-                                        {dayEvents.slice(0, 3).map((event, eventIndex) => (
-                                            <div key={eventIndex} className={`flex items-center p-1 rounded-md text-white ${eventColors[event.type]}`}>
-                                                <span className="truncate">{event.title}</span>
-                                            </div>
-                                        ))}
-                                        {dayEvents.length > 3 && <div className="text-center text-gray-500 font-bold">...</div>}
-                                    </div>
-                                </div>
-                            );
-                        })}
+                     <div className="flex items-center gap-4 mt-4 sm:mt-0">
+                        {Object.entries(eventTypeConfig).map(([type, { label, filterColor }]) => (
+                            <label key={type} className="flex items-center text-sm cursor-pointer">
+                                <input type="checkbox" checked={filters[type as CalendarEvent['type']]} onChange={() => handleFilterChange(type as CalendarEvent['type'])} className={`h-4 w-4 rounded border-gray-300 focus:ring-transparent ${filterColor.replace('bg-','text-')}`}/>
+                                <span className="ml-2 text-gray-700">{label}</span>
+                            </label>
+                        ))}
                     </div>
                 </div>
 
-                <div className="mt-8 lg:mt-0">
-                    <div className="bg-white p-6 rounded-lg shadow-md sticky top-10">
-                        <h3 className="text-xl font-bold text-brand-dark border-b pb-2 mb-4">
-                            Daily Agenda: {selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-                        </h3>
-                         <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
-                            {selectedDayEvents.length > 0 ? (
-                                selectedDayEvents.map(event => <AgendaItem key={event.id} event={event} />)
-                            ) : (
-                                <p className="text-gray-500 text-center py-8">No events scheduled for this day.</p>
-                            )}
+                {view === 'month' ? (
+                     <div className="lg:grid lg:grid-cols-3 lg:gap-8">
+                        <div className="lg:col-span-2">
+                             <div className="grid grid-cols-7 gap-1 text-center font-semibold text-gray-600 mb-2">
+                                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => <div key={d} className="py-2">{d}</div>)}
+                            </div>
+
+                            <div className="grid grid-cols-7 gap-1">
+                                {days.map((d, i) => {
+                                    const isCurrentMonth = d.getMonth() === currentDate.getMonth();
+                                    const dateStr = getLocalDateString(d);
+                                    const dayEvents = filteredEvents.filter(e => e.date === dateStr);
+                                    const isSelected = isSameDay(d, selectedDate);
+
+                                    return (
+                                        <div 
+                                            key={i}
+                                            onClick={() => setSelectedDate(d)}
+                                            className={`h-24 sm:h-28 border rounded-md flex flex-col overflow-hidden cursor-pointer transition-all duration-200 ${
+                                                isSelected ? 'bg-red-100 border-brand-red scale-105 shadow-lg z-10' : 
+                                                isToday(d) ? 'bg-red-50' : 
+                                                isCurrentMonth ? 'bg-white hover:bg-gray-50' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
+                                            }`}
+                                        >
+                                            <span className={`font-bold text-xs sm:text-base p-1 sm:p-2 ${isCurrentMonth ? 'text-gray-800' : 'text-gray-400'}`}>
+                                                {d.getDate()}
+                                            </span>
+                                            <div className="flex-grow overflow-hidden px-1 space-y-1">
+                                                {dayEvents.slice(0, 3).map((event) => (
+                                                    <div key={event.id} className={`w-full h-1.5 rounded-full ${eventTypeConfig[event.type].color}`}></div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <div className="mt-8 lg:mt-0">
+                            <div className="sticky top-10">
+                                <h3 className="text-xl font-bold text-brand-dark border-b pb-2 mb-4">
+                                    {selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                                </h3>
+                                 <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+                                    {selectedDayEvents.length > 0 ? (
+                                        selectedDayEvents.map(event => <AgendaItem key={event.id} event={event} />)
+                                    ) : (
+                                        <p className="text-gray-500 text-center py-8">No events scheduled.</p>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
+                ) : (
+                     <div className="max-h-[70vh] overflow-y-auto pr-2">
+                        {Object.keys(groupedAgendaEvents).length > 0 ? Object.entries(groupedAgendaEvents).map(([date, events]) => (
+                            <div key={date} className="mb-6">
+                                <h3 className="font-bold text-brand-dark mb-2 sticky top-0 bg-white py-2 border-b">
+                                    {new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                                </h3>
+                                <div className="space-y-2">
+                                    {events.map(event => <AgendaItem key={event.id} event={event} />)}
+                                </div>
+                            </div>
+                        )) : <p className="text-gray-500 text-center py-12">No upcoming events in the next 30 days.</p>}
+                    </div>
+                )}
             </div>
         </div>
     );

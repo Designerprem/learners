@@ -1,5 +1,6 @@
 
-import React, { useState, useMemo } from 'react';
+
+import React, { useState, useMemo, useEffect } from 'react';
 import { STUDENTS } from '../../constants';
 import type { Student } from '../../types';
 import StudentDetailModal from '../../components/faculty-portal/StudentDetailModal';
@@ -7,22 +8,34 @@ import { useFaculty } from '../FacultyPortalPage';
 
 const MyStudents: React.FC = () => {
     const { facultyMember } = useFaculty();
+    const [students, setStudents] = useState<Student[]>([]);
     const [selectedPaper, setSelectedPaper] = useState('All');
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
+    useEffect(() => {
+        const loadStudents = () => {
+            const storedStudents = localStorage.getItem('students');
+            setStudents(storedStudents ? JSON.parse(storedStudents) : STUDENTS);
+        };
+
+        loadStudents();
+        window.addEventListener('storage', loadStudents);
+        return () => window.removeEventListener('storage', loadStudents);
+    }, []);
+
     const studentsForPaper = useMemo(() => {
         if (selectedPaper === 'All') {
             const facultyPaperCodes = facultyMember.assignedPapers.map(p => p.split(':')[0].trim());
-            return STUDENTS.filter(student =>
+            return students.filter(student =>
                 student.enrolledPapers.some(studentPaperCode => facultyPaperCodes.includes(studentPaperCode))
             );
         }
         const paperCode = selectedPaper.split(':')[0].trim();
-        return STUDENTS.filter(student =>
+        return students.filter(student =>
             student.enrolledPapers.includes(paperCode)
         );
-    }, [selectedPaper, facultyMember.assignedPapers]);
+    }, [selectedPaper, facultyMember.assignedPapers, students]);
 
     const filteredStudents = useMemo(() => {
         if (!searchTerm) return studentsForPaper;

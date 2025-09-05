@@ -1,14 +1,26 @@
-
-
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { BLOG_POSTS, FACULTY_MEMBERS, STUDENTS } from '../constants';
-import type { BlogPost } from '../types';
+import type { BlogPost, FacultyMember, Student } from '../types';
+import { getItems } from '../services/dataService';
 
 
 const PostCard: React.FC<{ post: BlogPost }> = ({ post }) => {
-    const facultyMap = new Map(FACULTY_MEMBERS.map(f => [f.id, f]));
-    const studentMap = new Map(STUDENTS.map(s => [s.id, s]));
+    const [faculty, setFaculty] = useState<FacultyMember[]>(() => getItems('faculty', FACULTY_MEMBERS));
+    const [students, setStudents] = useState<Student[]>(() => getItems('students', STUDENTS));
+
+    useEffect(() => {
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === 'faculty') setFaculty(getItems('faculty', FACULTY_MEMBERS));
+            if (e.key === 'students') setStudents(getItems('students', STUDENTS));
+        };
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
+
+    const facultyMap = new Map(faculty.map(f => [f.id, f]));
+    const studentMap = new Map(students.map(s => [s.id, s]));
+
     const author = post.authorType === 'student'
         ? studentMap.get(post.authorId)
         : facultyMap.get(post.authorId);
@@ -47,8 +59,21 @@ const PostCard: React.FC<{ post: BlogPost }> = ({ post }) => {
 
 
 const FeaturedPost: React.FC<{ post: BlogPost }> = ({ post }) => {
-    const facultyMap = new Map(FACULTY_MEMBERS.map(f => [f.id, f]));
-    const studentMap = new Map(STUDENTS.map(s => [s.id, s]));
+    const [faculty, setFaculty] = useState<FacultyMember[]>(() => getItems('faculty', FACULTY_MEMBERS));
+    const [students, setStudents] = useState<Student[]>(() => getItems('students', STUDENTS));
+
+    useEffect(() => {
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === 'faculty') setFaculty(getItems('faculty', FACULTY_MEMBERS));
+            if (e.key === 'students') setStudents(getItems('students', STUDENTS));
+        };
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
+    
+    const facultyMap = new Map(faculty.map(f => [f.id, f]));
+    const studentMap = new Map(students.map(s => [s.id, s]));
+
     const author = post.authorType === 'student'
         ? studentMap.get(post.authorId)
         : facultyMap.get(post.authorId);
@@ -58,7 +83,7 @@ const FeaturedPost: React.FC<{ post: BlogPost }> = ({ post }) => {
 
     return (
         <section className="mb-12 md:mb-20">
-            <div className="grid md:grid-cols-2 gap-8 items-center bg-brand-beige p-8 rounded-lg shadow-lg">
+            <div className="grid md:grid-cols-2 gap-8 items-center bg-brand-beige p-6 sm:p-8 rounded-lg shadow-lg">
                 <div className="overflow-hidden rounded-md">
                     <Link to={`/blog/${post.id}`}>
                         <img src={post.imageUrl} alt={post.title} className="w-full object-cover transform hover:scale-105 transition-transform duration-500" />
@@ -87,22 +112,28 @@ const FeaturedPost: React.FC<{ post: BlogPost }> = ({ post }) => {
 
 
 const BlogPage: React.FC = () => {
-    const [allPosts, setAllPosts] = useState<BlogPost[]>(BLOG_POSTS);
+    const [allPosts, setAllPosts] = useState<BlogPost[]>([]);
     const [activeTag, setActiveTag] = useState<string>('All');
 
-    useEffect(() => {
-        try {
-            const storedData = localStorage.getItem('siteContent');
-            if (storedData) {
-                const content = JSON.parse(storedData);
-                if (content.blogs) {
-                    setAllPosts(content.blogs);
-                }
-            }
-        } catch (error) {
-            console.error("Failed to parse blogs from localStorage", error);
-        }
+    const loadPosts = useCallback(() => {
+        setAllPosts(getItems('blogs', BLOG_POSTS));
     }, []);
+
+    useEffect(() => {
+        loadPosts(); // Initial load
+
+        const handleStorageChange = (event: StorageEvent) => {
+            if (event.key === 'blogs') {
+                loadPosts();
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+        };
+    }, [loadPosts]);
 
     const publishedPosts = useMemo(() => allPosts.filter(p => p.status === 'Published'), [allPosts]);
     const featuredPost = useMemo(() => publishedPosts.find(p => p.isFeatured), [publishedPosts]);
@@ -119,13 +150,13 @@ const BlogPage: React.FC = () => {
     return (
         <div className="bg-white">
             <div className="bg-brand-dark text-white py-12 md:py-20">
-                <div className="container mx-auto px-6 text-center">
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 text-center">
                     <h1 className="text-3xl md:text-4xl font-bold">Learners Academy Blog</h1>
                     <p className="mt-4 text-lg max-w-3xl mx-auto">Insights, tips, and career advice from our ACCA experts.</p>
                 </div>
             </div>
 
-            <div className="container mx-auto px-6 py-12 md:py-20">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 py-12 md:py-20">
                 {featuredPost && <FeaturedPost post={featuredPost} />}
 
                 <div className="mb-12">
@@ -146,21 +177,13 @@ const BlogPage: React.FC = () => {
                         ))}
                     </div>
                 </div>
-                
-                {filteredPosts.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {filteredPosts.map(post => (
-                            <PostCard key={post.id} post={post} />
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-center py-12 text-gray-500">
-                        <p className="text-xl">No posts found for the tag "{activeTag}".</p>
-                    </div>
-                )}
+
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {filteredPosts.map(post => <PostCard key={post.id} post={post} />)}
+                </div>
             </div>
         </div>
     );
 };
-
+// FIX: Added default export to the BlogPage component.
 export default BlogPage;

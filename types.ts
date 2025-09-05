@@ -1,4 +1,4 @@
-
+// FIX: Removed unnecessary self-import of 'HighAchiever' that conflicted with the interface declaration below.
 
 export type UserRole = 'student' | 'faculty' | 'admin';
 
@@ -329,4 +329,11 @@ export interface PopupNotification {
   isActive: boolean;
   link?: string;
   linkText?: string;
+}
+
+export interface HighAchiever {
+  id: number;
+  name: string;
+  avatarUrl: string;
+  achievement: string;
 }

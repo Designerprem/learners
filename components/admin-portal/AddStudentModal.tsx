@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { Application } from '../../types';
 import { COURSES } from '../../constants';
+import { compressImage } from '../../services/imageCompressionService';
 
 interface AddStudentModalProps {
     isOpen: boolean;
@@ -110,7 +111,7 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClose, onAd
         }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
         if (!validateStudentId(formData.studentId)) {
@@ -118,6 +119,10 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClose, onAd
         }
 
         const { password, ...applicationData } = formData;
+
+        const photoUrl = photoFile
+            ? await compressImage(photoFile, { maxWidth: 200, maxHeight: 200, quality: 0.8 })
+            : `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.fullName)}&background=random&color=fff`;
         
         const newApplication: Application = {
             id: Date.now(),
@@ -131,7 +136,7 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClose, onAd
             submittedDate: new Date().toISOString().split('T')[0],
             status: 'Approved',
             documentUrl: documentFile ? '#' : undefined, // Placeholder URL
-            photoUrl: photoPreviewUrl || `https://picsum.photos/seed/${formData.fullName}/200/200`
+            photoUrl: photoUrl
         };
         onAddStudent(newApplication, password);
     };
@@ -156,10 +161,10 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClose, onAd
                 className="bg-white rounded-lg shadow-2xl w-full max-w-lg"
                 onClick={e => e.stopPropagation()}
             >
-                <div className="p-4 border-b">
-                    <h2 className="text-2xl font-bold text-brand-dark">Manual Student Admission</h2>
-                </div>
                 <form onSubmit={handleSubmit}>
+                    <div className="p-4 border-b">
+                        <h2 className="text-2xl font-bold text-brand-dark">Manual Student Admission</h2>
+                    </div>
                     <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
                         <div>
                             <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">Full Name</label>

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ACADEMY_LOGO_URL, ACADEMY_NAME } from '../constants.ts';

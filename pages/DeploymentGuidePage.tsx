@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ACADEMY_LOGO_URL, ACADEMY_NAME } from '../constants';
+import { ACADEMY_LOGO_URL, ACADEMY_NAME } from '../constants.ts';
 
 const CodeBlock: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <pre className="bg-gray-800 text-white p-4 rounded-md overflow-x-auto text-sm my-4">
@@ -58,7 +58,7 @@ const DeploymentGuidePage: React.FC = () => {
                         <CodeBlock>{`git add .`}</CodeBlock>
                         <p>3. Create your first commit (a snapshot of your code):</p>
                         <CodeBlock>{`git commit -m "Initial commit"`}</CodeBlock>
-                        <p>4. Go to <a href="https://github.com/new" target="_blank" rel="noopener noreferrer" className="text-brand-red font-semibold hover:underline">GitHub and create a new repository</a>. You can name it whatever you like (e.g., "learners-academy-website"). Make it **public** and do **not** initialize it with a README or .gitignore file.</p>
+                        <p>4. Go to <a href="https://github.com/new" target="_blank" rel="noopener noreferrer" className="text-brand-red font-semibold hover:underline">GitHub and create a new repository</a>. You can name it whatever you like (e.g., "learners-academy-website"). Make it <strong>public</strong> and do <strong>not</strong> initialize it with a README or .gitignore file.</p>
                         <p>5. After creating it, GitHub will show you commands to "push an existing repository from the command line". Copy those commands and run them in your terminal. They will look similar to this:</p>
                         <CodeBlock>{`git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git
 git push -u origin main`}</CodeBlock>
@@ -69,12 +69,12 @@ git push -u origin main`}</CodeBlock>
                         <p>Vercel is a platform that makes it incredibly easy to host modern web applications.</p>
                         <ol className="list-decimal list-inside space-y-3">
                             <li>Go to <a href="https://vercel.com/signup" target="_blank" rel="noopener noreferrer" className="text-brand-red font-semibold hover:underline">Vercel and sign up</a> using your GitHub account. It's free.</li>
-                            <li>After signing up, you'll be on your dashboard. Click **"Add New... > Project"**.</li>
-                            <li>Vercel will ask to connect to your GitHub. Grant it access, then find and select the repository you just created (e.g., "learners-academy-website") and click **"Import"**.</li>
+                            <li>After signing up, you'll be on your dashboard. Click <strong>"Add New... &gt; Project"</strong>.</li>
+                            <li>Vercel will ask to connect to your GitHub. Grant it access, then find and select the repository you just created (e.g., "learners-academy-website") and click <strong>"Import"</strong>.</li>
                             <li>On the configuration screen, Vercel will automatically detect that this is a Vite project. You shouldn't need to change any settings.</li>
-                            <li>Simply click the **"Deploy"** button.</li>
+                            <li>Simply click the <strong>"Deploy"</strong> button.</li>
                         </ol>
-                        <p>That's it! Vercel will build and deploy your site. After a minute or two, it will provide you with a public URL (like `your-project.vercel.app`) where your website is live!</p>
+                        <p>That's it! Vercel will build and deploy your site. After a minute or two, it will provide you with a public URL (like <code>your-project.vercel.app</code>) where your website is live!</p>
                     </Step>
 
                     <div className="mt-12 pt-8 border-t">

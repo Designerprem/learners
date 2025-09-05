@@ -160,7 +160,7 @@ const LiveClasses: React.FC = () => {
                     <h2 className="text-2xl font-bold text-brand-dark mb-4">Class Resources</h2>
                     <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
                         {resources.map((res, index) => {
-                            const title = 'topic' in res.data ? res.data.topic : res.data.title;
+                            const title = 'videoUrl' in res.data ? res.data.topic : res.data.title;
                             return (
                                 <div key={index} className="flex items-center p-3 hover:bg-gray-100 rounded-md transition-colors">
                                     {resourceIcons[res.type]}
@@ -172,7 +172,8 @@ const LiveClasses: React.FC = () => {
                                     </div>
                                     <div className="space-x-2">
                                         {'videoUrl' in res.data && (
-                                            <button onClick={() => setRatingTarget({ teacherName: 'Your Teacher', classTopic: res.data.topic })} className="text-xs font-semibold text-yellow-600 hover:underline">Rate</button>
+                                            // FIX: Used the 'title' variable which holds the topic for lectures, resolving a type inference issue within the onClick handler.
+                                            <button onClick={() => setRatingTarget({ teacherName: 'Your Teacher', classTopic: title })} className="text-xs font-semibold text-yellow-600 hover:underline">Rate</button>
                                         )}
                                         <button onClick={() => handleDownload(res.data)} className="text-xs font-semibold text-blue-600 hover:underline">Download</button>
                                     </div>

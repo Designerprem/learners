@@ -1,7 +1,8 @@
 import React from 'react';
 import { COURSES } from '../constants.ts';
 import type { Course } from '../types.ts';
-import { Link } from 'react-router-dom';
+// FIX: Switched to namespace import for react-router-dom to fix module resolution issues.
+import * as ReactRouterDOM from 'react-router-dom';
 import AnimatedSection from '../components/AnimatedSection.tsx';
 
 const CourseDetailCard: React.FC<{ course: Course }> = ({ course }) => (
@@ -28,9 +29,9 @@ const CourseDetailCard: React.FC<{ course: Course }> = ({ course }) => (
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                 Download Brochure
             </a>
-            <Link to={`/courses/${course.id}`} className="bg-brand-red text-white px-8 py-3 rounded-md font-semibold hover:bg-opacity-80 transition-colors inline-flex items-center">
+            <ReactRouterDOM.Link to={`/courses/${course.id}`} className="bg-brand-red text-white px-8 py-3 rounded-md font-semibold hover:bg-opacity-80 transition-colors inline-flex items-center">
                 View Details & Syllabus &rarr;
-            </Link>
+            </ReactRouterDOM.Link>
         </div>
     </div>
 );

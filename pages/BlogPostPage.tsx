@@ -1,7 +1,8 @@
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { BLOG_POSTS, FACULTY_MEMBERS, STUDENTS } from '../constants';
+// FIX: Switched to namespace import for react-router-dom to fix module resolution issues.
+import * as ReactRouterDOM from 'react-router-dom';
+// FIX: Add '.ts' to constants import to resolve module not found error.
+import { BLOG_POSTS, FACULTY_MEMBERS, STUDENTS } from '../constants.ts';
 import type { BlogPost, Comment, FacultyMember, Student } from '../types';
 import { getItems } from '../services/dataService';
 
@@ -139,13 +140,13 @@ const Sidebar: React.FC<{ post: BlogPost; author: FacultyMember | Student; allPo
                     <h3 className="font-bold text-xl text-brand-dark mb-4 border-b pb-2">Related Posts</h3>
                     <div className="space-y-4">
                         {relatedPosts.map(p => (
-                            <Link key={p.id} to={`/blog/${p.id}`} className="flex items-center gap-4 group">
+                            <ReactRouterDOM.Link key={p.id} to={`/blog/${p.id}`} className="flex items-center gap-4 group">
                                 <img src={p.imageUrl} alt={p.title} className="w-20 h-20 object-cover rounded-md flex-shrink-0" />
                                 <div>
                                     <h4 className="font-semibold text-sm leading-tight group-hover:text-brand-red transition-colors">{p.title}</h4>
                                      <p className="text-xs text-gray-500 mt-1">{new Date(p.publicationDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}</p>
                                 </div>
-                            </Link>
+                            </ReactRouterDOM.Link>
                         ))}
                     </div>
                 </div>
@@ -155,7 +156,7 @@ const Sidebar: React.FC<{ post: BlogPost; author: FacultyMember | Student; allPo
 };
 
 const BlogPostPage: React.FC = () => {
-    const { postId } = useParams<{ postId: string }>();
+    const { postId } = ReactRouterDOM.useParams<{ postId: string }>();
     const [allPosts, setAllPosts] = useState<BlogPost[]>([]);
     const [faculty, setFaculty] = useState<FacultyMember[]>([]);
     const [students, setStudents] = useState<Student[]>([]);
@@ -191,9 +192,9 @@ const BlogPostPage: React.FC = () => {
             <div className="container mx-auto px-4 sm:px-6 py-20 text-center">
                 <h1 className="text-3xl font-bold">Post Not Found</h1>
                 <p className="mt-4">The post you are looking for does not exist or has been moved.</p>
-                <Link to="/blog" className="mt-6 inline-block bg-brand-red text-white px-6 py-2 rounded-md font-semibold hover:bg-red-700">
+                <ReactRouterDOM.Link to="/blog" className="mt-6 inline-block bg-brand-red text-white px-6 py-2 rounded-md font-semibold hover:bg-red-700">
                     Back to Blog
-                </Link>
+                </ReactRouterDOM.Link>
             </div>
         );
     }
@@ -240,7 +241,7 @@ const BlogPostPage: React.FC = () => {
             `}</style>
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 py-12 md:py-20">
                 <div className="max-w-4xl mx-auto mb-8">
-                    <Link to="/blog" className="text-brand-red font-semibold hover:underline mb-4 inline-block">&larr; Back to all posts</Link>
+                    <ReactRouterDOM.Link to="/blog" className="text-brand-red font-semibold hover:underline mb-4 inline-block">&larr; Back to all posts</ReactRouterDOM.Link>
                     <p className="text-sm text-brand-red font-semibold">{post.tags.join(' / ')}</p>
                     <h1 className="text-4xl md:text-5xl font-black text-brand-dark my-4 leading-tight">{post.title}</h1>
                     <div className="flex items-center text-sm text-gray-500">

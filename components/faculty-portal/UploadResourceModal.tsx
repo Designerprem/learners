@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useRef } from 'react';
 import type { CourseMaterial, RecordedLecture } from '../../types';
 
@@ -71,14 +69,13 @@ const ResourceModal: React.FC<ResourceModalProps> = ({ isOpen, onClose, onSave, 
             } else {
                 if (files.length === 0) return alert('Please select at least one file to upload.');
                 
-                // FIX: Add a temporary unique ID to each new material to satisfy the CourseMaterial type.
                 const newMaterials: CourseMaterial[] = files.map((file, index) => ({
-                    id: Date.now() + index,
+                    id: Date.now() + index, // Add index to ensure unique ID
                     paper,
                     title: files.length > 1 ? file.name.replace(/\.[^/.]+$/, "") : title,
                     type: resourceType,
                     uploadDate: new Date().toISOString().split('T')[0],
-                    downloadLink: '#',
+                    downloadLink: '#', // Placeholder for actual download link
                 }));
                 onSave(newMaterials);
             }
@@ -106,33 +103,50 @@ const ResourceModal: React.FC<ResourceModalProps> = ({ isOpen, onClose, onSave, 
                         </div>
                         <div>
                             <label htmlFor="title" className="block text-sm font-medium text-gray-700">{resourceType === 'Recorded Lecture' ? 'Lecture Topic' : 'Title'}</label>
-                            <input type="text" id="title" required value={title} onChange={e => setTitle(e.target.value)} disabled={!isEditing && files.length > 1} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white disabled:bg-gray-100" />
-                             {!isEditing && files.length > 1 && <p className="text-xs text-gray-500 mt-1">Titles will be generated from filenames.</p>}
+                            <input 
+                                type="text" 
+                                id="title" 
+                                required 
+                                value={title} 
+                                onChange={e => setTitle(e.target.value)} 
+                                disabled={!isEditing && files.length > 1} 
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white disabled:bg-gray-100"
+                            />
+                            {!isEditing && files.length > 1 && <p className="text-xs text-gray-500 mt-1">Title will be taken from the filename for multiple uploads.</p>}
                         </div>
-
+                        
                         {resourceType === 'Recorded Lecture' ? (
                             <div>
-                                <label htmlFor="videoUrl" className="block text-sm font-medium text-gray-700">Video URL</label>
-                                <input type="url" id="videoUrl" placeholder="https://youtube.com/..." required value={videoUrl} onChange={e => setVideoUrl(e.target.value)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white" />
+                                <label htmlFor="videoUrl" className="block text-sm font-medium text-gray-700">YouTube/Vimeo Embed URL</label>
+                                <input 
+                                    type="url" 
+                                    id="videoUrl" 
+                                    required 
+                                    value={videoUrl} 
+                                    onChange={e => setVideoUrl(e.target.value)} 
+                                    placeholder="https://www.youtube.com/embed/..."
+                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white" 
+                                />
                             </div>
                         ) : (
-                             <div>
-                                <label htmlFor="file" className="block text-sm font-medium text-gray-700">Upload File(s)</label>
+                            <div>
+                                <label htmlFor="file" className="block text-sm font-medium text-gray-700">File(s)</label>
                                 <input 
                                     type="file" 
-                                    id="file"
+                                    id="file" 
                                     multiple={!isEditing} 
-                                    required={!isEditing} 
-                                    onChange={e => setFiles(e.target.files ? Array.from(e.target.files) : [])} 
+                                    onChange={(e) => setFiles(e.target.files ? Array.from(e.target.files) : [])}
                                     className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-brand-red hover:file:bg-red-100"
                                 />
-                                {isEditing && <p className="text-xs text-gray-500 mt-1">Leave blank to keep the existing file.</p>}
+                                {isEditing && <p className="text-xs text-gray-500 mt-1">Uploading a new file will replace the existing one.</p>}
                             </div>
                         )}
                     </div>
                     <div className="p-4 border-t bg-gray-50 flex justify-end gap-4">
                         <button type="button" onClick={onClose} className="bg-gray-200 text-gray-700 font-semibold px-4 py-2 rounded-md hover:bg-gray-300">Cancel</button>
-                        <button type="submit" className="bg-brand-red text-white font-semibold px-4 py-2 rounded-md hover:bg-red-700">{isEditing ? 'Update Resource' : 'Upload Resource'}</button>
+                        <button type="submit" className="bg-brand-red text-white font-semibold px-4 py-2 rounded-md hover:bg-red-700">
+                            {isEditing ? 'Save Changes' : 'Upload'}
+                        </button>
                     </div>
                 </form>
             </div>

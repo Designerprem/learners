@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { Application } from '../../types';
 import { COURSES } from '../../constants';
@@ -17,6 +15,8 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClose, onAd
         email: '',
         phone: '',
         address: '',
+        dob: '',
+        socialMediaUrl: '',
         program: COURSES[0].title,
         password: '',
         studentId: '',
@@ -66,7 +66,7 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClose, onAd
             setPhotoPreviewUrl(null);
         }
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [isOpen, onClose]);
+    }, [isOpen, onClose, initialState]);
     
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -130,6 +130,8 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClose, onAd
             email: applicationData.email,
             phone: applicationData.phone,
             address: applicationData.address,
+            dob: applicationData.dob,
+            socialMediaUrl: applicationData.socialMediaUrl,
             program: applicationData.program,
             selectedPapers: selectedPapers,
             studentId: applicationData.studentId,
@@ -238,6 +240,14 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClose, onAd
                          <div>
                             <label htmlFor="address" className="block text-sm font-medium text-gray-700">Address</label>
                             <textarea name="address" id="address" rows={2} required value={formData.address} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white"></textarea>
+                        </div>
+                        <div>
+                            <label htmlFor="dob" className="block text-sm font-medium text-gray-700">Date of Birth</label>
+                            <input type="date" name="dob" id="dob" required value={formData.dob} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white" />
+                        </div>
+                        <div>
+                            <label htmlFor="socialMediaUrl" className="block text-sm font-medium text-gray-700">Social Media URL (Optional)</label>
+                            <input type="url" name="socialMediaUrl" id="socialMediaUrl" value={formData.socialMediaUrl} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white" placeholder="https://www.linkedin.com/in/..."/>
                         </div>
                         <div>
                             <label htmlFor="program" className="block text-sm font-medium text-gray-700">Program</label>

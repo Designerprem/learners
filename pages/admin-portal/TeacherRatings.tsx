@@ -1,7 +1,7 @@
-
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { TEACHER_RATINGS, FACULTY_MEMBERS } from '../../constants';
+import { getItems, saveItems } from '../../services/dataService';
+import type { TeacherRating } from '../../types';
 
 const StarRating = ({ rating }: { rating: number }) => (
     <div className="flex">
@@ -15,14 +15,25 @@ const StarRating = ({ rating }: { rating: number }) => (
 
 
 const TeacherRatings: React.FC = () => {
+    const [ratings, setRatings] = useState<TeacherRating[]>(() => getItems('teacherRatings', TEACHER_RATINGS));
+
+    useEffect(() => {
+        saveItems('teacherRatings', ratings);
+    }, [ratings]);
+
+    const handleDeleteRating = (id: number) => {
+        if (window.confirm('Are you sure you want to delete this student feedback?')) {
+            setRatings(prev => prev.filter(r => r.id !== id));
+        }
+    };
 
     const facultyRatings = FACULTY_MEMBERS.map(faculty => {
-        const ratings = TEACHER_RATINGS.filter(r => r.teacherId === faculty.id);
-        const average = ratings.length > 0 ? ratings.reduce((acc, r) => acc + r.rating, 0) / ratings.length : 0;
+        const facultySpecificRatings = ratings.filter(r => r.teacherId === faculty.id);
+        const average = facultySpecificRatings.length > 0 ? facultySpecificRatings.reduce((acc, r) => acc + r.rating, 0) / facultySpecificRatings.length : 0;
         return {
             ...faculty,
             averageRating: average,
-            reviewCount: ratings.length
+            reviewCount: facultySpecificRatings.length
         };
     });
 
@@ -60,10 +71,11 @@ const TeacherRatings: React.FC = () => {
                                 <th className="p-4 font-semibold text-sm text-gray-600 uppercase text-center">Rating</th>
                                 <th className="p-4 font-semibold text-sm text-gray-600 uppercase">Feedback</th>
                                 <th className="p-4 font-semibold text-sm text-gray-600 uppercase">Date</th>
+                                <th className="p-4 font-semibold text-sm text-gray-600 uppercase">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y">
-                            {TEACHER_RATINGS.slice().reverse().map(rating => (
+                            {ratings.slice().reverse().map(rating => (
                                 <tr key={rating.id} className="hover:bg-gray-50">
                                     <td className="p-4 font-medium whitespace-nowrap">{rating.teacherName}</td>
                                     <td className="p-4 text-sm">{rating.classTopic}</td>
@@ -72,6 +84,9 @@ const TeacherRatings: React.FC = () => {
                                     </td>
                                     <td className="p-4 text-sm text-gray-600 max-w-sm">{rating.feedback}</td>
                                     <td className="p-4 text-sm font-mono whitespace-nowrap">{rating.date}</td>
+                                    <td className="p-4">
+                                        <button onClick={() => handleDeleteRating(rating.id)} className="text-sm font-semibold text-brand-red hover:underline">Delete</button>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>

@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { CALENDAR_EVENTS } from '../../constants';
-import type { CalendarEvent, Student } from '../../types';
+import { CALENDAR_EVENTS, MOCK_TESTS } from '../../constants';
+import type { CalendarEvent, Student, MockTest } from '../../types';
 import { useStudent } from '../StudentPortalPage';
+import { getItems } from '../../services/dataService';
 
 const eventTypeConfig: { [key in CalendarEvent['type']]: { label: string; color: string; filterColor: string } } = {
     class: { label: 'Class', color: 'bg-blue-500', filterColor: 'bg-blue-500' },
@@ -43,25 +44,40 @@ const SchedulePage: React.FC = () => {
         exam: true,
     });
     
-    const [allEvents, setAllEvents] = useState<CalendarEvent[]>(() => {
-        try {
-            const savedEvents = localStorage.getItem('calendarEvents');
-            return savedEvents ? JSON.parse(savedEvents) : CALENDAR_EVENTS;
-        } catch (e) {
-            console.error("Failed to load events from localStorage", e);
-            return CALENDAR_EVENTS;
-        }
-    });
+    // State for events from the calendar management
+    const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>(() => getItems('calendarEvents', CALENDAR_EVENTS));
+    // State for events derived from mock tests
+    const [mockTestEvents, setMockTestEvents] = useState<CalendarEvent[]>([]);
 
+    // Effect to load and listen for changes to both event sources
     useEffect(() => {
+        const loadAndSetEvents = () => {
+            // Load calendar events
+            setCalendarEvents(getItems('calendarEvents', CALENDAR_EVENTS));
+
+            // Load and transform mock tests
+            const mockTests = getItems<MockTest[]>('mockTests', MOCK_TESTS);
+            const testEvents: CalendarEvent[] = mockTests
+                .filter(test => test.status === 'Published' && test.scheduledStartTime)
+                .map(test => {
+                    const startTime = new Date(test.scheduledStartTime!);
+                    return {
+                        id: `test-${test.id}`,
+                        date: getLocalDateString(startTime),
+                        title: `Mock Test: ${test.title}`,
+                        type: 'exam',
+                        startTime: startTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+                        paper: test.paper,
+                    };
+                });
+            setMockTestEvents(testEvents);
+        };
+        
+        loadAndSetEvents(); // Initial load
+
         const handleStorageChange = (e: StorageEvent) => {
-            if (e.key === 'calendarEvents') {
-                 try {
-                    setAllEvents(e.newValue ? JSON.parse(e.newValue) : CALENDAR_EVENTS);
-                } catch (err) {
-                    console.error("Failed to parse calendar events on storage change", err);
-                    setAllEvents(CALENDAR_EVENTS);
-                }
+            if (e.key === 'calendarEvents' || e.key === 'mockTests') {
+                loadAndSetEvents();
             }
         };
 
@@ -70,6 +86,13 @@ const SchedulePage: React.FC = () => {
             window.removeEventListener('storage', handleStorageChange);
         };
     }, []);
+
+    // Memo to combine all events
+    const allEvents = useMemo(() => {
+        const calendarEventIds = new Set(calendarEvents.map(e => e.id));
+        const uniqueMockTestEvents = mockTestEvents.filter(e => !calendarEventIds.has(e.id));
+        return [...calendarEvents, ...uniqueMockTestEvents];
+    }, [calendarEvents, mockTestEvents]);
 
     const handleFilterChange = (type: CalendarEvent['type']) => {
         setFilters(prev => ({ ...prev, [type]: !prev[type] }));

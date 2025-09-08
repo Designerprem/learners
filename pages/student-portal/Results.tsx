@@ -8,7 +8,8 @@ const Results: React.FC = () => {
     
     const flattenedResults = useMemo(() => {
         if (!student?.grades) return [];
-        return Object.entries(student.grades).flatMap(([paperCode, grades]) => 
+        // FIX: Added type assertion to resolve 'map' on 'unknown' error.
+        return Object.entries(student.grades).flatMap(([paperCode, grades]: [string, GradeEntry[]]) => 
             grades.map(grade => ({
                 id: `${paperCode}-${grade.date}`,
                 paper: paperCode,

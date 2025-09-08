@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { Student } from '../../types';
 import { COURSES, TEACHER_RATINGS } from '../../constants';
@@ -89,7 +88,7 @@ const StudentDetailModal: React.FC<StudentDetailModalProps> = ({ isOpen, onClose
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, [isOpen, student, onClose]);
 
-    const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
@@ -133,6 +132,14 @@ const StudentDetailModal: React.FC<StudentDetailModalProps> = ({ isOpen, onClose
                                 <label className="block text-sm font-medium text-gray-700">Address</label>
                                 <input name="address" value={formData.address} onChange={handleFormChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-white"/>
                             </div>
+                             <div>
+                                <label className="block text-sm font-medium text-gray-700">Date of Birth</label>
+                                <input type="date" name="dob" value={formData.dob} onChange={handleFormChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-white"/>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Social Media URL</label>
+                                <input type="url" name="socialMediaUrl" value={formData.socialMediaUrl || ''} onChange={handleFormChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-white"/>
+                            </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Current Level</label>
                                 <select name="currentLevel" value={formData.currentLevel} onChange={handleFormChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-white">
@@ -151,6 +158,16 @@ const StudentDetailModal: React.FC<StudentDetailModalProps> = ({ isOpen, onClose
                         <DetailRow label="Phone Number" value={student.phone} />
                         <DetailRow label="Date of Birth" value={student.dob} />
                         <DetailRow label="Address" value={student.address} />
+                         {student.socialMediaUrl && (
+                            <div>
+                                <dt className="text-sm font-medium text-gray-500">Social Media</dt>
+                                <dd className="mt-1 text-md text-gray-900">
+                                    <a href={student.socialMediaUrl} target="_blank" rel="noopener noreferrer" className="text-brand-red hover:underline break-all">
+                                        {student.socialMediaUrl}
+                                    </a>
+                                </dd>
+                            </div>
+                        )}
                         <DetailRow label="Enrollment Date" value={student.enrollmentDate} />
                         <DetailRow label="Current Level" value={student.currentLevel} />
                         <DetailRow label="Overall Attendance" value={overallAttendance} />

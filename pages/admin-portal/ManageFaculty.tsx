@@ -3,6 +3,9 @@ import { FACULTY_MEMBERS } from '../../constants';
 import type { FacultyMember } from '../../types';
 import AddFacultyModal from '../../components/admin-portal/AddFacultyModal';
 import FacultyDetailModal from '../../components/admin-portal/FacultyDetailModal';
+import ConfirmModal from '../../components/ConfirmModal';
+import { useNavigate } from 'react-router-dom';
+import { getLoggedInUser } from '../../services/authService.ts';
 
 const ManageFaculty: React.FC = () => {
     const [faculty, setFaculty] = useState<FacultyMember[]>(() => {
@@ -20,25 +23,13 @@ const ManageFaculty: React.FC = () => {
         return FACULTY_MEMBERS;
     });
 
-    const [archivedFaculty, setArchivedFaculty] = useState<FacultyMember[]>(() => {
-        try {
-            const saved = localStorage.getItem('archivedFaculty');
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                if (Array.isArray(parsed)) {
-                    return parsed;
-                }
-            }
-        } catch (e) {
-            console.error(`Failed to load archivedFaculty from localStorage`, e);
-        }
-        return [];
-    });
-
-
     const [searchTerm, setSearchTerm] = useState('');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [selectedFaculty, setSelectedFaculty] = useState<FacultyMember | null>(null);
+    const [notification, setNotification] = useState('');
+    const [facultyToDelete, setFacultyToDelete] = useState<FacultyMember | null>(null);
+    const [facultyToImpersonate, setFacultyToImpersonate] = useState<FacultyMember | null>(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         try {
@@ -47,14 +38,6 @@ const ManageFaculty: React.FC = () => {
             console.error("Failed to save faculty to localStorage", error);
         }
     }, [faculty]);
-
-    useEffect(() => {
-        try {
-            localStorage.setItem('archivedFaculty', JSON.stringify(archivedFaculty));
-        } catch (error) {
-            console.error("Failed to save archived faculty to localStorage", error);
-        }
-    }, [archivedFaculty]);
 
     const filteredFaculty = faculty.filter(member =>
         member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -67,19 +50,41 @@ const ManageFaculty: React.FC = () => {
         setIsAddModalOpen(false);
     };
     
-    const handleRemoveFaculty = (facultyId: number) => {
-        if (window.confirm('Are you sure you want to remove this faculty member? Their records will be archived for future reference.')) {
-            const facultyToRemove = faculty.find(f => f.id === facultyId);
-            if (facultyToRemove) {
-                setArchivedFaculty(prev => [...prev, facultyToRemove]);
-                setFaculty(prev => prev.filter(f => f.id !== facultyId));
-            }
+    const handleDeleteClick = (facultyMember: FacultyMember) => {
+        setFacultyToDelete(facultyMember);
+    };
+
+    const handleConfirmDelete = () => {
+        if (facultyToDelete) {
+            setFaculty(prev => prev.filter(f => f.id !== facultyToDelete.id));
+            setNotification(`Faculty member "${facultyToDelete.name}" has been deleted successfully.`);
+            setTimeout(() => setNotification(''), 3000);
+            setFacultyToDelete(null);
         }
     };
     
     const handleSaveFaculty = (updatedFaculty: FacultyMember) => {
         setFaculty(prev => prev.map(f => f.id === updatedFaculty.id ? updatedFaculty : f));
         setSelectedFaculty(null);
+    };
+
+    const handleLoginAsClick = (facultyMember: FacultyMember) => {
+        setFacultyToImpersonate(facultyMember);
+    };
+
+    const handleConfirmLoginAs = () => {
+        if (!facultyToImpersonate) return;
+
+        const { user: adminUser, role: adminRole } = getLoggedInUser();
+        if (adminUser && adminRole === 'admin') {
+            sessionStorage.setItem('impersonator', JSON.stringify({ user: adminUser, role: adminRole }));
+            sessionStorage.setItem('loggedInUser', JSON.stringify(facultyToImpersonate));
+            sessionStorage.setItem('userRole', 'faculty');
+            navigate('/faculty-portal/dashboard');
+        } else {
+            alert('Error: Impersonation failed. Not logged in as admin.');
+        }
+        setFacultyToImpersonate(null);
     };
 
     return (
@@ -105,6 +110,12 @@ const ManageFaculty: React.FC = () => {
                     </button>
                 </div>
             </div>
+
+            {notification && (
+                <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-md transition-opacity duration-300">
+                    {notification}
+                </div>
+            )}
 
             <div className="bg-white p-6 rounded-lg shadow-md">
                 <div className="overflow-x-auto">
@@ -135,7 +146,8 @@ const ManageFaculty: React.FC = () => {
                                     </td>
                                     <td className="p-4 space-x-4 whitespace-nowrap">
                                         <button onClick={() => setSelectedFaculty(member)} className="text-sm font-semibold text-blue-600 hover:underline">View Details</button>
-                                        <button onClick={() => handleRemoveFaculty(member.id)} className="text-sm font-semibold text-brand-red hover:underline">Remove</button>
+                                        <button onClick={() => handleLoginAsClick(member)} className="text-sm font-semibold text-green-600 hover:underline">Go to Portal</button>
+                                        <button onClick={() => handleDeleteClick(member)} className="text-sm font-semibold text-brand-red hover:underline">Delete</button>
                                     </td>
                                 </tr>
                             ))}
@@ -156,6 +168,23 @@ const ManageFaculty: React.FC = () => {
                     onSave={handleSaveFaculty}
                 />
             )}
+             <ConfirmModal
+                isOpen={!!facultyToDelete}
+                title="Confirm Deletion"
+                message={`Are you sure you want to permanently delete the faculty member "${facultyToDelete?.name}"? This action cannot be undone.`}
+                onConfirm={handleConfirmDelete}
+                onCancel={() => setFacultyToDelete(null)}
+                confirmText="Delete"
+            />
+             <ConfirmModal
+                isOpen={!!facultyToImpersonate}
+                title="Confirm Portal Access"
+                message={`Are you sure you want to log in as "${facultyToImpersonate?.name}"? You will be redirected to their faculty portal.`}
+                onConfirm={handleConfirmLoginAs}
+                onCancel={() => setFacultyToImpersonate(null)}
+                confirmText="Log in as Faculty"
+                cancelText="Cancel"
+            />
         </div>
     );
 };

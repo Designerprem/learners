@@ -1,6 +1,8 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { ACADEMY_LOGO_URL, ACADEMY_NAME } from '../constants.ts';
+// FIX: Switched to namespace import for react-router-dom to fix module resolution issues.
+import * as ReactRouterDOM from 'react-router-dom';
+// FIX: Corrected import from ACADEMY_LOGO_URL to DEFAULT_ACADEMY_LOGO_URL.
+import { DEFAULT_ACADEMY_LOGO_URL, ACADEMY_NAME } from '../constants.ts';
 
 const CodeBlock: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <pre className="bg-gray-800 text-white p-4 rounded-md overflow-x-auto text-sm my-4">
@@ -29,7 +31,8 @@ const DeploymentGuidePage: React.FC = () => {
         <div className="bg-brand-beige min-h-screen font-sans">
             <header className="bg-white shadow-md p-4">
                 <div className="container mx-auto flex items-center gap-4">
-                    <img src={ACADEMY_LOGO_URL} alt="Academy Logo" className="h-12 w-auto" />
+                    {/* FIX: Used the correct constant name DEFAULT_ACADEMY_LOGO_URL. */}
+                    <img src={DEFAULT_ACADEMY_LOGO_URL} alt="Academy Logo" className="h-12 w-auto" />
                     <div>
                         <h1 className="text-xl font-bold text-brand-dark">{ACADEMY_NAME}</h1>
                         <p className="text-sm text-gray-600">Deployment Guide</p>
@@ -83,9 +86,9 @@ git push -u origin main`}</CodeBlock>
                             <p className="mt-2">Our next major task is to replace this with a central online database so that all data is shared and synchronized for everyone. This will make your admin, student, and faculty portals fully functional.</p>
                         </div>
                          <div className="text-center mt-8">
-                             <Link to="/" className="bg-brand-dark text-white px-8 py-3 rounded-md font-semibold hover:bg-opacity-80 transition-transform hover:scale-105 shadow-lg">
+                             <ReactRouterDOM.Link to="/" className="bg-brand-dark text-white px-8 py-3 rounded-md font-semibold hover:bg-opacity-80 transition-transform hover:scale-105 shadow-lg">
                                 &larr; Back to Home
-                            </Link>
+                            </ReactRouterDOM.Link>
                         </div>
                     </div>
                 </div>

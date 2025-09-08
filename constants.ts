@@ -1,24 +1,38 @@
-import type { FacultyMember, Course, Testimonial, FAQItem, GalleryImage, Student, ChatMessage, TeacherQuestion, LiveClass, RecordedLecture, CourseMaterial, CalendarEvent, Notification, Admin, Announcement, Application, RecentSubmission, TeacherRating, BlogPost, HeroSlide, Vlog, AccaFeeCategory, PopupNotification, Comment, HighAchiever } from './types.ts';
+import type { FacultyMember, Course, Testimonial, FAQItem, GalleryImage, Student, ChatMessage, TeacherQuestion, LiveClass, RecordedLecture, CourseMaterial, CalendarEvent, Notification, Admin, Announcement, Application, RecentSubmission, TeacherRating, BlogPost, HeroSlide, Vlog, AccaFeeCategory, PopupNotification, Comment, HighAchiever, SalaryRequest, MockTest, StudentSubmission, SharedResource, ContactDetails } from './types.ts';
 
-export const ACADEMY_LOGO_URL = 'https://scontent.fbhr4-1.fna.fbcdn.net/v/t39.30808-1/529317458_122176712906516643_1248331585587425416_n.jpg?stp=c0.64.1920.1920a_dst-jpg_s200x200_tt6&_nc_cat=104&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=8I2ZS1q_ApEQ7kNvwF37wvl&_nc_oc=Adk2uluXqsn0dXjNMJpxHVBzFmuM74GjLpn7Zg0eLcUG_ywlNUVVs9RvDUpUtNg3-5c&_nc_zt=24&_nc_ht=scontent.fbhr4-1.fna&_nc_gid=ZaRJb_SfrkngjBjjwD8OZQ&oh=00_AfVsUL--_a_dYIsmX724ZUV8imcA4h9Iz6UjupURWsH2AA&oe=68BC2CE7';
+export const DEFAULT_ACADEMY_LOGO_URL = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJzaGllbGRHcmFkaWVudCIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3R5bGU9InN0b3AtY29sb3I6I0IyMjIyMjtzdG9wLW9wYWNpdHk6MSIgLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiM4QjAwMDA7c3RvcC1vcGFjaXR5OjEiIC8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHBhdGggZD0iTTUwIDIgQyAxNSAxMCwgMTAgNDAsIDEwIDUwIEMgMTAgODAsIDUwIDk4LCA1MCA5OCBDIDUwIDk4LCA5MCA4MCwgOTAgNTAgQyA5MCA0MCwgODUgMTAsIDUwIDIgWiIgZmlsbD0idXJsKCNzaGllbGRHcmFkaWVudCkiLz48dGV4dCB4PSI1MCUiIHk9IjYyJSIgZm9udC1mYW1pbHk9IkludGVyLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjM4IiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSIjRkZGRkZGIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBsZXR0ZXItc3BhY2luZz0iLTEiPlJMQTwvdGV4dD48L3N2Zz4=';
 export const ACADEMY_NAME = 'Reliant Learners Academy';
-export const ACADEMY_EMAIL = 'learnersaccademynp@gmail.com';
-export const ACADEMY_PHONE_1 = '+977-9802394518';
-export const ACADEMY_PHONE_2 = '+977-9802394519';
+
+export const DEFAULT_CONTACT_DETAILS: ContactDetails = {
+  email: 'learnersaccademynp@gmail.com',
+  phones: ['+977-9802394518', '+977-9802394519'],
+  address: 'Kathmandu, 44600, Nepal',
+  officeHours: 'Sun - Fri, 9:00 AM - 5:00 PM',
+  socials: [
+    {
+      id: 1,
+      name: 'Facebook',
+      url: 'https://www.facebook.com/people/ACCA-at-Learners-Academy/61565499307383/',
+      iconUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAAANhJREFUaEPtmFEKgzAMRS8x739p1oN25SI4ZImEttNSxL/QQBTG2SxdB4D/Ap6AAbxjZ3kIdwLmh+2kUdqwNY2WsjXNMt3a5CS7gLUDbHIErAE7wBhgK5N86gaYpIaGZ4A/J50ADsAbgAUga0Y4JgKANnABfPIt4APoAJ2AR8Av8M3a+QGcgSfgCrgBfI8hFQAw3gGbgBvA5y9gBdwATz8AasB2ADgItoANGAB2gA0YAHAENoANGAB2gA0YAHAENoANGAB2gA0YAHAENoANGAB2gA0YAHAENoANAACyzgP6kYpGtgAAAABJRU5ErkJggg==',
+    },
+    {
+      id: 2,
+      name: 'WhatsApp',
+      url: 'https://wa.me/9779802394517',
+      iconUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAAANhJREFUaEPtmFEKgzAMRS8x739p1oN25SI4ZImEttNSxL/QQBTG2SxdB4D/Ap6AAbxjZ3kIdwLmh+2kUdqwNY2WsjXNMt3a5CS7gLUDbHIErAE7wBhgK5N86gaYpIaGZ4A/J50ADsAbgAUga0Y4JgKANnABfPIt4APoAJ2AR8Av8M3a+QGcgSfgCrgBfI8hFQAw3gGbgBvA5y9gBdwATz8AasB2ADgItoANGAB2gA0YAHAENoANGAB2gA0YAHAENoANGAB2gA0YAHAENoANGAB2gA0YAHAENoANAACyzgP6kYpGtgAAAABJRU5ErkJggg==',
+    }
+  ]
+};
+
 
 export const ADMIN_USER: Admin = {
     id: 'admin01',
     name: 'Admin User',
     email: 'admin@learners.edu',
-    avatarUrl: 'https://picsum.photos/seed/admin/100/100',
+    avatarUrl: DEFAULT_ACADEMY_LOGO_URL,
 };
 
-export const NEWS_TICKER_MESSAGES: string[] = [
-    "New batch for ACCA Foundation starting July 1st. Enroll now!",
-    "Congratulations to our students for achieving a 95% pass rate in the recent exams!",
-    "Admissions for the September intake are now open.",
-    "Guest lecture by Mr. John Doe, CFO of a leading firm, this Friday.",
-];
+export const NEWS_TICKER_MESSAGES: string[] = [];
 
 export const HERO_SLIDES: HeroSlide[] = [
     {
@@ -77,7 +91,9 @@ export const FACULTY_MEMBERS: FacultyMember[] = [
         bio: 'A passionate educator with over 10 years of experience in teaching professional accounting. Specializes in Financial Reporting and Auditing.',
         imageUrl: 'https://picsum.photos/seed/kabin/400/400',
         assignedPapers: ['FR: Financial Reporting', 'AA: Audit and Assurance', 'SBR: Strategic Business Reporting'],
-        address: 'Kathmandu, Nepal'
+        address: 'Kathmandu, Nepal',
+        baseSalary: 80000,
+        salaryHistory: []
     },
     {
         id: 2,
@@ -90,7 +106,9 @@ export const FACULTY_MEMBERS: FacultyMember[] = [
         bio: 'Expert in Performance Management and Financial Management, with a knack for simplifying complex topics for students.',
         imageUrl: 'https://picsum.photos/seed/susan/400/400',
         assignedPapers: ['PM: Performance Management', 'FM: Financial Management', 'APM: Advanced Performance Management'],
-        address: 'Pokhara, Nepal'
+        address: 'Pokhara, Nepal',
+        baseSalary: 75000,
+        salaryHistory: []
     }
 ];
 
@@ -209,226 +227,121 @@ export const GALLERY_IMAGES: GalleryImage[] = [
     { id: 5, type: 'image', src: 'https://picsum.photos/seed/campus-2/600/400', alt: 'Campus garden area', category: 'Campus' },
     { id: 6, type: 'image', src: 'https://picsum.photos/seed/events-2/600/400', alt: 'Guest lecture seminar', category: 'Events' },
     { id: 7, type: 'image', src: 'https://picsum.photos/seed/class-2/600/400', alt: 'Computer lab session', category: 'Classrooms' },
-    { id: 8, type: 'image', src: 'https://picsum.photos/seed/students-2/600/400', alt: 'Students collaborating on a project', category: 'Students' }
+    { id: 8, type: 'image', src: 'https://picsum.photos/seed/students-2/600/400', alt: 'Students collaborating on a project', category: 'Students' },
 ];
+
+export const VLOGS: Vlog[] = [
+    {
+        id: 1,
+        title: "A Day in the Life of an ACCA Student",
+        description: "Follow our student, Anjali, as she takes you through a typical day at Learners Academy.",
+        sourceType: 'url',
+        videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ", // Placeholder URL
+        thumbnailUrl: "https://picsum.photos/seed/vlog-1/800/600",
+        publicationDate: "2024-07-20"
+    },
+    {
+        id: 2,
+        title: "Campus Tour: Explore Our Facilities",
+        description: "Join us for a virtual tour of our state-of-the-art campus, from classrooms to the library.",
+        sourceType: 'url',
+        videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ", // Placeholder URL
+        thumbnailUrl: "https://picsum.photos/seed/vlog-2/800/600",
+        publicationDate: "2024-07-15"
+    }
+];
+
+export const BLOG_POSTS: BlogPost[] = [];
 
 export const STUDENTS: Student[] = [
     {
         id: 1,
-        name: 'Aarav Sharma',
-        avatarUrl: 'https://picsum.photos/seed/aarav/100/100',
+        name: 'Anita Sharma',
+        avatarUrl: 'https://picsum.photos/seed/anita/200/200',
         studentId: 'S12345',
         password: 'password123',
-        email: 'aarav.s@example.com',
-        phone: '+977-9841000001',
-        address: 'Kathmandu, Nepal',
+        email: 'anita.s@example.com',
+        phone: '9801234567',
+        address: 'Baneshwor, Kathmandu',
         dob: '2002-05-15',
-        enrollmentDate: '2023-09-01',
+        enrollmentDate: '2023-01-10',
         currentLevel: 'Applied Skills',
         enrolledPapers: ['FR', 'AA', 'PM'],
         totalFee: 150000,
         discount: 10000,
-        grades: {
-            'FR': [{ score: 65, date: '2024-03-10', examType: 'Mock' }],
-            'PM': [{ score: 72, date: '2024-03-12', examType: 'Mock' }],
-        },
-        attendance: { 'FR': 95, 'PM': 92 },
+        grades: {},
+        attendance: { 'FR': 92, 'AA': 88, 'PM': 95 },
         paymentHistory: [
-            { invoiceId: 'INV001', date: '2023-09-01', amount: 70000, status: 'Paid', method: 'eSewa', verifiedBy: 'Admin' },
-            { invoiceId: 'INV002', date: '2024-01-15', amount: 70000, status: 'Paid', method: 'Khalti', verifiedBy: 'Admin' }
+            { invoiceId: 'INV001', date: '2023-01-10', amount: 50000, status: 'Paid', method: 'eSewa' },
+            { invoiceId: 'INV002', date: '2023-04-10', amount: 50000, status: 'Paid', method: 'Khalti' }
         ],
-        dueDate: '2024-08-15'
-    },
-    {
-        id: 2,
-        name: 'Priya Gurung',
-        avatarUrl: 'https://picsum.photos/seed/priya/100/100',
-        studentId: 'S12346',
-        password: 'password123',
-        email: 'priya.g@example.com',
-        phone: '+977-9841000002',
-        address: 'Lalitpur, Nepal',
-        dob: '2003-01-20',
-        enrollmentDate: '2024-01-10',
-        currentLevel: 'Applied Knowledge',
-        enrolledPapers: ['AB', 'MA', 'FA'],
-        totalFee: 65000,
-        discount: 5000,
-        grades: {
-            'AB': [{ score: 85, date: '2024-06-05', examType: 'Mock' }],
-        },
-        attendance: { 'AB': 98 },
-        paymentHistory: [
-            { invoiceId: 'INV003', date: '2024-01-10', amount: 60000, status: 'Paid', method: 'Cash', verifiedBy: 'Admin' }
-        ],
-        dueDate: '2024-09-10'
+        dueDate: '2024-08-10'
     }
 ];
 
 export const HIGH_ACHIEVERS: HighAchiever[] = [
-    { id: 1, name: 'Aarav Sharma', avatarUrl: 'https://picsum.photos/seed/aarav/200/200', achievement: 'Scored 85 in AB' },
-    { id: 2, name: 'Rohan Thapa', avatarUrl: 'https://picsum.photos/seed/rohan/200/200', achievement: 'Scored 91 in FR' },
-    { id: 3, name: 'Anjali Lama', avatarUrl: 'https://picsum.photos/seed/anjali/200/200', achievement: 'Scored 88 in SBR' },
-    { id: 4, name: 'Bikash Shrestha', avatarUrl: 'https://picsum.photos/seed/bikash/200/200', achievement: 'Scored 95 in TX' },
-    { id: 5, name: 'Sita Rai', avatarUrl: 'https://picsum.photos/seed/sita/200/200', achievement: 'World Rank Holder in PM' },
-    { id: 6, name: 'Gopal Verma', avatarUrl: 'https://picsum.photos/seed/gopal/200/200', achievement: 'Scored 93 in AA' },
-    { id: 7, name: 'Maya Tamang', avatarUrl: 'https://picsum.photos/seed/maya/200/200', achievement: 'Topped Nepal in SBL' },
-    { id: 8, name: 'Hari KC', avatarUrl: 'https://picsum.photos/seed/hari/200/200', achievement: 'Scored 90 in FM' },
+    { id: 1, name: 'Ramesh Poudel', avatarUrl: 'https://picsum.photos/seed/ramesh/200/200', achievement: 'Nepal Topper in FR' },
+    { id: 2, name: 'Sita Gurung', avatarUrl: 'https://picsum.photos/seed/sita/200/200', achievement: 'Passed all Skills papers in first attempt' },
+    { id: 3, name: 'Hari Bahadur', avatarUrl: 'https://picsum.photos/seed/hari/200/200', achievement: 'World Rank Holder in PM' },
+    { id: 4, name: 'Gita Thapa', avatarUrl: 'https://picsum.photos/seed/gita/200/200', achievement: 'National Prize Winner in SBL' },
+    { id: 5, name: 'Bishal Rai', avatarUrl: 'https://picsum.photos/seed/bishal/200/200', achievement: 'Top Affiliate of the Year' },
+    { id: 6, name: 'Maya Sherpa', avatarUrl: 'https://picsum.photos/seed/maya/200/200', achievement: 'Passed all exams in one go' },
+    { id: 7, name: 'Nabin K.C.', avatarUrl: 'https://picsum.photos/seed/nabin/200/200', achievement: 'Highest Scorer in AAA' },
+    { id: 8, name: 'Priya Karki', avatarUrl: 'https://picsum.photos/seed/priya/200/200', achievement: 'ACCA Scholarship Winner' },
 ];
 
+export const POPUP_NOTIFICATION: PopupNotification[] = [];
 
-export const CHAT_MESSAGES: ChatMessage[] = [];
+export const ACCA_FEE_STRUCTURE: AccaFeeCategory[] = [
+    {
+        level: "One-Time Fees",
+        items: [
+            { details: "ACCA Initial Registration", ukFeesNrs: 15000, collegeFeesNrs: 0 },
+            { details: "Annual Subscription Fee", ukFeesNrs: 20000, collegeFeesNrs: 0 }
+        ]
+    },
+    {
+        level: "ACCA Knowledge Level",
+        items: [
+            { paper: "AB, MA, FA", details: "Per Paper Exam Fee", ukFeesNrs: 15000, collegeFeesNrs: 18000 }
+        ],
+        subtotals: {
+            ukFeesNrs: 45000,
+            collegeFeesNrs: 54000
+        }
+    }
+];
+
+export const CHAT_MESSAGES: { [paperCode: string]: ChatMessage[] } = {
+    'FR': [],
+    'AA': [],
+    'PM': []
+};
 
 export const TEACHER_QUESTIONS: TeacherQuestion[] = [];
 
-export const LIVE_CLASSES: LiveClass[] = [
-    { id: 1, paper: 'FR: Financial Reporting', topic: 'Consolidated Statement of Financial Position', instructor: 'Kabin Pyakurel', startTime: '10:00 AM', status: 'Live', joinLink: '#' },
-    { id: 2, paper: 'AA: Audit and Assurance', topic: 'Audit Risk and Planning', instructor: 'Susan Bones', startTime: '02:00 PM', status: 'Upcoming', joinLink: '#' },
-];
+export const LIVE_CLASSES: LiveClass[] = [];
 
-export const RECORDED_LECTURES: RecordedLecture[] = [
-    { id: 1, paper: 'FR', topic: 'IFRS 15 - Revenue from Contracts with Customers', date: '2024-07-15', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-    { id: 2, paper: 'FR', topic: 'IAS 16 - Property, Plant and Equipment', date: '2024-07-18', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-];
+export const RECORDED_LECTURES: RecordedLecture[] = [];
 
-export const COURSE_MATERIALS: CourseMaterial[] = [
-    { id: 1, paper: 'FR', title: 'Chapter 5 Notes - Leases', type: 'PDF', uploadDate: '2024-07-10', downloadLink: '#' },
-    { id: 2, paper: 'FR', title: 'Consolidation Assignment', type: 'Assignment', uploadDate: '2024-07-20', downloadLink: '#' },
-    { id: 3, paper: 'AA', title: 'Audit Risk Case Study', type: 'Notes', uploadDate: '2024-07-19', downloadLink: '#' },
-];
+export const COURSE_MATERIALS: CourseMaterial[] = [];
 
-export const CALENDAR_EVENTS: CalendarEvent[] = [
-    { id: 1, date: '2024-07-22', title: 'Consolidated Statement of Financial Position', type: 'class', startTime: '10:00 AM', endTime: '12:00 PM', paper: 'FR', instructor: 'Kabin Pyakurel', joinLink: '#' },
-    { id: 2, date: '2024-07-22', title: 'Audit Risk and Planning', type: 'class', startTime: '02:00 PM', endTime: '04:00 PM', paper: 'AA', instructor: 'Susan Bones', joinLink: '#' },
-    { id: 3, date: '2024-07-25', title: 'Consolidation Assignment Due', type: 'deadline', paper: 'FR' },
-    { id: 4, date: '2024-07-29', title: 'FR Mock Exam', type: 'exam', paper: 'FR', startTime: '09:00 AM', endTime: '12:00 PM' },
-];
+export const CALENDAR_EVENTS: CalendarEvent[] = [];
 
-export const NOTIFICATIONS: Notification[] = [
-    { id: 1, type: 'grade', title: 'New Grade Published', message: 'Your mock exam result for FR has been published.', timestamp: '2 hours ago', read: false },
-    { id: 2, type: 'deadline', title: 'Assignment Due Soon', message: 'Your FR consolidation assignment is due in 3 days.', timestamp: '1 day ago', read: false },
-    { id: 3, type: 'material', title: 'New Material Added', message: 'Chapter 6 notes for AA have been uploaded.', timestamp: '2 days ago', read: true },
-];
+export const NOTIFICATIONS: Notification[] = [];
 
-export const GLOBAL_ANNOUNCEMENTS: Announcement[] = [
-    { id: 1, title: 'Mid-term Break', content: 'The academy will be closed for mid-term break from Aug 1st to Aug 5th.', date: '2024-07-20', author: 'Admin', audience: 'All Students & Faculty' },
-];
-export const FACULTY_ANNOUNCEMENTS: Announcement[] = [
-    { id: 101, title: 'FR Mock Exam Schedule', content: 'Please ensure all mock exam grades for the FR paper are submitted by July 28th.', date: '2024-07-22', author: 'Kabin Pyakurel', audience: 'FR: Financial Reporting' },
-];
+export const GLOBAL_ANNOUNCEMENTS: Announcement[] = [];
 
 export const PENDING_APPLICATIONS: Application[] = [];
 
 export const TEACHER_RATINGS: TeacherRating[] = [];
 
-export const BLOG_POSTS: BlogPost[] = [
-    {
-        id: '5-tips-for-acca-fr-exam',
-        title: '5 Essential Tips to Ace Your ACCA Financial Reporting (FR) Exam',
-        authorId: 1, // Kabin Pyakurel
-        authorType: 'faculty',
-        publicationDate: '2024-07-20',
-        excerpt: 'The Financial Reporting (FR) exam is a significant step in your ACCA journey. Here are five proven tips from our expert faculty to help you succeed.',
-        content: `<h3>Introduction</h3><p>The ACCA Financial Reporting (FR) exam can be challenging, but with the right preparation, you can pass with confidence. This guide provides five essential tips to help you structure your studies and master the syllabus.</p><h3>1. Master the Accounting Standards</h3><p>A deep understanding of International Financial Reporting Standards (IFRS) is non-negotiable. Don't just memorize them; understand the principles behind each standard. Practice applying them to various scenarios, especially for standards like IFRS 15 (Revenue), IFRS 16 (Leases), and IAS 16 (Property, Plant and Equipment).</p><h3>2. Practice Consolidation Questions Religiously</h3><p>Consolidated financial statements are a cornerstone of the FR exam and often carry significant marks. Ensure you are comfortable with preparing consolidated statements of financial position, profit or loss, and other comprehensive income. Pay close attention to workings for goodwill, non-controlling interest (NCI), and retained earnings.</p><h3>3. Time Management is Key</h3><p>The exam is time-pressured. Practice questions under strict exam conditions to improve your speed and accuracy. Allocate your time based on the marks available for each question—roughly 1.8 minutes per mark. If you get stuck, move on and come back later if time permits.</p>`,
-        imageUrl: 'https://picsum.photos/seed/blog-fr/1200/800',
-        tags: ['ACCA', 'FR', 'Exam Tips'],
-        status: 'Published',
-        isFeatured: true,
-        timeToRead: 5,
-        comments: [
-            { id: 1, authorName: 'Aarav Sharma', text: 'This is super helpful! The consolidation tip is a lifesaver.', timestamp: '2024-07-21T10:00:00Z' }
-        ]
-    },
-    {
-        id: 'a-students-guide-to-performance-management',
-        title: "A Student's Guide to Performance Management (PM)",
-        authorId: 2, // Priya Gurung
-        authorType: 'student',
-        publicationDate: '2024-07-18',
-        excerpt: 'As a student currently tackling the Applied Skills level, I wanted to share my personal strategies for navigating the Performance Management (PM) paper.',
-        content: `<h3>My PM Journey</h3><p>Performance Management (PM) is more than just numbers; it's about understanding how a business measures and manages its success. Initially, I found the breadth of the syllabus daunting, from costing techniques to variance analysis. Here's how I broke it down.</p><h3>Focus on Application, Not Just Theory</h3><p>The key to PM is applying techniques to real-world scenarios. Don't just learn the formula for variance; understand what it tells a manager about the business's performance. The examiner is looking for your ability to interpret the data and provide meaningful advice.</p>`,
-        imageUrl: 'https://picsum.photos/seed/blog-pm/1200/800',
-        tags: ['ACCA', 'PM', 'Student Life'],
-        status: 'Published',
-        isFeatured: false,
-        timeToRead: 4,
-        comments: []
-    }
-];
+export const FACULTY_ANNOUNCEMENTS: Announcement[] = [];
 
-export const VLOGS: Vlog[] = [
-    { id: 1, title: "A Day in the Life of an ACCA Student", description: "Follow along for a typical day of classes, study sessions, and fun at Learners Academy.", sourceType: 'url', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnailUrl: 'https://picsum.photos/seed/vlog-1/600/400', publicationDate: "2024-07-15" },
-    { id: 2, title: "Campus Tour", description: "Join us for a virtual tour of our state-of-the-art campus and facilities.", sourceType: 'url', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', thumbnailUrl: 'https://picsum.photos/seed/vlog-2/600/400', publicationDate: "2024-07-10" },
-];
+export const MOCK_TESTS: MockTest[] = [];
 
-export const ACCA_FEE_STRUCTURE: AccaFeeCategory[] = [
-    {
-        level: 'Initial Registration & Subscription',
-        items: [
-            { details: 'One-time registration fee payable to ACCA', ukPounds: 89, ukFeesNrs: 14240, collegeFeesNrs: 5000 },
-            { details: 'Annual Subscription Fee', ukPounds: 122, ukFeesNrs: 19520 }
-        ],
-    },
-    {
-        level: 'ACCA Knowledge Level',
-        description: 'Fees per paper',
-        items: [
-            { paper: 'AB', details: 'Accountant in Business', ukPounds: 84, ukFeesNrs: 13440, collegeFeesNrs: 20000 },
-            { paper: 'MA', details: 'Management Accounting', ukPounds: 84, ukFeesNrs: 13440, collegeFeesNrs: 20000 },
-            { paper: 'FA', details: 'Financial Accounting', ukPounds: 84, ukFeesNrs: 13440, collegeFeesNrs: 20000 }
-        ],
-        subtotals: {
-            ukFeesNrs: 40320,
-            collegeFeesNrs: 60000,
-        }
-    },
-    {
-        level: 'ACCA Skills Level',
-        description: 'Fees per paper',
-        items: [
-            { paper: 'LW', details: 'Corporate and Business Law', ukPounds: 132, ukFeesNrs: 21120, collegeFeesNrs: 25000 },
-            { paper: 'PM', details: 'Performance Management', ukPounds: 132, ukFeesNrs: 21120, collegeFeesNrs: 25000 },
-            { paper: 'TX', details: 'Taxation', ukPounds: 132, ukFeesNrs: 21120, collegeFeesNrs: 25000 },
-            { paper: 'FR', details: 'Financial Reporting', ukPounds: 132, ukFeesNrs: 21120, collegeFeesNrs: 25000 },
-            { paper: 'AA', details: 'Audit and Assurance', ukPounds: 132, ukFeesNrs: 21120, collegeFeesNrs: 25000 },
-            { paper: 'FM', details: 'Financial Management', ukPounds: 132, ukFeesNrs: 21120, collegeFeesNrs: 25000 },
-        ],
-         subtotals: {
-            ukFeesNrs: 126720,
-            collegeFeesNrs: 150000,
-        }
-    },
-    {
-        level: 'Strategic Professional',
-        description: 'Essentials (Compulsory)',
-        items: [
-             { paper: 'SBL', details: 'Strategic Business Leader', ukPounds: 245, ukFeesNrs: 39200, collegeFeesNrs: 30000 },
-             { paper: 'SBR', details: 'Strategic Business Reporting', ukPounds: 180, ukFeesNrs: 28800, collegeFeesNrs: 30000 },
-        ],
-    },
-    {
-        level: 'Strategic Professional Options',
-        description: 'Choose any 2 from 4',
-        items: [
-            { paper: 'AFM', details: 'Advanced Financial Management', ukPounds: 180, ukFeesNrs: 28800, collegeFeesNrs: 30000 },
-            { paper: 'APM', details: 'Advanced Performance Management', ukPounds: 180, ukFeesNrs: 28800, collegeFeesNrs: 30000 },
-            { paper: 'ATX', details: 'Advanced Taxation', ukPounds: 180, ukFeesNrs: 28800, collegeFeesNrs: 30000 },
-            { paper: 'AAA', details: 'Advanced Audit and Assurance', ukPounds: 180, ukFeesNrs: 28800, collegeFeesNrs: 30000 },
-        ],
-        notes: "Students must select and pass two optional papers."
-    }
-];
+export const STUDENT_SUBMISSIONS: StudentSubmission[] = [];
 
-export const POPUP_NOTIFICATION: PopupNotification[] = [
-    {
-        id: 1,
-        title: "New ACCA Batch Starting Soon!",
-        content: "Admissions are now open for our upcoming September intake. Secure your spot and start your journey to becoming a finance professional.",
-        imageUrl: "https://picsum.photos/seed/popup-admissions/600/400",
-        isActive: true,
-        link: "/admissions",
-        linkText: "Apply Now"
-    }
-];
+export const SHARED_RESOURCES: SharedResource[] = [];
 
-// ... any other exports that might have been truncated
+export const SALARY_REQUESTS: SalaryRequest[] = [];

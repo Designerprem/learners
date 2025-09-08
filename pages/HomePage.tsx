@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+// FIX: Switched to namespace import for react-router-dom to fix module resolution issues.
+import * as ReactRouterDOM from 'react-router-dom';
+// FIX: Add missing constant imports.
 import { COURSES, TESTIMONIALS, BLOG_POSTS, FACULTY_MEMBERS, HERO_SLIDES, STUDENTS, HIGH_ACHIEVERS } from '../constants.ts';
 import PopupNotificationManager from '../components/PopupNotification.tsx';
 import AnimatedSection from '../components/AnimatedSection.tsx';
@@ -70,7 +72,7 @@ const Hero = () => {
                 {/* Background Images */}
                 <div className="w-full h-full">
                     {slides.map((slide, slideIndex) => (
-                         <div key={slideIndex} className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${slideIndex === currentIndex ? 'opacity-30' : 'opacity-0'}`}>
+                         <div key={slideIndex} className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${slideIndex === currentIndex ? 'opacity-50' : 'opacity-0'}`}>
                             <img src={slide.url} alt={slide.alt} className="w-full h-full object-cover" />
                         </div>
                     ))}
@@ -87,7 +89,7 @@ const Hero = () => {
                         </p>
                         <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
                             {currentSlide.buttons.map((button) => (
-                                <Link 
+                                <ReactRouterDOM.Link 
                                     key={button.to + button.text} 
                                     to={button.to} 
                                     className={`${
@@ -97,7 +99,7 @@ const Hero = () => {
                                     } px-8 py-3 rounded-md font-semibold transition-transform hover:scale-105 shadow-lg`}
                                 >
                                     {button.text}
-                                </Link>
+                                </ReactRouterDOM.Link>
                             ))}
                         </div>
                     </div>
@@ -154,7 +156,7 @@ const WhyChooseUs = () => {
                         <div key={feature.title}>
                             {feature.icon}
                             <h3 className="text-xl font-bold mt-4 mb-2">{feature.title}</h3>
-                            <p className="text-gray-600">{feature.description}</p>
+                            <p className="text-gray-600 text-base">{feature.description}</p>
                         </div>
                     ))}
                 </div>
@@ -298,12 +300,12 @@ const ACCAPrograms = () => (
                 {COURSES.map(course => (
                     <div key={course.id} className="bg-white p-8 rounded-lg shadow-lg flex flex-col">
                         <h3 className="text-2xl font-bold text-brand-red mb-4">{course.title}</h3>
-                        <p className="text-gray-600 mb-6 flex-grow">{course.description}</p>
+                        <p className="text-gray-600 mb-6 flex-grow text-base">{course.description}</p>
                         <div className="border-t pt-4 space-y-2">
                              <p><strong>Duration:</strong> {course.duration}</p>
                              <p><strong>Eligibility:</strong> {course.eligibility}</p>
                         </div>
-                        <Link to={`/courses/${course.id}`} className="mt-6 font-semibold text-brand-red hover:text-brand-dark self-start">Learn More &rarr;</Link>
+                        <ReactRouterDOM.Link to={`/courses/${course.id}`} className="mt-6 font-semibold text-brand-red hover:text-brand-dark self-start">Learn More &rarr;</ReactRouterDOM.Link>
                     </div>
                 ))}
             </div>
@@ -341,7 +343,7 @@ const Testimonials = () => {
                     <div key={t.id} className="bg-brand-beige p-8 rounded-lg text-center shadow-lg relative">
                         <img src={t.imageUrl} alt={t.name} className="w-24 h-24 rounded-full mx-auto absolute -top-12 left-1/2 -translate-x-1/2 border-4 border-white shadow-md" />
                         <div className="mt-14">
-                             <p className="text-gray-700 italic mb-4">"{t.quote}"</p>
+                             <p className="text-gray-700 italic mb-4 text-lg">"{t.quote}"</p>
                             <p className="font-bold text-lg text-brand-dark">{t.name}</p>
                             <p className="text-brand-red font-semibold">{t.program}</p>
                         </div>
@@ -412,7 +414,7 @@ const LatestBlogPosts = () => {
                                     <div>
                                         <p className="text-sm text-brand-red font-semibold">{post.tags.join(', ')}</p>
                                         <h3 className="text-xl font-bold mt-2 mb-3 group-hover:text-brand-red transition-colors min-h-[3.5rem] line-clamp-2">{post.title}</h3>
-                                        <p className="text-gray-600 text-sm line-clamp-3">{post.excerpt}</p>
+                                        <p className="text-gray-600 text-base line-clamp-3">{post.excerpt}</p>
                                     </div>
                                     <div className="mt-auto pt-6">
                                         <div className="border-t pt-4 flex items-center">
@@ -422,7 +424,7 @@ const LatestBlogPosts = () => {
                                                 <p className="text-xs text-gray-500">{new Date(post.publicationDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                                             </div>
                                         </div>
-                                        <Link to={`/blog/${post.id}`} className="mt-4 font-semibold text-brand-red self-start block">Read More &rarr;</Link>
+                                        <ReactRouterDOM.Link to={`/blog/${post.id}`} className="mt-4 font-semibold text-brand-red self-start block">Read More &rarr;</ReactRouterDOM.Link>
                                     </div>
                                 </div>
                             </div>
@@ -430,7 +432,7 @@ const LatestBlogPosts = () => {
                     })}
                 </div>
                 <div className="text-center mt-12">
-                    <Link to="/blog" className="bg-brand-dark text-white px-8 py-3 rounded-md font-semibold hover:bg-opacity-80 transition-transform hover:scale-105 shadow-lg">View All Posts</Link>
+                    <ReactRouterDOM.Link to="/blog" className="bg-brand-dark text-white px-8 py-3 rounded-md font-semibold hover:bg-opacity-80 transition-transform hover:scale-105 shadow-lg">View All Posts</ReactRouterDOM.Link>
                 </div>
             </div>
         </section>
@@ -441,8 +443,8 @@ const CallToAction = () => (
     <section className="bg-brand-red text-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 py-16 text-center">
             <h2 className="text-3xl font-bold mb-2">Ready to Start Your ACCA Journey?</h2>
-            <p className="mb-6 max-w-2xl mx-auto">Join hundreds of successful students who chose Reliant Learners Academy for their professional accounting career. Apply today to secure your spot for the next intake.</p>
-            <Link to="/admissions" className="bg-white text-brand-red px-10 py-3 rounded-md font-bold hover:bg-gray-200 transition-transform hover:scale-105 shadow-lg">Apply Now</Link>
+            <p className="mb-6 max-w-2xl mx-auto text-lg">Join hundreds of successful students who chose Reliant Learners Academy for their professional accounting career. Apply today to secure your spot for the next intake.</p>
+            <ReactRouterDOM.Link to="/admissions" className="bg-white text-brand-red px-10 py-3 rounded-md font-bold hover:bg-gray-200 transition-transform hover:scale-105 shadow-lg">Apply Now</ReactRouterDOM.Link>
         </div>
     </section>
 );

@@ -1,7 +1,6 @@
-
-
 import React, { useState, useMemo, useEffect } from 'react';
-import { STUDENTS } from '../../constants';
+// FIX: Add '.ts' to constants import to resolve module not found error.
+import { STUDENTS } from '../../constants.ts';
 import type { Student } from '../../types';
 import StudentDetailModal from '../../components/faculty-portal/StudentDetailModal';
 import { useFaculty } from '../FacultyPortalPage';

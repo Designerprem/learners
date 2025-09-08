@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+// FIX: Add missing VLOGS import.
 import { GALLERY_IMAGES, VLOGS } from '../constants.ts';
 import type { GalleryImage, Vlog } from '../types.ts';
 import AnimatedSection from '../components/AnimatedSection.tsx';
@@ -20,6 +21,16 @@ const MediaModal: React.FC<{
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [onClose, onPrev, onNext]);
+
+    const handlePrevClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        onPrev();
+    };
+
+    const handleNextClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        onNext();
+    };
 
     // Prioritize localVideoSrc for uploaded content. This ensures <video> tag is used.
     const isUploadedVideo = !!item.localVideoSrc;
@@ -59,10 +70,10 @@ const MediaModal: React.FC<{
             <button onClick={onClose} className="absolute top-4 right-4 text-white text-4xl hover:text-gray-300 transition-colors" aria-label="Close image viewer">&times;</button>
 
             {/* Prev Button */}
-            <button onClick={onPrev} className="absolute left-4 top-1/2 -translate-y-1/2 text-white bg-black bg-opacity-50 p-2 rounded-full text-3xl hover:bg-opacity-75 transition-colors" aria-label="Previous image">&#8249;</button>
+            <button onClick={handlePrevClick} className="absolute left-4 top-1/2 -translate-y-1/2 text-white bg-black bg-opacity-50 p-2 rounded-full text-3xl hover:bg-opacity-75 transition-colors" aria-label="Previous image">&#8249;</button>
 
             {/* Next Button */}
-            <button onClick={onNext} className="absolute right-4 top-1/2 -translate-y-1/2 text-white bg-black bg-opacity-50 p-2 rounded-full text-3xl hover:bg-opacity-75 transition-colors" aria-label="Next image">&#8250;</button>
+            <button onClick={handleNextClick} className="absolute right-4 top-1/2 -translate-y-1/2 text-white bg-black bg-opacity-50 p-2 rounded-full text-3xl hover:bg-opacity-75 transition-colors" aria-label="Next image">&#8250;</button>
         </div>
     );
 };

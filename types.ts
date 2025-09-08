@@ -9,6 +9,29 @@ export interface Admin {
   avatarUrl: string;
 }
 
+export interface SalaryPayment {
+  id: string;
+  date: string;
+  amount: number;
+  method: 'Bank Transfer' | 'Cash' | 'Cheque';
+  category: 'Salary' | 'Tuition Fee' | 'Other';
+  otherCategory?: string; // For "Other" category
+  notes?: string;
+  processedBy: string; // Admin's name
+}
+
+
+export interface SalaryRequest {
+    id: number;
+    facultyId: number;
+    facultyName: string;
+    message: string;
+    status: 'Pending' | 'Resolved';
+    requestDate: string;
+    resolvedDate?: string;
+}
+
+
 export interface FacultyMember {
   id: number;
   name: string;
@@ -21,6 +44,10 @@ export interface FacultyMember {
   imageUrl: string;
   assignedPapers: string[];
   address: string;
+  dob?: string;
+  socialMediaUrl?: string;
+  baseSalary: number;
+  salaryHistory?: SalaryPayment[];
 }
 
 export interface Course {
@@ -157,6 +184,7 @@ export interface Student {
   phone: string;
   address: string;
   dob: string;
+  socialMediaUrl?: string;
   enrollmentDate: string;
   currentLevel: 'Applied Knowledge' | 'Applied Skills' | 'Strategic Professional';
   enrolledPapers: string[];
@@ -190,12 +218,12 @@ export interface TeacherQuestion {
   studentName?: string;
   paper: string;
   question: string;
+  questionAttachment?: ChatAttachment;
   status: 'Pending' | 'Answered';
   answer?: string;
   answerAttachment?: ChatAttachment;
   askedDate: string;
   answeredBy?: string;
-  attachmentName?: string;
 }
 
 export interface LiveClass {
@@ -294,6 +322,8 @@ export interface Application {
     status: 'Pending' | 'Approved' | 'Rejected';
     phone?: string;
     address?: string;
+    dob?: string;
+    socialMediaUrl?: string;
     selectedPapers?: string[];
     photoUrl?: string;
     documentUrl?: string;
@@ -336,4 +366,85 @@ export interface HighAchiever {
   name: string;
   avatarUrl: string;
   achievement: string;
+}
+
+export interface SharedResource {
+  id: number;
+  studentId: number;
+  studentName: string;
+  studentAvatarUrl: string;
+  paper: string; // The full paper name
+  title: string;
+  description: string;
+  url: string;
+  timestamp: string;
+}
+
+// Mock Test System Types
+export interface MCQOption {
+    id: number;
+    text: string;
+    isCorrect: boolean;
+}
+
+export interface Question {
+    id: number;
+    type: 'MCQ' | 'Theoretical';
+    questionText: string;
+    points: number;
+    mcqOptions?: MCQOption[]; // Only for MCQ
+}
+
+export interface MockTest {
+    id: number;
+    title: string;
+    paper: string; // Full paper name like 'FR: Financial Reporting'
+    createdByFacultyId: number;
+    status: 'Draft' | 'Published';
+    durationMinutes: number; // e.g., 180 for 3 hours
+    questions: Question[];
+    publishDate?: string;
+    scheduledStartTime?: string; // ISO string for scheduled start time
+    isLocked?: boolean; // To manually lock/unlock the test
+}
+
+export interface StudentAnswer {
+    questionId: number;
+    answerText?: string; // For theoretical
+    selectedOptionId?: number; // For MCQ
+    awardedPoints?: number; // For manual grading of theoretical questions
+    suggestion?: string; // Feedback from the faculty
+}
+
+export interface StudentSubmission {
+    id: number;
+    studentId: number;
+    testId: number;
+    answers: StudentAnswer[];
+    startTime: string; // ISO string
+    submittedAt: string; // ISO string
+    status: 'In Progress' | 'Completed';
+    isGraded?: boolean; // Set to true after faculty grades theoretical parts
+    totalAwardedPoints?: number; // Final total score after manual grading
+}
+
+export interface PaymentQRCode {
+  id: number;
+  title: string;
+  imageUrl: string;
+}
+
+export interface SocialMediaLink {
+  id: number;
+  name: string;
+  url: string;
+  iconUrl: string; // Base64 Data URL for the PNG image
+}
+
+export interface ContactDetails {
+  email: string;
+  phones: string[];
+  address: string;
+  officeHours: string;
+  socials: SocialMediaLink[];
 }

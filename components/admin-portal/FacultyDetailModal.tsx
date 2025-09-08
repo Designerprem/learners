@@ -1,6 +1,3 @@
-
-
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { FacultyMember, CalendarEvent } from '../../types';
 import { CALENDAR_EVENTS, TEACHER_RATINGS, COURSES } from '../../constants';
@@ -118,6 +115,14 @@ const FacultyDetailModal: React.FC<FacultyDetailModalProps> = ({ isOpen, onClose
                                 <label className="block text-sm font-medium text-gray-700">Phone</label>
                                 <input name="phone" type="tel" value={formData.phone} onChange={handleFormChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-white"/>
                             </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Date of Birth</label>
+                                <input name="dob" type="date" value={formData.dob || ''} onChange={handleFormChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-white"/>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Social Media URL</label>
+                                <input name="socialMediaUrl" type="url" value={formData.socialMediaUrl || ''} onChange={handleFormChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-white"/>
+                            </div>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Address</label>
@@ -146,7 +151,18 @@ const FacultyDetailModal: React.FC<FacultyDetailModalProps> = ({ isOpen, onClose
                             <DetailRow label="Qualification" value={faculty.qualification} />
                             <DetailRow label="Email Address" value={faculty.email} />
                             <DetailRow label="Phone Number" value={faculty.phone} />
+                            <DetailRow label="Date of Birth" value={faculty.dob || 'N/A'} />
                             <DetailRow label="Address" value={faculty.address} />
+                             {faculty.socialMediaUrl && (
+                                <div>
+                                    <dt className="text-sm font-medium text-gray-500">Social Media</dt>
+                                    <dd className="mt-1 text-md text-gray-900">
+                                        <a href={faculty.socialMediaUrl} target="_blank" rel="noopener noreferrer" className="text-brand-red hover:underline break-all">
+                                            {faculty.socialMediaUrl}
+                                        </a>
+                                    </dd>
+                                </div>
+                             )}
                         </dl>
                         <div>
                              <h3 className="font-semibold text-lg mb-2 text-brand-dark border-b pb-2">Biography</h3>

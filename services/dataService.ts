@@ -3,18 +3,13 @@ export const getItems = <T>(key: string, defaultValue: T): T => {
     try {
         const storedValue = localStorage.getItem(key);
         if (storedValue) {
-            const parsed = JSON.parse(storedValue);
-            // Basic check to prevent returning an empty array from storage if the default has content,
-            // which can happen if the content was cleared from the admin panel.
-            if (Array.isArray(parsed) && parsed.length === 0 && Array.isArray(defaultValue) && defaultValue.length > 0) {
-                 return defaultValue;
-            }
-            return parsed;
+            // If a value exists in storage (even an empty array "[]"), parse and return it.
+            return JSON.parse(storedValue);
         }
     } catch (error) {
         console.error(`Error reading '${key}' from localStorage:`, error);
     }
-    // Return the default value if nothing is in storage or if there's an error
+    // Return the default value only if nothing is in storage or if there's a parsing error
     return defaultValue;
 };
 

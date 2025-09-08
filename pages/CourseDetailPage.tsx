@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-// FIX: Split react-router-dom imports to resolve module export errors.
-import { useParams, Link } from 'react-router-dom';
+// FIX: Consolidating all react-router-dom imports to resolve module export errors.
+// FIX: Switched to namespace import for react-router-dom to fix module resolution issues.
+import * as ReactRouterDOM from 'react-router-dom';
+// FIX: Add missing ACCA_FEE_STRUCTURE import.
 import { COURSES, FACULTY_MEMBERS, ACCA_FEE_STRUCTURE } from '../constants.ts';
 import type { FacultyMember, AccaFeeCategory } from '../types.ts';
 
@@ -109,7 +111,7 @@ const CourseFeeStructure: React.FC<{ feeCategories: AccaFeeCategory[] }> = ({ fe
 
 
 const CourseDetailPage: React.FC = () => {
-    const { courseId } = useParams<{ courseId: string }>();
+    const { courseId } = ReactRouterDOM.useParams<{ courseId: string }>();
     const course = COURSES.find(c => c.id === courseId);
     const [allFaculty, setAllFaculty] = useState<FacultyMember[]>([]);
 
@@ -123,9 +125,9 @@ const CourseDetailPage: React.FC = () => {
             <div className="container mx-auto px-4 sm:px-6 py-20 text-center">
                 <h1 className="text-3xl font-bold">Course Not Found</h1>
                 <p className="mt-4">The course you are looking for does not exist.</p>
-                <Link to="/courses" className="mt-6 inline-block bg-brand-red text-white px-6 py-2 rounded-md font-semibold hover:bg-red-700">
+                <ReactRouterDOM.Link to="/courses" className="mt-6 inline-block bg-brand-red text-white px-6 py-2 rounded-md font-semibold hover:bg-red-700">
                     Back to Courses
-                </Link>
+                </ReactRouterDOM.Link>
             </div>
         );
     }
@@ -154,6 +156,12 @@ const CourseDetailPage: React.FC = () => {
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 py-12 md:py-20">
                 <div className="grid lg:grid-cols-3 gap-12">
                     <div className="lg:col-span-2">
+                        <ReactRouterDOM.Link to="/courses" className="inline-flex items-center text-brand-red font-semibold hover:underline mb-6 text-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                            </svg>
+                            Back to Courses
+                        </ReactRouterDOM.Link>
                         <section id="description" className="mb-12">
                              <h2 className="text-2xl md:text-3xl font-bold text-brand-dark mb-4 border-b-2 border-brand-red pb-2">Course Overview</h2>
                              <p className="text-gray-700 leading-relaxed">{course.description}</p>
@@ -166,7 +174,7 @@ const CourseDetailPage: React.FC = () => {
 
                         <section id="outcomes" className="mb-12">
                             <h2 className="text-2xl md:text-3xl font-bold text-brand-dark mb-4 border-b-2 border-brand-red pb-2">Learning Outcomes</h2>
-                            <ul className="list-disc list-inside space-y-2 text-gray-700 pl-4">
+                            <ul className="list-disc list-inside space-y-2 text-gray-700 pl-4 text-base">
                                 {course.learningOutcomes.map((outcome, index) => <li key={index}>{outcome}</li>)}
                             </ul>
                         </section>
@@ -187,9 +195,9 @@ const CourseDetailPage: React.FC = () => {
                                     <p className="col-span-2 text-gray-600">Instructor information coming soon.</p>
                                 )}
                             </div>
-                            <Link to="/admissions" className="mt-8 block w-full text-center bg-brand-red text-white py-3 rounded-md font-semibold hover:bg-red-700 transition-colors shadow-md">
+                            <ReactRouterDOM.Link to="/admissions" className="mt-8 block w-full text-center bg-brand-red text-white py-3 rounded-md font-semibold hover:bg-red-700 transition-colors shadow-md">
                                 Apply for this Course
-                            </Link>
+                            </ReactRouterDOM.Link>
                         </div>
                     </aside>
                 </div>

@@ -1,13 +1,34 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+// FIX: Switched to namespace import for react-router-dom to fix module resolution issues.
+import * as ReactRouterDOM from 'react-router-dom';
+import { DEFAULT_ACADEMY_LOGO_URL, DEFAULT_CONTACT_DETAILS } from '../constants.ts';
+import { useLocalStorage } from '../hooks/useLocalStorage.ts';
+import { getItems } from '../services/dataService.ts';
+import type { ContactDetails } from '../types';
 
-const Logo = () => (
-     <Link to="/" className="flex items-center">
-       <img src="https://scontent.fbhr4-1.fna.fbcdn.net/v/t39.30808-1/529317458_122176712906516643_1248331585587425416_n.jpg?stp=c0.64.1920.1920a_dst-jpg_s200x200_tt6&_nc_cat=104&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=8I2ZS1q_ApEQ7kNvwF37wvl&_nc_oc=Adk2uluXqsn0dXjNMJpxHVBzFmuM74GjLpn7Zg0eLcUG_ywlNUVVs9RvDUpUtNg3-5c&_nc_zt=24&_nc_ht=scontent.fbhr4-1.fna&_nc_gid=ZaRJb_SfrkngjBjjwD8OZQ&oh=00_AfVsUL--_a_dYIsmX724ZUV8imcA4h9Iz6UjupURWsH2AA&oe=68BC2CE7" alt="Learners Academy Logo" className="h-12 w-auto" />
-    </Link>
-);
+const Logo = () => {
+    const [logoUrl] = useLocalStorage('academyLogoUrl', DEFAULT_ACADEMY_LOGO_URL);
+    return (
+     <ReactRouterDOM.Link to="/" className="flex items-center">
+       <img src={logoUrl} alt="Learners Academy Logo" className="h-12 w-auto" />
+    </ReactRouterDOM.Link>
+    );
+};
 
 const Footer: React.FC = () => {
+    const [contactDetails, setContactDetails] = useState<ContactDetails>(() => getItems('contactDetails', DEFAULT_CONTACT_DETAILS));
+
+    useEffect(() => {
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === 'contactDetails') {
+                setContactDetails(getItems('contactDetails', DEFAULT_CONTACT_DETAILS));
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
+
     return (
         <footer className="bg-brand-dark text-white">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-20 py-12">
@@ -17,7 +38,7 @@ const Footer: React.FC = () => {
                          <Logo />
                         <p className="mt-4 text-gray-400 text-sm">Your gateway to a successful career in accounting and finance.</p>
                         <div className="mt-4">
-                            <Link to="/login?role=admin" className="text-xs text-gray-500 hover:text-white">Admin Login</Link>
+                            <ReactRouterDOM.Link to="/login?role=admin" className="text-xs text-gray-500 hover:text-white">Admin Login</ReactRouterDOM.Link>
                         </div>
                     </div>
 
@@ -25,11 +46,11 @@ const Footer: React.FC = () => {
                     <div>
                         <h3 className="font-semibold tracking-wider uppercase">Quick Links</h3>
                         <ul className="mt-4 space-y-2">
-                            <li><Link to="/about" className="text-gray-400 hover:text-white transition-colors">About Us</Link></li>
-                            <li><Link to="/courses" className="text-gray-400 hover:text-white transition-colors">Courses</Link></li>
-                            <li><Link to="/gallery" className="text-gray-400 hover:text-white transition-colors">Gallery</Link></li>
-                            <li><Link to="/blog" className="text-gray-400 hover:text-white transition-colors">Blog</Link></li>
-                            <li><Link to="/faq" className="text-gray-400 hover:text-white transition-colors">FAQ</Link></li>
+                            <li><ReactRouterDOM.Link to="/about" className="text-gray-400 hover:text-white transition-colors">About Us</ReactRouterDOM.Link></li>
+                            <li><ReactRouterDOM.Link to="/courses" className="text-gray-400 hover:text-white transition-colors">Courses</ReactRouterDOM.Link></li>
+                            <li><ReactRouterDOM.Link to="/gallery" className="text-gray-400 hover:text-white transition-colors">Gallery</ReactRouterDOM.Link></li>
+                            <li><ReactRouterDOM.Link to="/blog" className="text-gray-400 hover:text-white transition-colors">Blog</ReactRouterDOM.Link></li>
+                            <li><ReactRouterDOM.Link to="/faq" className="text-gray-400 hover:text-white transition-colors">FAQ</ReactRouterDOM.Link></li>
                         </ul>
                     </div>
 
@@ -37,9 +58,9 @@ const Footer: React.FC = () => {
                      <div>
                         <h3 className="font-semibold tracking-wider uppercase">Portals</h3>
                         <ul className="mt-4 space-y-2">
-                            <li><Link to="/login?role=student" className="text-gray-400 hover:text-white transition-colors">Student Portal</Link></li>
-                            <li><Link to="/login?role=faculty" className="text-gray-400 hover:text-white transition-colors">Faculty Portal</Link></li>
-                            <li><Link to="/admissions" className="text-gray-400 hover:text-white transition-colors">Apply Now</Link></li>
+                            <li><ReactRouterDOM.Link to="/login?role=student" className="text-gray-400 hover:text-white transition-colors">Student Portal</ReactRouterDOM.Link></li>
+                            <li><ReactRouterDOM.Link to="/login?role=faculty" className="text-gray-400 hover:text-white transition-colors">Faculty Portal</ReactRouterDOM.Link></li>
+                            <li><ReactRouterDOM.Link to="/admissions" className="text-gray-400 hover:text-white transition-colors">Apply Now</ReactRouterDOM.Link></li>
                         </ul>
                     </div>
 
@@ -47,10 +68,11 @@ const Footer: React.FC = () => {
                     <div>
                         <h3 className="font-semibold tracking-wider uppercase">Contact Us</h3>
                         <ul className="mt-4 space-y-2 text-gray-400">
-                            <li>Kathmandu, 44600, Nepal</li>
-                            <li>Email: learnersaccademynp@gmail.com</li>
-                            <li>Phone: +977-9802394518</li>
-                             <li>Phone: +977-9802394519</li>
+                            <li>{contactDetails.address}</li>
+                            <li>Email: <a href={`mailto:${contactDetails.email}`} className="hover:text-white transition-colors">{contactDetails.email}</a></li>
+                            {contactDetails.phones.map((phone, index) => (
+                                <li key={index}>Phone: <a href={`tel:${phone.replace(/-/g, '')}`} className="hover:text-white transition-colors">{phone}</a></li>
+                            ))}
                         </ul>
                     </div>
                 </div>
@@ -58,9 +80,11 @@ const Footer: React.FC = () => {
                 <div className="mt-12 border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-400">
                     <p>&copy; {new Date().getFullYear()} Reliant Learners Academy. All Rights Reserved.</p>
                     <div className="flex space-x-4 mt-4 md:mt-0">
-                       <a href="#" className="hover:text-white transition-colors">Facebook</a>
-                       <a href="#" className="hover:text-white transition-colors">Twitter</a>
-                       <a href="#" className="hover:text-white transition-colors">LinkedIn</a>
+                        {contactDetails.socials.map(social => (
+                            <a key={social.id} href={social.url} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity" aria-label={social.name}>
+                                <img src={social.iconUrl} alt={social.name} className="w-6 h-6 object-contain" />
+                            </a>
+                        ))}
                     </div>
                 </div>
             </div>

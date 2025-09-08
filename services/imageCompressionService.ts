@@ -56,3 +56,19 @@ export const compressImage = (file: File, options: CompressionOptions): Promise<
     reader.readAsDataURL(file);
   });
 };
+
+export const imageFileToDataUrl = (file: File, compressOptions?: CompressionOptions): Promise<string> => {
+    if (file.type === 'image/svg+xml') {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = e => resolve(e.target?.result as string);
+            reader.onerror = error => reject(error);
+            reader.readAsDataURL(file);
+        });
+    } else if (file.type.startsWith('image/')) {
+        // Use existing compression for other image types
+        return compressImage(file, compressOptions || { maxWidth: 400, maxHeight: 400, quality: 0.8 });
+    } else {
+        return Promise.reject(new Error('File is not a supported image type (SVG, PNG, JPG, etc.).'));
+    }
+};

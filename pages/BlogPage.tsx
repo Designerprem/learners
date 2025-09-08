@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import { BLOG_POSTS, FACULTY_MEMBERS, STUDENTS } from '../constants';
+// FIX: Switched to namespace import for react-router-dom to fix module resolution issues.
+import * as ReactRouterDOM from 'react-router-dom';
+// FIX: Add '.ts' to constants import and include all necessary constants.
+import { BLOG_POSTS, FACULTY_MEMBERS, STUDENTS } from '../constants.ts';
 import type { BlogPost, FacultyMember, Student } from '../types';
 import { getItems } from '../services/dataService';
 
@@ -30,14 +32,14 @@ const PostCard: React.FC<{ post: BlogPost }> = ({ post }) => {
 
     return (
         <div className="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col group border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
-            <Link to={`/blog/${post.id}`} className="block overflow-hidden">
+            <ReactRouterDOM.Link to={`/blog/${post.id}`} className="block overflow-hidden">
                 <img src={post.imageUrl.replace('/1200/800', '/800/600')} alt={post.title} className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-500" />
-            </Link>
+            </ReactRouterDOM.Link>
             <div className="p-6 flex flex-col flex-grow">
                 <div>
                     <p className="text-sm text-brand-red font-semibold">{post.tags.join(' / ')}</p>
                     <h2 className="text-xl font-bold mt-2 mb-3 group-hover:text-brand-red transition-colors min-h-[3.5rem] line-clamp-2">
-                        <Link to={`/blog/${post.id}`}>{post.title}</Link>
+                        <ReactRouterDOM.Link to={`/blog/${post.id}`}>{post.title}</ReactRouterDOM.Link>
                     </h2>
                     <p className="text-gray-600 text-sm line-clamp-3 flex-grow">{post.excerpt}</p>
                 </div>
@@ -85,14 +87,14 @@ const FeaturedPost: React.FC<{ post: BlogPost }> = ({ post }) => {
         <section className="mb-12 md:mb-20">
             <div className="grid md:grid-cols-2 gap-8 items-center bg-brand-beige p-6 sm:p-8 rounded-lg shadow-lg">
                 <div className="overflow-hidden rounded-md">
-                    <Link to={`/blog/${post.id}`}>
+                    <ReactRouterDOM.Link to={`/blog/${post.id}`}>
                         <img src={post.imageUrl} alt={post.title} className="w-full object-cover transform hover:scale-105 transition-transform duration-500" />
-                    </Link>
+                    </ReactRouterDOM.Link>
                 </div>
                 <div>
                     <p className="text-brand-red font-bold uppercase tracking-wider mb-2">Featured Post</p>
                     <h2 className="text-3xl md:text-4xl font-bold text-brand-dark hover:text-brand-red transition-colors">
-                        <Link to={`/blog/${post.id}`}>{post.title}</Link>
+                        <ReactRouterDOM.Link to={`/blog/${post.id}`}>{post.title}</ReactRouterDOM.Link>
                     </h2>
                     <p className="text-gray-600 my-4">{post.excerpt}</p>
                     <div className="flex items-center">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import type { PopupNotification } from '../types';
 import { getItems } from '../services/dataService';
 
@@ -13,9 +13,9 @@ const PopupNotificationModal: React.FC<{ notification: PopupNotification; onClos
                     <p className="text-gray-600 mb-6">{notification.content}</p>
                     <div className="flex flex-col sm:flex-row justify-center gap-4">
                         {notification.link && notification.linkText && (
-                             <Link to={notification.link} onClick={onClose} className="bg-brand-red text-white px-8 py-3 rounded-md font-semibold hover:bg-red-700 transition-transform hover:scale-105 shadow-lg">
+                             <ReactRouterDOM.Link to={notification.link} onClick={onClose} className="bg-brand-red text-white px-8 py-3 rounded-md font-semibold hover:bg-red-700 transition-transform hover:scale-105 shadow-lg">
                                 {notification.linkText}
-                            </Link>
+                            </ReactRouterDOM.Link>
                         )}
                         <button onClick={onClose} className="bg-gray-200 text-brand-dark px-8 py-3 rounded-md font-semibold hover:bg-gray-300 transition-transform hover:scale-105 shadow-lg">
                             Close
@@ -43,20 +43,22 @@ const PopupNotificationManager: React.FC = () => {
         const activePopups = popups.filter(p => p.isActive);
 
         if (activePopups.length > 0) {
-            const hasSeenPopup = sessionStorage.getItem('hasSeenPopup');
-            if (!hasSeenPopup) {
-                // Select a random popup to display
-                const randomPopup = activePopups[Math.floor(Math.random() * activePopups.length)];
-                setNotification(randomPopup);
-                // A small delay to let the page load before showing the popup
+            const seenPopupIds: number[] = JSON.parse(sessionStorage.getItem('seenPopupIds') || '[]');
+            const nextPopupToShow = activePopups.find(p => !seenPopupIds.includes(p.id));
+            
+            if (nextPopupToShow) {
+                setNotification(nextPopupToShow);
                 setTimeout(() => setIsVisible(true), 1500);
             }
         }
     }, []);
 
     const handleClose = () => {
-        setIsVisible(false);
-        sessionStorage.setItem('hasSeenPopup', 'true');
+        if (notification) {
+            setIsVisible(false);
+            const seenPopupIds: number[] = JSON.parse(sessionStorage.getItem('seenPopupIds') || '[]');
+            sessionStorage.setItem('seenPopupIds', JSON.stringify([...seenPopupIds, notification.id]));
+        }
     };
 
     if (!isVisible || !notification) {

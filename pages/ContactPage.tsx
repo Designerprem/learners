@@ -1,9 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AnimatedSection from '../components/AnimatedSection.tsx';
+import { DEFAULT_CONTACT_DETAILS } from '../constants.ts';
+import { getItems } from '../services/dataService.ts';
+import type { ContactDetails } from '../types';
+
 
 const ContactPage: React.FC = () => {
     const [isSubmitted, setIsSubmitted] = useState(false);
-    
+    const [contactDetails, setContactDetails] = useState<ContactDetails>(() => getItems('contactDetails', DEFAULT_CONTACT_DETAILS));
+
+    useEffect(() => {
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === 'contactDetails') {
+                setContactDetails(getItems('contactDetails', DEFAULT_CONTACT_DETAILS));
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitted(true);
@@ -46,12 +62,35 @@ const ContactPage: React.FC = () => {
                     </div>
                     <div className="bg-brand-beige p-6 md:p-8 rounded-lg">
                         <h2 className="text-2xl md:text-3xl font-bold text-brand-dark mb-6">Contact Information</h2>
-                        <div className="space-y-4 text-gray-700">
-                             <p><strong>Address:</strong> Kathmandu, 44600, Nepal</p>
-                             <p><strong>Phone:</strong> +977-9802394518 / +977-9802394519</p>
-                             <p><strong>Email:</strong> learnersaccademynp@gmail.com</p>
-                             <p><strong>Office Hours:</strong> Sun - Fri, 9:00 AM - 5:00 PM</p>
+                        <div className="space-y-4 text-gray-700 text-lg">
+                             <p><strong>Address:</strong> {contactDetails.address}</p>
+                             <p>
+                                <strong>Phone:</strong>{' '}
+                                {contactDetails.phones.map((phone, index) => (
+                                    <React.Fragment key={index}>
+                                        <a href={`tel:${phone.replace(/-/g, '')}`} className="text-brand-red hover:underline">{phone}</a>
+                                        {index < contactDetails.phones.length - 1 && ' / '}
+                                    </React.Fragment>
+                                ))}
+                            </p>
+                             <p>
+                                <strong>Email:</strong>{' '}
+                                <a href={`mailto:${contactDetails.email}`} className="text-brand-red hover:underline">{contactDetails.email}</a>
+                            </p>
+                             <p><strong>Office Hours:</strong> {contactDetails.officeHours}</p>
                         </div>
+
+                        <div className="mt-8 border-t pt-6">
+                            <h3 className="font-semibold text-lg mb-4 text-brand-dark">Follow Us</h3>
+                            <div className="flex space-x-6">
+                                {contactDetails.socials.map(social => (
+                                    <a key={social.id} href={social.url} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity" aria-label={social.name}>
+                                        <img src={social.iconUrl} alt={social.name} className="w-8 h-8 object-contain" />
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+
                         <div className="mt-8">
                              <iframe
                                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3533.921319084803!2d85.3421384!3d27.6865647!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb197a9e0f9951%3A0xee204fd90d8a685c!2sACCA%20%40%20Learners%20Academy!5e0!3m2!1sen!2snp!4v1626882298218!5m2!1sen!2snp"

@@ -1,24 +1,26 @@
-
 import React, { useState } from 'react';
-// FIX: Split react-router-dom imports to resolve module export errors.
-import { useSearchParams, Link } from 'react-router-dom';
-import { useNavigate } from 'react-router';
-import type { UserRole, Student, FacultyMember } from '../types';
-import { STUDENTS, FACULTY_MEMBERS } from '../constants';
-import { getItems } from '../services/dataService';
+// FIX: Consolidating all react-router-dom imports to resolve module export errors.
+// FIX: Switched to namespace import for react-router-dom to fix module resolution issues.
+import * as ReactRouterDOM from 'react-router-dom';
+import type { UserRole, Student, FacultyMember } from '../types.ts';
+// FIX: Add missing STUDENTS import
+import { STUDENTS, FACULTY_MEMBERS, ADMIN_USER, DEFAULT_ACADEMY_LOGO_URL } from '../constants.ts';
+import { getItems } from '../services/dataService.ts';
+import { useLocalStorage } from '../hooks/useLocalStorage.ts';
 
 const getStudents = (): Student[] => getItems('students', STUDENTS);
 const getFaculty = (): FacultyMember[] => getItems('faculty', FACULTY_MEMBERS);
 
 
 const LoginPage: React.FC = () => {
-    const [searchParams] = useSearchParams();
-    const navigate = useNavigate();
+    const [searchParams] = ReactRouterDOM.useSearchParams();
+    const navigate = ReactRouterDOM.useNavigate();
     const role = (searchParams.get('role') as UserRole) || 'student';
     
     const [id, setId] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [logoUrl] = useLocalStorage('academyLogoUrl', DEFAULT_ACADEMY_LOGO_URL);
 
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
@@ -37,6 +39,8 @@ const LoginPage: React.FC = () => {
             path = '/faculty-portal/dashboard';
         } else if (role === 'admin') {
              if (id === 'admin@learners.edu' && password === 'password') { // Simplified admin check
+                sessionStorage.setItem('loggedInUser', JSON.stringify(ADMIN_USER));
+                sessionStorage.setItem('userRole', 'admin');
                 navigate('/admin-portal/dashboard');
                 return;
             }
@@ -83,7 +87,7 @@ const LoginPage: React.FC = () => {
     return (
          <div className="flex flex-col items-center justify-center min-h-screen bg-brand-beige">
             <div className="mb-8 text-center">
-                <img src="https://scontent.fbhr4-1.fna.fbcdn.net/v/t39.30808-1/529317458_122176712906516643_1248331585587425416_n.jpg?stp=c0.64.1920.1920a_dst-jpg_s200x200_tt6&_nc_cat=104&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=8I2ZS1q_ApEQ7kNvwF37wvl&_nc_oc=Adk2uluXqsn0dXjNMJpxHVBzFmuM74GjLpn7Zg0eLcUG_ywlNUVVs9RvDUpUtNg3-5c&_nc_zt=24&_nc_ht=scontent.fbhr4-1.fna&_nc_gid=ZaRJb_SfrkngjBjjwD8OZQ&oh=00_AfVsUL--_a_dYIsmX724ZUV8imcA4h9Iz6UjupURWsH2AA&oe=68BC2CE7" alt="Learners Academy Logo" className="h-20 w-auto mx-auto" />
+                <img src={logoUrl} alt="Learners Academy Logo" className="h-20 w-auto mx-auto" />
                 <h1 className="text-2xl font-bold text-brand-dark mt-4">Reliant Learners Academy</h1>
             </div>
             <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg">
@@ -118,11 +122,11 @@ const LoginPage: React.FC = () => {
                     <button type="submit" className="w-full bg-brand-red text-white py-3 px-4 rounded-md font-semibold hover:bg-red-700 transition-colors">Login</button>
                     {role !== 'admin' && (
                         <p className="text-center text-sm text-gray-600">
-                           <Link to={switchRoleLink} className="font-medium text-brand-red hover:underline">{switchRoleText}</Link>
+                           <ReactRouterDOM.Link to={switchRoleLink} className="font-medium text-brand-red hover:underline">{switchRoleText}</ReactRouterDOM.Link>
                         </p>
                     )}
                      <p className="text-center text-xs text-gray-500 mt-4">
-                        <Link to="/" className="hover:underline">← Back to Main Site</Link>
+                        <ReactRouterDOM.Link to="/" className="hover:underline">← Back to Main Site</ReactRouterDOM.Link>
                     </p>
                 </form>
             </div>

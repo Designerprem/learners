@@ -1,9 +1,9 @@
-
-import React, { useRef, useEffect } from 'react';
-// FIX: Split react-router-dom imports to resolve module export errors.
-import { NavLink } from 'react-router-dom';
-import { useNavigate } from 'react-router';
-import { ADMIN_USER } from '../../constants';
+import React, { useRef, useEffect, useState } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { ADMIN_USER, DEFAULT_ACADEMY_LOGO_URL } from '../../constants';
+import { logout } from '../../services/authService';
+import ConfirmModal from '../../components/ConfirmModal.tsx';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
 
 const icons = {
     dashboard: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>,
@@ -13,7 +13,8 @@ const icons = {
     admissions: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" /></svg>,
     announcements: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.277 0 7.423-4.586 6.357-8.455A4.002 4.002 0 0118 4v6c0 .635-.21 1.223-.592 1.699l-2.147 6.15a1.76 1.76 0 01-3.417-.592V5.882z"></path></svg>,
     fees: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>,
-    mockResults: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>,
+    salary: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01" /></svg>,
+    mockTests: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>,
     ratings: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>,
     content: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>,
     settings: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065zM15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>,
@@ -46,6 +47,8 @@ interface AdminSidebarProps {
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, setIsOpen }) => {
     const navigate = useNavigate();
     const sidebarRef = useRef<HTMLElement>(null);
+    const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
+    const [logoUrl] = useLocalStorage('academyLogoUrl', DEFAULT_ACADEMY_LOGO_URL);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -58,10 +61,13 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, setIsOpen }) => {
     }, [setIsOpen]);
 
     const handleLogoutClick = () => {
-        // In a real app, call a logout service
-        sessionStorage.clear();
+        setIsLogoutConfirmOpen(true);
+    };
+
+    const handleConfirmLogout = () => {
+        logout();
         setIsOpen(false);
-        navigate('/login?role=admin');
+        navigate('/');
     };
     
     const handleLinkClick = () => {
@@ -79,7 +85,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, setIsOpen }) => {
                 ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:fixed`}
             >
                 <div className="flex items-center mb-10 px-2">
-                    <img src={admin.avatarUrl} alt={`${admin.name}'s profile picture`} className="w-10 h-10 rounded-full" />
+                    <img src={logoUrl} alt={`${admin.name}'s profile picture`} className="w-10 h-10 rounded-full" />
                     <div className="ml-3">
                         <p className="text-lg font-bold leading-tight">{admin.name}</p>
                         <p className="text-xs text-gray-400">Administrator</p>
@@ -93,7 +99,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, setIsOpen }) => {
                     <SidebarLink to="/admin-portal/admissions" icon={icons.admissions} onClick={handleLinkClick}>Admissions</SidebarLink>
                     <SidebarLink to="/admin-portal/announcements" icon={icons.announcements} onClick={handleLinkClick}>Announcements</SidebarLink>
                     <SidebarLink to="/admin-portal/fees" icon={icons.fees} onClick={handleLinkClick}>Fee Management</SidebarLink>
-                    <SidebarLink to="/admin-portal/mock-results" icon={icons.mockResults} onClick={handleLinkClick}>Mock Results</SidebarLink>
+                    <SidebarLink to="/admin-portal/salary" icon={icons.salary} onClick={handleLinkClick}>Manage Salary</SidebarLink>
+                    <SidebarLink to="/admin-portal/mock-tests" icon={icons.mockTests} onClick={handleLinkClick}>Mock Tests & Submissions</SidebarLink>
                     <SidebarLink to="/admin-portal/ratings" icon={icons.ratings} onClick={handleLinkClick}>Teacher Ratings</SidebarLink>
                     <SidebarLink to="/admin-portal/content" icon={icons.content} onClick={handleLinkClick}>Site Content</SidebarLink>
                     <SidebarLink to="/admin-portal/settings" icon={icons.settings} onClick={handleLinkClick}>Settings</SidebarLink>
@@ -108,6 +115,15 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, setIsOpen }) => {
                     </button>
                 </div>
             </aside>
+            <ConfirmModal
+                isOpen={isLogoutConfirmOpen}
+                title="Confirm Logout"
+                message="Are you sure you want to log out? Any unsaved changes will be lost."
+                onConfirm={handleConfirmLogout}
+                onCancel={() => setIsLogoutConfirmOpen(false)}
+                confirmText="Log Out"
+                cancelText="Cancel"
+            />
         </>
     );
 };

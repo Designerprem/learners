@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { PENDING_APPLICATIONS, STUDENTS } from '../../constants';
-import type { Application, Student } from '../../types';
-import AddStudentModal from '../../components/admin-portal/AddStudentModal';
-import ApplicationDetailModal from '../../components/admin-portal/ApplicationDetailModal';
-import { sendWelcomeEmail, DEFAULT_WELCOME_EMAIL_TEMPLATE } from '../../services/emailService';
+// FIX: Add missing PENDING_APPLICATIONS and STUDENTS imports.
+import { PENDING_APPLICATIONS, STUDENTS } from '../../constants.ts';
+import type { Application, Student } from '../../types.ts';
+import AddStudentModal from '../../components/admin-portal/AddStudentModal.tsx';
+import ApplicationDetailModal from '../../components/admin-portal/ApplicationDetailModal.tsx';
+import { sendWelcomeEmail, DEFAULT_WELCOME_EMAIL_TEMPLATE } from '../../services/emailService.ts';
 
 type Tab = 'Pending' | 'Approved' | 'Rejected';
 
@@ -141,7 +141,8 @@ const ManageAdmissions: React.FC = () => {
             email: application.email,
             phone: application.phone || 'N/A',
             address: application.address || 'N/A',
-            dob: 'N/A',
+            dob: application.dob || 'N/A',
+            socialMediaUrl: application.socialMediaUrl,
             enrollmentDate: enrollmentDate.toISOString().split('T')[0],
             currentLevel: application.program.includes('Knowledge') ? 'Applied Knowledge' : application.program.includes('Skills') ? 'Applied Skills' : 'Strategic Professional',
             enrolledPapers: application.selectedPapers?.map(p => p.split(':')[0].trim()) || [],
@@ -191,6 +192,18 @@ const ManageAdmissions: React.FC = () => {
         setSelectedApplication(null);
     };
 
+    const handleDeleteApplication = (id: number) => {
+        if (window.confirm('Are you sure you want to permanently delete this application? This cannot be undone.')) {
+            if (activeTab === 'Pending') {
+                setPending(prev => prev.filter(app => app.id !== id));
+            } else if (activeTab === 'Approved') {
+                setApproved(prev => prev.filter(app => app.id !== id));
+            } else if (activeTab === 'Rejected') {
+                setRejected(prev => prev.filter(app => app.id !== id));
+            }
+        }
+    };
+
     const handleAddStudent = async (newApplication: Application, password: string) => {
         const { studentId } = newApplication;
         
@@ -209,7 +222,8 @@ const ManageAdmissions: React.FC = () => {
             email: newApplication.email,
             phone: newApplication.phone || 'N/A',
             address: newApplication.address || 'N/A',
-            dob: 'N/A',
+            dob: newApplication.dob || 'N/A',
+            socialMediaUrl: newApplication.socialMediaUrl,
             enrollmentDate: enrollmentDate.toISOString().split('T')[0],
             currentLevel: newApplication.program.includes('Knowledge') ? 'Applied Knowledge' : newApplication.program.includes('Skills') ? 'Applied Skills' : 'Strategic Professional',
             enrolledPapers: newApplication.selectedPapers?.map(p => p.split(':')[0].trim()) || [],
@@ -339,6 +353,7 @@ const ManageAdmissions: React.FC = () => {
                                                 {app.status}
                                             </span>
                                         )}
+                                        <button onClick={() => handleDeleteApplication(app.id)} className="text-sm font-semibold text-brand-red hover:underline ml-2">Delete</button>
                                     </td>
                                 </tr>
                             )) : (

@@ -6,11 +6,28 @@ import { useFaculty } from '../FacultyPortalPage';
 type Tab = 'Pending' | 'Answered';
 
 const RenderFacultyAttachment = ({ attachment }: { attachment: ChatAttachment }) => {
+    const downloadLink = (
+        <a href={attachment.url} download={attachment.name || 'download'} className="mt-1 flex items-center text-xs font-semibold text-blue-600 hover:underline">
+            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            Download
+        </a>
+    );
+
     switch (attachment.type) {
         case 'image':
-            return <img src={attachment.url} alt={attachment.name || 'attachment'} className="mt-2 rounded-lg max-w-xs max-h-48 object-cover" />;
+            return (
+                <div className="mt-2">
+                    <img src={attachment.url} alt={attachment.name || 'attachment'} className="rounded-lg max-w-xs max-h-48 object-cover" />
+                    {downloadLink}
+                </div>
+            );
         case 'video':
-            return <video src={attachment.url} controls className="mt-2 rounded-lg max-w-xs" />;
+            return (
+                <div className="mt-2">
+                    <video src={attachment.url} controls className="rounded-lg max-w-xs" />
+                    {downloadLink}
+                </div>
+            );
         case 'document':
         default:
             return (
@@ -55,6 +72,12 @@ const QuestionCard = ({ question, onAnswer, studentAvatarUrl }: { question: Teac
                 <div className="flex justify-between items-start">
                     <div>
                         <p className="font-bold text-gray-800">{question.question}</p>
+                        {question.questionAttachment && (
+                            <div className="mt-2">
+                                <p className="text-xs font-semibold text-gray-500 mb-1">Student's Attachment:</p>
+                                <RenderFacultyAttachment attachment={question.questionAttachment} />
+                            </div>
+                        )}
                         <p className="text-sm text-gray-500 mt-1">
                             From: <span className="font-semibold">{question.studentName || 'A Student'}</span> | 
                             Paper: <span className="font-semibold">{question.paper}</span> | 

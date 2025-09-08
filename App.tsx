@@ -1,7 +1,9 @@
+
+
 import React from 'react';
-// FIX: Split react-router-dom imports to resolve module export errors.
-import { HashRouter } from 'react-router-dom';
-import { Routes, Route, Outlet } from 'react-router';
+// FIX: Consolidating all react-router-dom imports to resolve module export errors.
+// FIX: Switched to namespace import for react-router-dom to fix module resolution issues.
+import * as ReactRouterDOM from 'react-router-dom';
 import Header from './components/Header.tsx';
 import Footer from './components/Footer.tsx';
 import HomePage from './pages/HomePage.tsx';
@@ -27,7 +29,7 @@ const MainLayout = () => (
     <>
         <Header />
         <main className="flex-grow">
-            <Outlet />
+            <ReactRouterDOM.Outlet />
         </main>
         <Footer />
     </>
@@ -36,34 +38,34 @@ const MainLayout = () => (
 
 const App: React.FC = () => {
     return (
-        <HashRouter>
+        <ReactRouterDOM.HashRouter>
             <ScrollToTop />
             <div className="flex flex-col min-h-screen">
-                 <Routes>
-                    <Route element={<MainLayout />}>
-                        <Route path="/" element={<HomePage />} />
-                        <Route path="/about" element={<AboutPage />} />
-                        <Route path="/courses" element={<CoursesPage />} />
-                        <Route path="/courses/:courseId" element={<CourseDetailPage />} />
-                        <Route path="/admissions" element={<AdmissionsPage />} />
+                 <ReactRouterDOM.Routes>
+                    <ReactRouterDOM.Route element={<MainLayout />}>
+                        <ReactRouterDOM.Route path="/" element={<HomePage />} />
+                        <ReactRouterDOM.Route path="/about" element={<AboutPage />} />
+                        <ReactRouterDOM.Route path="/courses" element={<CoursesPage />} />
+                        <ReactRouterDOM.Route path="/courses/:courseId" element={<CourseDetailPage />} />
+                        <ReactRouterDOM.Route path="/admissions" element={<AdmissionsPage />} />
                         {/* Add route for the new Fee Structure page. */}
-                        <Route path="/fees" element={<FeeStructurePage />} />
-                        <Route path="/gallery" element={<GalleryPage />} />
-                        <Route path="/faq" element={<FAQPage />} />
-                        <Route path="/blog" element={<BlogPage />} />
-                        <Route path="/blog/:postId" element={<BlogPostPage />} />
-                        <Route path="/vlogs" element={<VlogsPage />} />
-                        <Route path="/contact" element={<ContactPage />} />
-                    </Route>
+                        <ReactRouterDOM.Route path="/fees" element={<FeeStructurePage />} />
+                        <ReactRouterDOM.Route path="/gallery" element={<GalleryPage />} />
+                        <ReactRouterDOM.Route path="/faq" element={<FAQPage />} />
+                        <ReactRouterDOM.Route path="/blog" element={<BlogPage />} />
+                        <ReactRouterDOM.Route path="/blog/:postId" element={<BlogPostPage />} />
+                        <ReactRouterDOM.Route path="/vlogs" element={<VlogsPage />} />
+                        <ReactRouterDOM.Route path="/contact" element={<ContactPage />} />
+                    </ReactRouterDOM.Route>
                     
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/student-portal/*" element={<StudentPortalPage />} />
-                    <Route path="/faculty-portal/*" element={<FacultyPortalPage />} />
-                    <Route path="/admin-portal/*" element={<AdminPortalPage />} />
-                    <Route path="/deployment-guide" element={<DeploymentGuidePage />} />
-                </Routes>
+                    <ReactRouterDOM.Route path="/login" element={<LoginPage />} />
+                    <ReactRouterDOM.Route path="/student-portal/*" element={<StudentPortalPage />} />
+                    <ReactRouterDOM.Route path="/faculty-portal/*" element={<FacultyPortalPage />} />
+                    <ReactRouterDOM.Route path="/admin-portal/*" element={<AdminPortalPage />} />
+                    <ReactRouterDOM.Route path="/deployment-guide" element={<DeploymentGuidePage />} />
+                </ReactRouterDOM.Routes>
             </div>
-        </HashRouter>
+        </ReactRouterDOM.HashRouter>
     );
 };
 

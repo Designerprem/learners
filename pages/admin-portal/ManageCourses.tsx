@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import type { Course } from '../../types';
 import CourseEditModal from '../../components/admin-portal/CourseEditModal';
 import AddCourseModal from '../../components/admin-portal/AddCourseModal';
+import ConfirmModal from '../../components/ConfirmModal';
 
 const ManageCourses: React.FC = () => {
     const [courses, setCourses] = useState<Course[]>(() => {
@@ -17,14 +18,23 @@ const ManageCourses: React.FC = () => {
 
     const [editingCourse, setEditingCourse] = useState<Course | null>(null);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [notification, setNotification] = useState('');
+    const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
 
     useEffect(() => {
         localStorage.setItem('courses', JSON.stringify(courses));
     }, [courses]);
 
-    const handleDeleteCourse = (courseId: string) => {
-        if (window.confirm('Are you sure you want to delete this course? This action cannot be undone.')) {
-            setCourses(prev => prev.filter(c => c.id !== courseId));
+    const handleDeleteClick = (course: Course) => {
+        setCourseToDelete(course);
+    };
+    
+    const handleConfirmDelete = () => {
+        if (courseToDelete) {
+            setCourses(prev => prev.filter(c => c.id !== courseToDelete.id));
+            setNotification(`Course "${courseToDelete.title}" has been deleted successfully.`);
+            setTimeout(() => setNotification(''), 3000);
+            setCourseToDelete(null);
         }
     };
 
@@ -52,6 +62,12 @@ const ManageCourses: React.FC = () => {
                     Add New Course
                 </button>
             </div>
+            
+            {notification && (
+                <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-md transition-opacity duration-300">
+                    {notification}
+                </div>
+            )}
 
             <div className="bg-white p-6 rounded-lg shadow-md">
                 <div className="overflow-x-auto">
@@ -77,7 +93,7 @@ const ManageCourses: React.FC = () => {
                                     <td className="p-4 space-x-2 whitespace-nowrap">
                                         <Link to={`/courses/${course.id}`} className="text-sm font-semibold text-blue-600 hover:underline">View</Link>
                                         <button onClick={() => setEditingCourse(course)} className="text-sm font-semibold text-yellow-600 hover:underline">Edit</button>
-                                        <button onClick={() => handleDeleteCourse(course.id)} className="text-sm font-semibold text-brand-red hover:underline">Delete</button>
+                                        <button onClick={() => handleDeleteClick(course)} className="text-sm font-semibold text-brand-red hover:underline">Delete</button>
                                     </td>
                                 </tr>
                             ))}
@@ -98,6 +114,14 @@ const ManageCourses: React.FC = () => {
                 isOpen={isAddModalOpen}
                 onClose={() => setIsAddModalOpen(false)}
                 onSave={handleAddNewCourse}
+            />
+             <ConfirmModal
+                isOpen={!!courseToDelete}
+                title="Confirm Deletion"
+                message={`Are you sure you want to permanently delete the course "${courseToDelete?.title}"? This action cannot be undone.`}
+                onConfirm={handleConfirmDelete}
+                onCancel={() => setCourseToDelete(null)}
+                confirmText="Delete"
             />
         </div>
     );

@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { NavLink, Link } from 'react-router-dom';
+// FIX: Switched to namespace import for react-router-dom to fix module resolution issues.
+import * as ReactRouterDOM from 'react-router-dom';
 import NewsTicker from './NewsTicker.tsx';
+import { DEFAULT_ACADEMY_LOGO_URL } from '../constants.ts';
+import { useLocalStorage } from '../hooks/useLocalStorage.ts';
 
 const navLinksList = [
     { to: "/", text: "Home" },
@@ -13,12 +16,15 @@ const navLinksList = [
     { to: "/contact", text: "Contact" },
 ];
 
-const Logo = () => (
-     <NavLink to="/" className="flex items-center">
-        <img src="https://scontent.fbhr4-1.fna.fbcdn.net/v/t39.30808-1/529317458_122176712906516643_1248331585587425416_n.jpg?stp=c0.64.1920.1920a_dst-jpg_s200x200_tt6&_nc_cat=104&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=8I2ZS1q_ApEQ7kNvwF37wvl&_nc_oc=Adk2uluXqsn0dXjNMJpxHVBzFmuM74GjLpn7Zg0eLcUG_ywlNUVVs9RvDUpUtNg3-5c&_nc_zt=24&_nc_ht=scontent.fbhr4-1.fna&_nc_gid=ZaRJb_SfrkngjBjjwD8OZQ&oh=00_AfVsUL--_a_dYIsmX724ZUV8imcA4h9Iz6UjupURWsH2AA&oe=68BC2CE7" alt="Learners Academy Logo" className="h-12 w-auto" />
-        <span className="ml-3 text-xl font-bold text-brand-dark hidden sm:inline">Reliant Learners Academy</span>
-    </NavLink>
-);
+const Logo = () => {
+    const [logoUrl] = useLocalStorage('academyLogoUrl', DEFAULT_ACADEMY_LOGO_URL);
+    return (
+         <ReactRouterDOM.NavLink to="/" className="flex items-center">
+            <img src={logoUrl} alt="Learners Academy Logo" className="h-12 w-auto" />
+            <span className="ml-3 text-xl font-bold text-brand-dark hidden sm:inline">Reliant Learners Academy</span>
+        </ReactRouterDOM.NavLink>
+    );
+};
 
 const Header: React.FC = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -45,7 +51,7 @@ const Header: React.FC = () => {
                     <div className="flex items-center">
                         <nav className="hidden md:flex items-center space-x-2 lg:space-x-4">
                             {navLinksList.map(link => (
-                                <NavLink 
+                                <ReactRouterDOM.NavLink 
                                     key={link.to} 
                                     to={link.to} 
                                     className={({ isActive }) => 
@@ -53,7 +59,7 @@ const Header: React.FC = () => {
                                     }
                                 >
                                     {link.text}
-                                </NavLink>
+                                </ReactRouterDOM.NavLink>
                             ))}
                         </nav>
                          {/* Desktop Login Button */}
@@ -71,8 +77,8 @@ const Header: React.FC = () => {
                             </button>
                             {isLoginOpen && (
                                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border animate-fade-in-down">
-                                    <Link to="/login?role=student" onClick={() => setIsLoginOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Student Portal</Link>
-                                    <Link to="/login?role=faculty" onClick={() => setIsLoginOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Faculty Portal</Link>
+                                    <ReactRouterDOM.Link to="/login?role=student" onClick={() => setIsLoginOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Student Portal</ReactRouterDOM.Link>
+                                    <ReactRouterDOM.Link to="/login?role=faculty" onClick={() => setIsLoginOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Faculty Portal</ReactRouterDOM.Link>
                                 </div>
                             )}
                              <style>{`
@@ -95,7 +101,7 @@ const Header: React.FC = () => {
                 <div className={`md:hidden transition-all duration-300 ease-in-out ${isMenuOpen ? 'max-h-screen' : 'max-h-0'} overflow-hidden`}>
                     <nav className="flex flex-col space-y-1 px-4 pb-4">
                         {navLinksList.map(link => (
-                            <NavLink 
+                            <ReactRouterDOM.NavLink 
                                 key={link.to} 
                                 to={link.to} 
                                 className={({ isActive }) => 
@@ -104,15 +110,15 @@ const Header: React.FC = () => {
                                 onClick={() => setIsMenuOpen(false)}
                             >
                                 {link.text}
-                            </NavLink>
+                            </ReactRouterDOM.NavLink>
                         ))}
                         <div className="border-t my-2"></div>
-                        <Link to="/login?role=student" className="block py-2 px-3 text-base font-medium rounded-md text-brand-dark hover:bg-gray-100" onClick={() => setIsMenuOpen(false)}>
+                        <ReactRouterDOM.Link to="/login?role=student" className="block py-2 px-3 text-base font-medium rounded-md text-brand-dark hover:bg-gray-100" onClick={() => setIsMenuOpen(false)}>
                             Student Login
-                        </Link>
-                        <Link to="/login?role=faculty" className="block py-2 px-3 text-base font-medium rounded-md text-brand-dark hover:bg-gray-100" onClick={() => setIsMenuOpen(false)}>
+                        </ReactRouterDOM.Link>
+                        <ReactRouterDOM.Link to="/login?role=faculty" className="block py-2 px-3 text-base font-medium rounded-md text-brand-dark hover:bg-gray-100" onClick={() => setIsMenuOpen(false)}>
                             Faculty Login
-                        </Link>
+                        </ReactRouterDOM.Link>
                     </nav>
                 </div>
             </header>

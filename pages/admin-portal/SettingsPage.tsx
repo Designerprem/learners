@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { STUDENTS, FACULTY_MEMBERS } from '../../constants';
+import React, { useState, useEffect, useRef } from 'react';
+// FIX: Add '.ts' to constants import to resolve module not found error.
+import { STUDENTS, FACULTY_MEMBERS, DEFAULT_ACADEMY_LOGO_URL } from '../../constants.ts';
 import type { Student, FacultyMember } from '../../types';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { imageFileToDataUrl } from '../../services/imageCompressionService';
 
 // Password Reset Component for Students or Faculty
 const ResetUserPassword: React.FC<{
@@ -89,6 +92,46 @@ const ResetUserPassword: React.FC<{
                     </button>
                 </div>
             </form>
+        </div>
+    );
+};
+
+const LogoSettings = () => {
+    const [logoUrl, setLogoUrl] = useLocalStorage('academyLogoUrl', DEFAULT_ACADEMY_LOGO_URL);
+    const [message, setMessage] = useState('');
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setMessage('');
+
+        try {
+            const dataUrl = await imageFileToDataUrl(file, { maxWidth: 200, maxHeight: 200, quality: 0.9 });
+            setLogoUrl(dataUrl);
+            setMessage('Logo updated successfully!');
+        } catch (error) {
+            console.error(error);
+            setMessage('Failed to update logo. Please use a valid image file (SVG, PNG, JPG).');
+        } finally {
+            setTimeout(() => setMessage(''), 4000);
+        }
+    };
+
+    return (
+         <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-2xl font-bold text-brand-dark mb-4 border-b pb-4">Academy Logo</h2>
+            {message && <p className="text-sm text-green-600 p-3 bg-green-50 rounded-md mb-4">{message}</p>}
+            <div className="flex flex-col items-center gap-4">
+                <p className="text-sm text-gray-600 text-center">This logo appears in the header, footer, and login pages of the main site.</p>
+                <div className="h-28 flex items-center justify-center">
+                    <img src={logoUrl} alt="Current Academy Logo" className="max-h-full max-w-full bg-gray-100 p-2 border rounded-md" />
+                </div>
+                <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
+                <button onClick={() => fileInputRef.current?.click()} className="bg-brand-dark text-white font-semibold px-4 py-2 rounded-md hover:bg-black">
+                    Upload New Logo
+                </button>
+            </div>
         </div>
     );
 };
@@ -226,8 +269,7 @@ const SettingsPage: React.FC = () => {
                         </div>
                     </form>
                 </div>
-                 {/* Empty placeholder for grid layout */}
-                <div></div>
+                 <LogoSettings />
             </div>
 
             <div className="mt-8 pt-8 border-t">

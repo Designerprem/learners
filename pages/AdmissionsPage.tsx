@@ -11,6 +11,8 @@ const AdmissionsPage: React.FC = () => {
         email: '',
         phone: '',
         address: '',
+        dob: '',
+        socialMediaUrl: '',
         program: 'ACCA Applied Knowledge',
         selectedPapers: [] as string[],
         document: null as File | null,
@@ -85,6 +87,8 @@ const AdmissionsPage: React.FC = () => {
             email: formData.email,
             phone: formData.phone,
             address: formData.address,
+            dob: formData.dob,
+            socialMediaUrl: formData.socialMediaUrl,
             program: formData.program,
             selectedPapers: formData.selectedPapers,
             submittedDate: new Date().toISOString().split('T')[0],
@@ -139,6 +143,14 @@ const AdmissionsPage: React.FC = () => {
                                  <div>
                                     <label htmlFor="address" className="block text-sm font-medium text-gray-700">Address</label>
                                     <textarea name="address" id="address" rows={3} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white" onChange={handleChange} />
+                                </div>
+                                <div>
+                                    <label htmlFor="dob" className="block text-sm font-medium text-gray-700">Date of Birth</label>
+                                    <input type="date" name="dob" id="dob" required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white" onChange={handleChange} />
+                                </div>
+                                <div>
+                                    <label htmlFor="socialMediaUrl" className="block text-sm font-medium text-gray-700">Social Media Profile URL (Optional)</label>
+                                    <input type="url" name="socialMediaUrl" id="socialMediaUrl" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white" onChange={handleChange} placeholder="https://www.linkedin.com/in/..."/>
                                 </div>
                                 <div>
                                     <label htmlFor="program" className="block text-sm font-medium text-gray-700">Program of Interest</label>
@@ -231,28 +243,28 @@ const AdmissionsPage: React.FC = () => {
                                 <div className="bg-brand-red text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-4 flex-shrink-0">1</div>
                                 <div>
                                     <h4 className="font-bold">Submit Application</h4>
-                                    <p className="text-gray-600">Fill out the online application form with all the required details and upload your documents.</p>
+                                    <p className="text-gray-600 text-base">Fill out the online application form with all the required details and upload your documents.</p>
                                 </div>
                             </li>
                             <li className="flex items-start">
                                 <div className="bg-brand-red text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-4 flex-shrink-0">2</div>
                                 <div>
                                     <h4 className="font-bold">Application Review</h4>
-                                    <p className="text-gray-600">Our admissions team will review your application to ensure all criteria are met.</p>
+                                    <p className="text-gray-600 text-base">Our admissions team will review your application to ensure all criteria are met.</p>
                                 </div>
                             </li>
                              <li className="flex items-start">
                                 <div className="bg-brand-red text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-4 flex-shrink-0">3</div>
                                 <div>
                                     <h4 className="font-bold">Receive Offer Letter</h4>
-                                    <p className="text-gray-600">Successful candidates will receive an offer letter via email with details for the next steps.</p>
+                                    <p className="text-gray-600 text-base">Successful candidates will receive an offer letter via email with details for the next steps.</p>
                                 </div>
                             </li>
                              <li className="flex items-start">
                                 <div className="bg-brand-red text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-4 flex-shrink-0">4</div>
                                 <div>
                                     <h4 className="font-bold">Pay Admission Fee</h4>
-                                    <p className="text-gray-600">Secure your place by paying the admission fee through our online portal.</p>
+                                    <p className="text-gray-600 text-base">Secure your place by paying the admission fee through our online portal.</p>
                                 </div>
                             </li>
                         </ol>

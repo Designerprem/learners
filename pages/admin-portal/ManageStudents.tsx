@@ -2,6 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { STUDENTS } from '../../constants';
 import type { Student } from '../../types';
 import StudentDetailModal from '../../components/admin-portal/StudentDetailModal';
+import ConfirmModal from '../../components/ConfirmModal';
+import { useNavigate } from 'react-router-dom';
+import { getLoggedInUser } from '../../services/authService.ts';
 
 const ManageStudents: React.FC = () => {
     const [students, setStudents] = useState<Student[]>(() => {
@@ -19,26 +22,14 @@ const ManageStudents: React.FC = () => {
         return STUDENTS;
     });
 
-    const [archivedStudents, setArchivedStudents] = useState<Student[]>(() => {
-        try {
-            const saved = localStorage.getItem('archivedStudents');
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                if (Array.isArray(parsed)) {
-                    return parsed;
-                }
-            }
-        } catch (e) {
-            console.error(`Failed to load archivedStudents from localStorage`, e);
-        }
-        return [];
-    });
-
-
     const [searchTerm, setSearchTerm] = useState('');
     const [levelFilter, setLevelFilter] = useState('All');
     const [dateFilter, setDateFilter] = useState({ from: '', to: '' });
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+    const [notification, setNotification] = useState('');
+    const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
+    const [studentToImpersonate, setStudentToImpersonate] = useState<Student | null>(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         try {
@@ -47,15 +38,6 @@ const ManageStudents: React.FC = () => {
             console.error("Failed to save students to localStorage", error);
         }
     }, [students]);
-
-    useEffect(() => {
-        try {
-            localStorage.setItem('archivedStudents', JSON.stringify(archivedStudents));
-        } catch (error) {
-            console.error("Failed to save archived students to localStorage", error);
-        }
-    }, [archivedStudents]);
-
 
     const filteredStudents = useMemo(() => {
         return students
@@ -95,16 +77,37 @@ const ManageStudents: React.FC = () => {
         setSelectedStudent(null);
     };
 
-    const handleRemoveStudent = (studentId: number) => {
-        if (window.confirm('Are you sure you want to remove this student? Their records will be archived for future reference.')) {
-            const studentToRemove = students.find(s => s.id === studentId);
-            if (studentToRemove) {
-                setArchivedStudents(prev => [...prev, studentToRemove]);
-                setStudents(prev => prev.filter(s => s.id !== studentId));
-            }
+    const handleDeleteClick = (student: Student) => {
+        setStudentToDelete(student);
+    };
+
+    const handleConfirmDelete = () => {
+        if (studentToDelete) {
+            setStudents(prev => prev.filter(s => s.id !== studentToDelete.id));
+            setNotification(`Student "${studentToDelete.name}" has been deleted successfully.`);
+            setTimeout(() => setNotification(''), 3000);
+            setStudentToDelete(null);
         }
     };
 
+    const handleLoginAsClick = (student: Student) => {
+        setStudentToImpersonate(student);
+    };
+
+    const handleConfirmLoginAs = () => {
+        if (!studentToImpersonate) return;
+        
+        const { user: adminUser, role: adminRole } = getLoggedInUser();
+        if (adminUser && adminRole === 'admin') {
+            sessionStorage.setItem('impersonator', JSON.stringify({ user: adminUser, role: adminRole }));
+            sessionStorage.setItem('loggedInUser', JSON.stringify(studentToImpersonate));
+            sessionStorage.setItem('userRole', 'student');
+            navigate('/student-portal/dashboard');
+        } else {
+            alert('Error: Impersonation failed. Not logged in as admin.');
+        }
+        setStudentToImpersonate(null);
+    };
 
     return (
         <div>
@@ -149,6 +152,12 @@ const ManageStudents: React.FC = () => {
                 </div>
             </div>
 
+            {notification && (
+                <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-md transition-opacity duration-300">
+                    {notification}
+                </div>
+            )}
+
             <div className="bg-white p-6 rounded-lg shadow-md">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left min-w-[700px]">
@@ -173,7 +182,8 @@ const ManageStudents: React.FC = () => {
                                     <td className="p-4 text-sm">{student.currentLevel}</td>
                                     <td className="p-4 space-x-4 whitespace-nowrap">
                                         <button onClick={() => handleViewDetails(student)} className="text-sm font-semibold text-blue-600 hover:underline">View Details</button>
-                                        <button onClick={() => handleRemoveStudent(student.id)} className="text-sm font-semibold text-brand-red hover:underline">Remove</button>
+                                        <button onClick={() => handleLoginAsClick(student)} className="text-sm font-semibold text-green-600 hover:underline">Go to Portal</button>
+                                        <button onClick={() => handleDeleteClick(student)} className="text-sm font-semibold text-brand-red hover:underline">Delete</button>
                                     </td>
                                 </tr>
                             ))}
@@ -190,6 +200,23 @@ const ManageStudents: React.FC = () => {
                     onSave={handleSaveStudent}
                 />
             }
+            <ConfirmModal
+                isOpen={!!studentToDelete}
+                title="Confirm Deletion"
+                message={`Are you sure you want to permanently delete the student "${studentToDelete?.name}"? This action cannot be undone.`}
+                onConfirm={handleConfirmDelete}
+                onCancel={() => setStudentToDelete(null)}
+                confirmText="Delete"
+            />
+             <ConfirmModal
+                isOpen={!!studentToImpersonate}
+                title="Confirm Portal Access"
+                message={`Are you sure you want to log in as "${studentToImpersonate?.name}"? You will be redirected to their student portal.`}
+                onConfirm={handleConfirmLoginAs}
+                onCancel={() => setStudentToImpersonate(null)}
+                confirmText="Log in as Student"
+                cancelText="Cancel"
+            />
         </div>
     );
 };

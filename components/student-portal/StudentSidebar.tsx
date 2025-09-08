@@ -1,9 +1,8 @@
-import React, { useRef, useEffect } from 'react';
-// FIX: Split react-router-dom imports to resolve module export errors.
-import { NavLink } from 'react-router-dom';
-import { useNavigate } from 'react-router';
+import React, { useRef, useEffect, useState } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
 import type { Student } from '../../types.ts';
 import { logout } from '../../services/authService.ts';
+import ConfirmModal from '../../components/ConfirmModal.tsx';
 
 const icons = {
     dashboard: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>,
@@ -15,6 +14,7 @@ const icons = {
     fee: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>,
     logout: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>,
     schedule: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" ><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>,
+    mockTests: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>,
 };
 
 const SidebarLink = ({ to, icon, children, onClick }: { to: string; icon: JSX.Element; children: React.ReactNode; onClick?: () => void }) => (
@@ -44,6 +44,7 @@ interface StudentSidebarProps {
 const StudentSidebar: React.FC<StudentSidebarProps> = ({ isOpen, setIsOpen, student }) => {
     const navigate = useNavigate();
     const sidebarRef = useRef<HTMLElement>(null);
+    const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -56,9 +57,13 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({ isOpen, setIsOpen, stud
     }, [setIsOpen]);
 
     const handleLogoutClick = () => {
+        setIsLogoutConfirmOpen(true);
+    };
+
+    const handleConfirmLogout = () => {
         logout();
         setIsOpen(false);
-        navigate('/login?role=student');
+        navigate('/');
     };
 
     const handleLinkClick = () => {
@@ -81,6 +86,7 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({ isOpen, setIsOpen, stud
                     <SidebarLink to="/student-portal/dashboard" icon={icons.dashboard} onClick={handleLinkClick}>Dashboard</SidebarLink>
                     <SidebarLink to="/student-portal/courses" icon={icons.courses} onClick={handleLinkClick}>My Courses</SidebarLink>
                     <SidebarLink to="/student-portal/classes" icon={icons.classes} onClick={handleLinkClick}>Classes & Resources</SidebarLink>
+                    <SidebarLink to="/student-portal/mock-tests" icon={icons.mockTests} onClick={handleLinkClick}>Mock Tests</SidebarLink>
                     <SidebarLink to="/student-portal/schedule" icon={icons.schedule} onClick={handleLinkClick}>My Schedule</SidebarLink>
                     <SidebarLink to="/student-portal/fee-payment" icon={icons.fee} onClick={handleLinkClick}>Fee Payment</SidebarLink>
                     <SidebarLink to="/student-portal/results" icon={icons.results} onClick={handleLinkClick}>My Results</SidebarLink>
@@ -97,6 +103,15 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({ isOpen, setIsOpen, stud
                     </button>
                 </div>
             </aside>
+            <ConfirmModal
+                isOpen={isLogoutConfirmOpen}
+                title="Confirm Logout"
+                message="Are you sure you want to log out? Any unsaved changes will be lost."
+                onConfirm={handleConfirmLogout}
+                onCancel={() => setIsLogoutConfirmOpen(false)}
+                confirmText="Log Out"
+                cancelText="Cancel"
+            />
         </>
     );
 };

@@ -1,5 +1,6 @@
 import React from 'react';
-import { VLOGS } from '../constants';
+// FIX: Add '.ts' to constants import to resolve module not found error.
+import { VLOGS } from '../constants.ts';
 import type { Vlog } from '../types';
 import { getItems } from '../services/dataService';
 

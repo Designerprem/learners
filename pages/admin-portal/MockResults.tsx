@@ -1,6 +1,6 @@
-
 import React, { useState, useMemo } from 'react';
-import { STUDENTS, COURSES } from '../../constants';
+// FIX: Add '.ts' to constants import to resolve module not found error.
+import { STUDENTS, COURSES } from '../../constants.ts';
 import type { Student, GradeEntry } from '../../types';
 
 interface FlatResult {

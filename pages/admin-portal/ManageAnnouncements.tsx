@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
-import { GLOBAL_ANNOUNCEMENTS } from '../../constants';
+// FIX: Add '.ts' to constants import to resolve module not found error.
+import { GLOBAL_ANNOUNCEMENTS } from '../../constants.ts';
 import type { Announcement } from '../../types';
 
 const ManageAnnouncements: React.FC = () => {

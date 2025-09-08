@@ -1,5 +1,3 @@
-
-
 import React, { useState, useRef, useEffect } from 'react';
 import { FACULTY_MEMBERS } from '../../constants';
 import type { FacultyMember } from '../../types';
@@ -230,6 +228,14 @@ const Profile: React.FC = () => {
                                 <label className="block text-sm font-medium text-gray-700">Phone</label>
                                 <input name="phone" type="tel" value={formData.phone} onChange={handleFormChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-white"/>
                             </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Date of Birth</label>
+                                <input name="dob" type="date" value={formData.dob || ''} onChange={handleFormChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-white"/>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Social Media URL</label>
+                                <input name="socialMediaUrl" type="url" value={formData.socialMediaUrl || ''} onChange={handleFormChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-white"/>
+                            </div>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Biography</label>
@@ -243,6 +249,10 @@ const Profile: React.FC = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                                 <p><span className="font-semibold">Email:</span> {facultyInfo.email}</p>
                                 <p><span className="font-semibold">Phone:</span> {facultyInfo.phone}</p>
+                                <p><span className="font-semibold">Date of Birth:</span> {facultyInfo.dob || 'N/A'}</p>
+                                {facultyInfo.socialMediaUrl && (
+                                    <p><span className="font-semibold">Social Media:</span> <a href={facultyInfo.socialMediaUrl} target="_blank" rel="noopener noreferrer" className="text-brand-red hover:underline break-all">{facultyInfo.socialMediaUrl}</a></p>
+                                )}
                             </div>
                         </div>
                          <div>

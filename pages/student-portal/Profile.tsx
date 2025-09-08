@@ -167,6 +167,16 @@ const Profile: React.FC = () => {
                            <ProfileInfoRow label="Email Address" value={studentInfo.email} />
                            <ProfileInfoRow label="Phone Number" value={studentInfo.phone} />
                            <ProfileInfoRow label="Date of Birth" value={studentInfo.dob} />
+                            {studentInfo.socialMediaUrl && (
+                                <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
+                                    <dt className="text-sm font-medium text-gray-500">Social Media</dt>
+                                    <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                        <a href={studentInfo.socialMediaUrl} target="_blank" rel="noopener noreferrer" className="text-brand-red hover:underline break-all">
+                                            {studentInfo.socialMediaUrl}
+                                        </a>
+                                    </dd>
+                                </div>
+                            )}
                            <ProfileInfoRow label="Address" value={studentInfo.address} />
                            <ProfileInfoRow label="Emergency Contact" value="Jane Doe (Mother) - +977 9807654321" />
                            <ProfileInfoRow label="Enrolled Since" value={studentInfo.enrollmentDate} />

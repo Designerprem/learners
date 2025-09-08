@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { STUDENTS, COURSES } from '../../constants';
-import type { Student, PaymentHistoryItem } from '../../types';
-import StudentDetailModal from '../../components/admin-portal/StudentDetailModal';
+// FIX: Add '.ts' to constants import to resolve module not found error.
+import { STUDENTS, COURSES } from '../../constants.ts';
+import type { Student, PaymentHistoryItem, PaymentQRCode } from '../../types';
+import { getItems, saveItems } from '../../services/dataService';
+import { useLocalStorage } from '../../hooks/useLocalStorage.ts';
+import { imageFileToDataUrl } from '../../services/imageCompressionService.ts';
+import ConfirmModal from '../../components/ConfirmModal.tsx';
+
 
 // Storage helper
 const getStudentsFromStorage = (): Student[] => {
@@ -233,8 +238,13 @@ const FeeManagementModal: React.FC<{ student: Student; onClose: () => void; onSa
                     <div key={p.invoiceId} className="p-4 border rounded-lg bg-yellow-50">
                         <p><strong>Date:</strong> {p.date} | <strong>Amount:</strong> NPR {p.amount.toLocaleString()}</p>
                         <p><strong>Method:</strong> {p.method} | <strong>Remarks:</strong> {p.remarks}</p>
-                        {p.screenshotUrl && <a href={p.screenshotUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">View Screenshot</a>}
-                        <div className="mt-2 space-y-2">
+                        {p.screenshotUrl && (
+                            <div className="mt-2">
+                                <a href={p.screenshotUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm font-semibold block mb-2">View Full Screenshot</a>
+                                <img src={p.screenshotUrl} alt="Payment Proof Screenshot" className="max-h-64 rounded-md border bg-white p-1" />
+                            </div>
+                        )}
+                        <div className="mt-4 space-y-2">
                            <div className="flex gap-2 items-center">
                             <input type="text" placeholder="Rejection reason (if any)" onChange={e=>setRejectionReason(e.target.value)} className="flex-grow p-1 border rounded bg-white" />
                             <button onClick={()=>handlePaymentStatus(p.invoiceId, 'Rejected')} className="bg-red-500 text-white px-3 py-1 rounded text-sm">Reject</button>
@@ -246,11 +256,31 @@ const FeeManagementModal: React.FC<{ student: Student; onClose: () => void; onSa
             </div>}
             {activeTab === 'History' && <div className="max-h-96 overflow-y-auto">
                 <table className="w-full text-sm">
-                    <thead className="sticky top-0 bg-gray-100"><tr className="border-b"><th className="p-2">Date</th><th className="p-2">Amount</th><th className="p-2">Status</th><th className="p-2">Remarks</th></tr></thead>
+                    <thead className="sticky top-0 bg-gray-100"><tr className="border-b"><th className="p-2">Date</th><th className="p-2">Amount</th><th className="p-2">Status</th><th className="p-2">Remarks</th><th className="p-2">Proof</th></tr></thead>
                     <tbody>
                     {student.paymentHistory && student.paymentHistory.length > 0 ? [...student.paymentHistory].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(p => (
-                        <tr key={p.invoiceId} className="border-b"><td className="p-2">{p.date}</td><td className="p-2">NPR {p.amount.toLocaleString()}</td><td className="p-2">{p.status}</td><td className="p-2 italic text-gray-600">{p.remarks}</td></tr>
-                    )) : <tr><td colSpan={4} className="text-center p-4">No history.</td></tr>}
+                        <tr key={p.invoiceId} className="border-b">
+                            <td className="p-2">{p.date}</td>
+                            <td className="p-2">NPR {p.amount.toLocaleString()}</td>
+                            <td className="p-2">
+                                <span className={`px-2 py-1 text-xs font-bold rounded-full ${
+                                    p.status === 'Paid' ? 'bg-green-100 text-green-700' :
+                                    p.status === 'Pending Verification' ? 'bg-yellow-100 text-yellow-700' :
+                                    'bg-red-100 text-red-700'
+                                }`}>{p.status}</span>
+                            </td>
+                            <td className="p-2 italic text-gray-600">{p.remarks}</td>
+                            <td className="p-2">
+                                {p.screenshotUrl ? (
+                                    <a href={p.screenshotUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-semibold">View</a>
+                                ) : p.method === 'Cash' ? (
+                                    <span className="text-gray-400">Cash</span>
+                                ) : (
+                                    'N/A'
+                                )}
+                            </td>
+                        </tr>
+                    )) : <tr><td colSpan={5} className="text-center p-4">No history.</td></tr>}
                     </tbody>
                 </table>
             </div>}
@@ -264,271 +294,245 @@ const FeeManagementModal: React.FC<{ student: Student; onClose: () => void; onSa
     );
 };
 
-// Main Component
+const ManagePaymentMethods = () => {
+    const [qrs, setQrs] = useLocalStorage<PaymentQRCode[]>('paymentQRCodes', []);
+    const [isEnabled, setIsEnabled] = useLocalStorage<boolean>('onlinePaymentsEnabled', true);
+    
+    const [newTitle, setNewTitle] = useState('');
+    const [newImageFile, setNewImageFile] = useState<File | null>(null);
+    const [message, setMessage] = useState('');
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [qrToDelete, setQrToDelete] = useState<PaymentQRCode | null>(null);
+
+    const handleAddQr = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newTitle.trim() || !newImageFile) {
+            alert('Please provide a title and select a QR code image.');
+            return;
+        }
+
+        try {
+            const imageUrl = await imageFileToDataUrl(newImageFile, { maxWidth: 300, maxHeight: 300, quality: 0.9 });
+            const newQr: PaymentQRCode = {
+                id: Date.now(),
+                title: newTitle.trim(),
+                imageUrl,
+            };
+            setQrs([...qrs, newQr]);
+            setNewTitle('');
+            setNewImageFile(null);
+            if(fileInputRef.current) fileInputRef.current.value = '';
+            setMessage('New payment method added successfully.');
+        } catch (error) {
+            setMessage('Error adding new method. Please try again.');
+        } finally {
+            setTimeout(() => setMessage(''), 3000);
+        }
+    };
+
+    const handleDeleteClick = (qr: PaymentQRCode) => {
+        setQrToDelete(qr);
+    };
+
+    const handleConfirmDelete = () => {
+        if (qrToDelete) {
+            const updatedQrs = qrs.filter(qr => qr.id !== qrToDelete.id);
+            setQrs(updatedQrs);
+            setMessage('Payment method deleted.');
+            setTimeout(() => setMessage(''), 3000);
+            setQrToDelete(null);
+        }
+    };
+    
+    return (
+        <div className="bg-white p-6 rounded-lg shadow-md space-y-6">
+            <div className="flex justify-between items-center p-4 border rounded-lg bg-gray-50">
+                <h3 className="text-lg font-bold text-brand-dark">Online Payment Status</h3>
+                <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" checked={isEnabled} onChange={() => setIsEnabled(!isEnabled)} className="sr-only peer" />
+                    <div className="w-14 h-7 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600"></div>
+                    <span className="ml-3 text-sm font-medium text-gray-900">{isEnabled ? 'Enabled' : 'Disabled'}</span>
+                </label>
+            </div>
+
+            <div>
+                <h3 className="text-lg font-bold text-brand-dark mb-4">Current Payment Methods</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {qrs.map(qr => (
+                        <div key={qr.id} className="p-4 border rounded-lg text-center relative group">
+                             <img src={qr.imageUrl} alt={qr.title} className="w-32 h-32 mx-auto border p-1 rounded-md bg-white mb-2" />
+                             <p className="font-semibold">{qr.title}</p>
+                             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-60 transition-all flex items-center justify-center">
+                                <button 
+                                    onClick={() => handleDeleteClick(qr)} 
+                                    className="bg-brand-red text-white font-semibold px-4 py-2 rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                    Delete
+                                </button>
+                             </div>
+                        </div>
+                    ))}
+                    {qrs.length === 0 && <p className="text-gray-500 md:col-span-3 text-center">No payment methods have been added.</p>}
+                </div>
+            </div>
+
+            <div className="border-t pt-6">
+                <h3 className="text-lg font-bold text-brand-dark mb-4">Add New Payment Method</h3>
+                {message && <p className="text-sm text-green-600 mb-4">{message}</p>}
+                <form onSubmit={handleAddQr} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div>
+                        <label className="block text-sm font-medium">Payment Method Title</label>
+                        <input type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="e.g., Fonepay" className="mt-1 w-full p-2 border rounded-md bg-white"/>
+                    </div>
+                     <div>
+                        <label className="block text-sm font-medium">QR Code Image</label>
+                        <input type="file" ref={fileInputRef} accept="image/*" onChange={e => setNewImageFile(e.target.files ? e.target.files[0] : null)} className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-brand-red hover:file:bg-red-100" />
+                    </div>
+                    <button type="submit" className="bg-blue-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-blue-700 h-10">Add Method</button>
+                </form>
+            </div>
+            
+            <ConfirmModal
+                isOpen={!!qrToDelete}
+                title="Confirm Deletion"
+                message={`Are you sure you want to delete the payment method "${qrToDelete?.title}"? This cannot be undone.`}
+                onConfirm={handleConfirmDelete}
+                onCancel={() => setQrToDelete(null)}
+                confirmText="Delete"
+            />
+        </div>
+    );
+};
+
 const ManageFees: React.FC = () => {
-    // State management
-    const [allStudents, setAllStudents] = useState<Student[]>(getStudentsFromStorage);
-    const [selectedStudents, setSelectedStudents] = useState<Set<number>>(new Set());
-    const [selectedStudentForManage, setSelectedStudentForManage] = useState<Student | null>(null);
-    const [selectedStudentForDetailView, setSelectedStudentForDetailView] = useState<Student | null>(null);
+    const [students, setStudents] = useState<Student[]>(getStudentsFromStorage);
+    const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [filterStatus, setFilterStatus] = useState('All');
-    const [filterLevel, setFilterLevel] = useState('All');
-    const [filterPaper, setFilterPaper] = useState('All');
-    const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
-    const [isReminderModalOpen, setIsReminderModalOpen] = useState(false);
-    const [isBulkUpdateModalOpen, setIsBulkUpdateModalOpen] = useState(false);
-    const [bulkUpdateInfo, setBulkUpdateInfo] = useState({ amount: '', remarks: '' });
+    const [statusFilter, setStatusFilter] = useState('All');
+    const [activeTab, setActiveTab] = useState('Overview');
 
-    // Persist student data to localStorage
     useEffect(() => {
-        localStorage.setItem('students', JSON.stringify(allStudents));
-    }, [allStudents]);
+        saveItems('students', students);
+    }, [students]);
 
-    const allPapers = useMemo(() => {
-        const papersSet = new Set<string>();
-        COURSES.forEach(course => {
-            course.papers.forEach(paper => {
-                const paperCode = paper.split(':')[0].trim();
-                papersSet.add(paperCode);
-            });
-             if (course.options) {
-                 course.options.forEach(paper => {
-                    const paperCode = paper.split(':')[0].trim();
-                    papersSet.add(paperCode);
-                });
-            }
-        });
-        return ['All', ...Array.from(papersSet).sort()];
-    }, []);
-
-    // Summary stats for dashboard
-    const summaryStats = useMemo(() => {
-        let totalOutstanding = 0;
-        let totalCollected = 0;
-        let pendingVerifications = 0;
-        let studentsWithOverdue = 0;
-
-        allStudents.forEach(student => {
-            const details = calculateFeeDetails(student);
-            totalOutstanding += details.outstandingBalance;
-            totalCollected += details.paidAmount;
-            if (student.paymentHistory?.some(p => p.status === 'Pending Verification')) {
-                pendingVerifications++;
-            }
-            if (details.isOverdue) {
-                studentsWithOverdue++;
-            }
-        });
-
-        return { totalOutstanding, totalCollected, pendingVerifications, studentsWithOverdue };
-    }, [allStudents]);
-
-    // Filtered list of students for the table
     const filteredStudents = useMemo(() => {
-        return allStudents
+        return students
             .filter(student =>
                 student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 student.studentId.toLowerCase().includes(searchTerm.toLowerCase())
             )
-            .filter(student => {
-                if (filterStatus === 'All') return true;
-                const status = getStudentFeeStatusForFilter(student);
-                return status === filterStatus;
-            })
-            .filter(student => {
-                if (filterLevel === 'All') return true;
-                return student.currentLevel === filterLevel;
-            })
-            .filter(student => {
-                if (filterPaper === 'All') return true;
-                return student.enrolledPapers.includes(filterPaper);
-            });
-    }, [allStudents, searchTerm, filterStatus, filterLevel, filterPaper]);
-    
-    // Handlers
-    const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.checked) {
-            const allIds = new Set(filteredStudents.map(s => s.id));
-            setSelectedStudents(allIds);
-        } else {
-            setSelectedStudents(new Set());
-        }
-    };
-
-    const handleSelectOne = (studentId: number) => {
-        const newSelection = new Set(selectedStudents);
-        if (newSelection.has(studentId)) {
-            newSelection.delete(studentId);
-        } else {
-            newSelection.add(studentId);
-        }
-        setSelectedStudents(newSelection);
-    };
-
-    const openReminderModal = () => {
-        if (selectedStudents.size > 0) {
-            setIsReminderModalOpen(true);
-        }
-    };
-
-    const confirmAndSendReminders = () => {
-        setNotification({ type: 'success', message: `Fee reminders sent to ${selectedStudents.size} selected student(s).` });
-        setSelectedStudents(new Set());
-        setIsReminderModalOpen(false);
-        setTimeout(() => setNotification(null), 3000);
-    };
-
-    const handleBulkUpdate = () => {
-        const amount = parseFloat(bulkUpdateInfo.amount);
-        if (isNaN(amount) || amount <= 0 || !bulkUpdateInfo.remarks.trim()) {
-            alert('Please enter a valid amount and remark for the bulk update.');
-            return;
-        }
-
-        setAllStudents(prev =>
-            prev.map(student => {
-                if (selectedStudents.has(student.id)) {
-                    return {
-                        ...student,
-                        totalFee: (student.totalFee || 0) + amount,
-                        feeRemarks: `${student.feeRemarks || ''}\n[${new Date().toISOString().split('T')[0]}] Bulk Update: ${bulkUpdateInfo.remarks} - NPR ${amount.toLocaleString()}`.trim(),
-                    };
-                }
-                return student;
-            })
-        );
-        
-        setNotification({ type: 'success', message: `Bulk fee update applied to ${selectedStudents.size} student(s).` });
-        setSelectedStudents(new Set());
-        setIsBulkUpdateModalOpen(false);
-        setBulkUpdateInfo({ amount: '', remarks: '' });
-        setTimeout(() => setNotification(null), 3000);
-    };
-
+            .filter(student =>
+                statusFilter === 'All' || getStudentFeeStatusForFilter(student) === statusFilter
+            );
+    }, [students, searchTerm, statusFilter]);
 
     const handleSaveStudent = (updatedStudent: Student) => {
-        setAllStudents(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s));
+        setStudents(prev => prev.map(s => (s.id === updatedStudent.id ? updatedStudent : s)));
+        setSelectedStudent(null);
     };
 
-    const StatCard = ({ title, value, color, icon }: { title: string, value: string | number, color: string, icon: JSX.Element }) => (
-        <div className="bg-white p-4 rounded-lg shadow-md flex items-start">
-            <div className={`p-3 rounded-full mr-4 ${color.replace('text-', 'bg-').replace('600', '100')}`}>
-                {icon}
-            </div>
-            <div>
-                <p className="text-sm text-gray-500 font-medium uppercase">{title}</p>
-                <p className={`text-2xl font-bold ${color}`}>{value}</p>
-            </div>
-        </div>
-    );
+    const handleViewDetails = (student: Student) => {
+        setSelectedStudent(student);
+    };
 
     return (
-        <div className="space-y-6">
-            <h1 className="text-3xl md:text-4xl font-bold text-brand-dark">Fee Management</h1>
-            {notification && (
-                <div className={`p-3 rounded-md text-sm ${notification.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{notification.message}</div>
-            )}
+        <div>
+            <h1 className="text-3xl md:text-4xl font-bold text-brand-dark mb-8">Fee Management</h1>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard title="Total Outstanding" value={`NPR ${summaryStats.totalOutstanding.toLocaleString()}`} color="text-red-600" icon={<svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01" /></svg>} />
-                <StatCard title="Total Collected" value={`NPR ${summaryStats.totalCollected.toLocaleString()}`} color="text-green-600" icon={<svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>} />
-                <StatCard title="Pending Verifications" value={summaryStats.pendingVerifications} color="text-yellow-600" icon={<svg className="w-6 h-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>} />
-                <StatCard title="Students Overdue" value={summaryStats.studentsWithOverdue} color="text-purple-600" icon={<svg className="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>} />
-            </div>
-            
-            <div className="bg-white p-6 rounded-lg shadow-md">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                    <input type="text" placeholder="Search by name or ID..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full p-2 border rounded-md bg-white"/>
-                    <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="w-full p-2 border rounded-md bg-white">
-                        <option value="All">All Statuses</option>
-                        <option value="Outstanding">Outstanding/Overdue</option>
-                        <option value="Pending Verification">Pending Verification</option>
-                        <option value="Paid">Paid</option>
-                        <option value="Fee Not Set">Fee Not Set</option>
-                    </select>
-                    <select value={filterLevel} onChange={e => setFilterLevel(e.target.value)} className="w-full p-2 border rounded-md bg-white">
-                        <option value="All">All Levels</option>
-                        <option value="Applied Knowledge">Applied Knowledge</option>
-                        <option value="Applied Skills">Applied Skills</option>
-                        <option value="Strategic Professional">Strategic Professional</option>
-                    </select>
-                    <select value={filterPaper} onChange={e => setFilterPaper(e.target.value)} className="w-full p-2 border rounded-md bg-white">
-                        {allPapers.map(p => <option key={p} value={p}>{p}</option>)}
-                    </select>
-                </div>
-                 <div className="flex items-center gap-4 mb-4 p-3 bg-gray-50 rounded-md">
-                    <p className="text-sm font-semibold">{selectedStudents.size} selected</p>
-                    <button onClick={openReminderModal} disabled={selectedStudents.size === 0} className="text-sm font-semibold text-blue-600 hover:underline disabled:text-gray-400 disabled:cursor-not-allowed">Send Reminder</button>
-                    <button onClick={() => setIsBulkUpdateModalOpen(true)} disabled={selectedStudents.size === 0} className="text-sm font-semibold text-green-600 hover:underline disabled:text-gray-400 disabled:cursor-not-allowed">Bulk Add Charge</button>
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left min-w-[800px]">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="p-3"><input type="checkbox" onChange={handleSelectAll} checked={filteredStudents.length > 0 && selectedStudents.size === filteredStudents.length} /></th>
-                                <th className="p-3 font-semibold text-sm">Student</th>
-                                <th className="p-3 font-semibold text-sm">Outstanding</th>
-                                <th className="p-3 font-semibold text-sm">Last Payment</th>
-                                <th className="p-3 font-semibold text-sm">Status</th>
-                                <th className="p-3 font-semibold text-sm">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y">
-                            {filteredStudents.map(student => {
-                                const { outstandingBalance, lastPaymentDate } = calculateFeeDetails(student);
-                                const status = getStudentFeeStatus(student);
-                                return (
-                                <tr key={student.id} className="hover:bg-gray-50">
-                                    <td className="p-3"><input type="checkbox" onChange={() => handleSelectOne(student.id)} checked={selectedStudents.has(student.id)} /></td>
-                                    <td className="p-3"><div className="font-medium">{student.name}</div><div className="text-xs text-gray-500">{student.studentId}</div></td>
-                                    <td className="p-3 font-mono">NPR {outstandingBalance.toLocaleString()}</td>
-                                    <td className="p-3 font-mono text-xs">{lastPaymentDate}</td>
-                                    <td className="p-3"><span className={`px-2 py-1 text-xs font-bold rounded-full ${status.color}`}>{status.text}</span></td>
-                                    <td className="p-3 space-x-2"><button onClick={() => setSelectedStudentForManage(student)} className="text-sm font-semibold text-blue-600 hover:underline">Manage</button><button onClick={() => setSelectedStudentForDetailView(student)} className="text-sm font-semibold text-gray-600 hover:underline">View</button></td>
-                                </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
+             <div className="border-b mb-6">
+                <nav className="-mb-px flex space-x-8">
+                    <button onClick={() => setActiveTab('Overview')} className={`py-2 px-1 border-b-2 font-semibold text-sm ${activeTab === 'Overview' ? 'border-brand-red text-brand-red' : 'border-transparent text-gray-500'}`}>
+                        Student Fee Overview
+                    </button>
+                    <button onClick={() => setActiveTab('PaymentMethods')} className={`py-2 px-1 border-b-2 font-semibold text-sm ${activeTab === 'PaymentMethods' ? 'border-brand-red text-brand-red' : 'border-transparent text-gray-500'}`}>
+                        Manage Payment Methods
+                    </button>
+                </nav>
             </div>
 
-            {isReminderModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg shadow-2xl w-full max-w-md p-6">
-                        <h3 className="text-lg font-bold">Confirm Reminders</h3>
-                        <p className="my-4">Are you sure you want to send fee reminders to {selectedStudents.size} selected student(s)?</p>
-                        <div className="flex justify-end gap-4">
-                            <button onClick={() => setIsReminderModalOpen(false)} className="bg-gray-200 px-4 py-2 rounded">Cancel</button>
-                            <button onClick={confirmAndSendReminders} className="bg-brand-red text-white px-4 py-2 rounded">Send</button>
+            {activeTab === 'Overview' && (
+                <>
+                    <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label htmlFor="search" className="block text-sm font-medium text-gray-700">Search by Student Name/ID</label>
+                                <input
+                                    type="text"
+                                    id="search"
+                                    value={searchTerm}
+                                    onChange={e => setSearchTerm(e.target.value)}
+                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white"
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="statusFilter" className="block text-sm font-medium text-gray-700">Filter by Status</label>
+                                <select
+                                    id="statusFilter"
+                                    value={statusFilter}
+                                    onChange={e => setStatusFilter(e.target.value)}
+                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm"
+                                >
+                                    <option value="All">All Statuses</option>
+                                    <option value="Paid">Paid</option>
+                                    <option value="Outstanding">Outstanding</option>
+                                    <option value="Pending Verification">Pending Verification</option>
+                                    <option value="Fee Not Set">Fee Not Set</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-            
-            {isBulkUpdateModalOpen && (
-                 <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg shadow-2xl w-full max-w-md p-6">
-                        <h3 className="text-lg font-bold">Bulk Add Charge</h3>
-                        <p className="text-sm text-gray-600 my-2">This will add the same charge to all {selectedStudents.size} selected students.</p>
-                        <div className="space-y-4 my-4">
-                            <div><label className="text-sm">Amount (NPR)</label><input type="number" value={bulkUpdateInfo.amount} onChange={e => setBulkUpdateInfo({...bulkUpdateInfo, amount: e.target.value})} className="w-full p-2 border rounded" /></div>
-                            <div><label className="text-sm">Remarks</label><input type="text" value={bulkUpdateInfo.remarks} onChange={e => setBulkUpdateInfo({...bulkUpdateInfo, remarks: e.target.value})} className="w-full p-2 border rounded" /></div>
-                        </div>
-                        <div className="flex justify-end gap-4">
-                            <button onClick={() => setIsBulkUpdateModalOpen(false)} className="bg-gray-200 px-4 py-2 rounded">Cancel</button>
-                            <button onClick={handleBulkUpdate} className="bg-green-600 text-white px-4 py-2 rounded">Apply Charge</button>
+
+                    <div className="bg-white p-6 rounded-lg shadow-md">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left min-w-[800px]">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="p-3 font-semibold text-sm">Student</th>
+                                        <th className="p-3 font-semibold text-sm">Outstanding Balance</th>
+                                        <th className="p-3 font-semibold text-sm">Last Payment</th>
+                                        <th className="p-3 font-semibold text-sm">Status</th>
+                                        <th className="p-3 font-semibold text-sm">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y">
+                                    {filteredStudents.map(student => {
+                                        const { outstandingBalance, lastPaymentDate } = calculateFeeDetails(student);
+                                        const status = getStudentFeeStatus(student);
+                                        return (
+                                            <tr key={student.id} className="hover:bg-gray-50">
+                                                <td className="p-3 font-medium flex items-center">
+                                                    <img src={student.avatarUrl} alt={student.name} className="w-10 h-10 rounded-full mr-3 object-cover"/>
+                                                    <div>
+                                                        {student.name}
+                                                        <p className="text-xs text-gray-500 font-mono">{student.studentId}</p>
+                                                    </div>
+                                                </td>
+                                                <td className="p-3 font-mono">NPR {outstandingBalance.toLocaleString()}</td>
+                                                <td className="p-3 font-mono text-xs">{lastPaymentDate}</td>
+                                                <td className="p-3">
+                                                    <span className={`px-2 py-1 text-xs font-bold rounded-full ${status.color}`}>{status.text}</span>
+                                                </td>
+                                                <td className="p-3">
+                                                    <button onClick={() => handleViewDetails(student)} className="text-sm font-semibold text-blue-600 hover:underline">Manage</button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                </div>
+                </>
             )}
 
-            {selectedStudentForManage && (
-                <FeeManagementModal student={selectedStudentForManage} onClose={() => setSelectedStudentForManage(null)} onSave={handleSaveStudent} />
-            )}
-            {selectedStudentForDetailView && (
-                <StudentDetailModal isOpen={!!selectedStudentForDetailView} onClose={() => setSelectedStudentForDetailView(null)} student={selectedStudentForDetailView} onSave={handleSaveStudent} />
+            {activeTab === 'PaymentMethods' && <ManagePaymentMethods />}
+            
+            {selectedStudent && (
+                <FeeManagementModal
+                    student={selectedStudent}
+                    onClose={() => setSelectedStudent(null)}
+                    onSave={handleSaveStudent}
+                />
             )}
         </div>
     );

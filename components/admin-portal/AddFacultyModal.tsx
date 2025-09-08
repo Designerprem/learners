@@ -10,15 +10,19 @@ interface AddFacultyModalProps {
 }
 
 const AddFacultyModal: React.FC<AddFacultyModalProps> = ({ isOpen, onClose, onAddFaculty }) => {
+    // FIX: Added 'baseSalary' to the initial state to match the 'FacultyMember' type.
     const initialState = {
         name: '',
         username: '',
         email: '',
         phone: '',
         address: '',
+        dob: '',
+        socialMediaUrl: '',
         qualification: '',
         bio: '',
         password: '',
+        baseSalary: 0,
     };
     const [formData, setFormData] = useState(initialState);
     const [selectedPapers, setSelectedPapers] = useState<string[]>([]);
@@ -47,11 +51,13 @@ const AddFacultyModal: React.FC<AddFacultyModalProps> = ({ isOpen, onClose, onAd
             setPreviewUrl(null);
         }
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [isOpen, onClose]);
+    }, [isOpen, onClose, initialState]);
 
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        // FIX: Ensured 'baseSalary' is parsed as a number to maintain correct data typing.
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: name === 'baseSalary' ? (parseInt(value, 10) || 0) : value });
     };
 
     const handlePaperChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -128,13 +134,30 @@ const AddFacultyModal: React.FC<AddFacultyModalProps> = ({ isOpen, onClose, onAd
                             <input type="tel" name="phone" id="phone" required value={formData.phone} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white" />
                         </div>
                     </div>
-                    <div>
-                        <label htmlFor="qualification" className="block text-sm font-medium text-gray-700">Qualification</label>
-                        <input type="text" name="qualification" id="qualification" required value={formData.qualification} onChange={handleChange} placeholder="e.g., PhD, FCCA" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white" />
+                    {/* FIX: Replaced single input with a grid to include 'Base Salary'. */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label htmlFor="qualification" className="block text-sm font-medium text-gray-700">Qualification</label>
+                            <input type="text" name="qualification" id="qualification" required value={formData.qualification} onChange={handleChange} placeholder="e.g., PhD, FCCA" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white" />
+                        </div>
+                        <div>
+                            <label htmlFor="baseSalary" className="block text-sm font-medium text-gray-700">Base Salary (NPR)</label>
+                            <input type="number" name="baseSalary" id="baseSalary" required value={formData.baseSalary} onChange={handleChange} placeholder="e.g., 80000" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white" />
+                        </div>
                     </div>
                     <div>
                         <label htmlFor="address" className="block text-sm font-medium text-gray-700">Address</label>
                         <textarea name="address" id="address" rows={2} required value={formData.address} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white"></textarea>
+                    </div>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label htmlFor="dob" className="block text-sm font-medium text-gray-700">Date of Birth</label>
+                            <input type="date" name="dob" id="dob" required value={formData.dob} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white" />
+                        </div>
+                        <div>
+                            <label htmlFor="socialMediaUrl" className="block text-sm font-medium text-gray-700">Social Media URL (Optional)</label>
+                            <input type="url" name="socialMediaUrl" id="socialMediaUrl" value={formData.socialMediaUrl} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red bg-white" placeholder="https://www.linkedin.com/in/..."/>
+                        </div>
                     </div>
                      <div>
                         <label htmlFor="password"className="block text-sm font-medium text-gray-700">Set Initial Password</label>

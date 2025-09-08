@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { CALENDAR_EVENTS } from '../../constants';
-import type { CalendarEvent } from '../../types';
+import { CALENDAR_EVENTS, MOCK_TESTS } from '../../constants';
+import type { CalendarEvent, MockTest } from '../../types';
 import AddEventModal from '../../components/faculty-portal/AddEventModal';
 import { useFaculty } from '../FacultyPortalPage';
+import { getItems, saveItems } from '../../services/dataService';
 
 const eventTypeConfig: { [key in CalendarEvent['type']]: { label: string; color: string; } } = {
     class: { label: 'Class', color: 'bg-blue-500' },
@@ -26,24 +27,57 @@ const Schedule: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
     
-    const [allEvents, setAllEvents] = useState<CalendarEvent[]>(() => {
-        try {
-            const savedEvents = localStorage.getItem('calendarEvents');
-            return savedEvents ? JSON.parse(savedEvents) : CALENDAR_EVENTS;
-        } catch (e) {
-            console.error("Failed to load events from localStorage", e);
-            return CALENDAR_EVENTS;
-        }
-    });
+    // State for events from the calendar management
+    const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>(() => getItems('calendarEvents', CALENDAR_EVENTS));
+    // State for events derived from mock tests
+    const [mockTestEvents, setMockTestEvents] = useState<CalendarEvent[]>([]);
 
+    // Effect to load and listen for changes to both event sources
     useEffect(() => {
-        try {
-            localStorage.setItem('calendarEvents', JSON.stringify(allEvents));
-        } catch (e) {
-            console.error("Failed to save events to localStorage", e);
-        }
-    }, [allEvents]);
+        const loadAndSetEvents = () => {
+            // Load calendar events
+            setCalendarEvents(getItems('calendarEvents', CALENDAR_EVENTS));
 
+            // Load and transform mock tests created by this faculty member
+            const mockTests = getItems<MockTest[]>('mockTests', MOCK_TESTS);
+            const testEvents: CalendarEvent[] = mockTests
+                .filter(test => test.createdByFacultyId === facultyMember.id && test.status === 'Published' && test.scheduledStartTime)
+                .map(test => {
+                    const startTime = new Date(test.scheduledStartTime!);
+                    return {
+                        id: `test-${test.id}`,
+                        date: getLocalDateString(startTime),
+                        title: `Mock Test: ${test.title}`,
+                        type: 'exam',
+                        startTime: startTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+                        paper: test.paper,
+                        instructor: facultyMember.name,
+                    };
+                });
+            setMockTestEvents(testEvents);
+        };
+        
+        loadAndSetEvents(); // Initial load
+
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === 'calendarEvents' || e.key === 'mockTests') {
+                loadAndSetEvents();
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+        };
+    }, [facultyMember.id, facultyMember.name]);
+
+    // Memo to combine all events
+    const allEvents = useMemo(() => {
+        const calendarEventIds = new Set(calendarEvents.map(e => e.id));
+        const uniqueMockTestEvents = mockTestEvents.filter(e => !calendarEventIds.has(e.id));
+        return [...calendarEvents, ...uniqueMockTestEvents];
+    }, [calendarEvents, mockTestEvents]);
+    
     const facultyPaperCodes = useMemo(() => {
         if (!facultyMember) return [];
         return facultyMember.assignedPapers.map(p => p.split(':')[0].trim());
@@ -92,16 +126,20 @@ const Schedule: React.FC = () => {
     };
 
     const handleSaveEvent = (eventData: CalendarEvent) => {
+        const currentCalendarEvents = getItems('calendarEvents', CALENDAR_EVENTS);
+        let updatedEvents;
         if (eventData.id && editingEvent) { // This is an update
-            setAllEvents(prev => prev.map(e => e.id === eventData.id ? eventData : e));
+            updatedEvents = currentCalendarEvents.map(e => e.id === eventData.id ? eventData : e);
         } else { // This is a new class
              const newEvent: CalendarEvent = {
                 ...eventData,
                 id: Date.now(),
                 instructor: facultyMember.name,
             };
-            setAllEvents(prev => [...prev, newEvent]);
+            updatedEvents = [...currentCalendarEvents, newEvent];
         }
+        setCalendarEvents(updatedEvents);
+        saveItems('calendarEvents', updatedEvents);
         setIsModalOpen(false);
         setEditingEvent(null);
     };
@@ -113,7 +151,10 @@ const Schedule: React.FC = () => {
 
     const handleDeleteClick = (id: number | string) => {
         if (window.confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
-            setAllEvents(prev => prev.filter(e => e.id !== id));
+            const currentCalendarEvents = getItems('calendarEvents', CALENDAR_EVENTS);
+            const updatedEvents = currentCalendarEvents.filter(e => e.id !== id);
+            setCalendarEvents(updatedEvents);
+            saveItems('calendarEvents', updatedEvents);
         }
     };
     
@@ -146,6 +187,7 @@ const Schedule: React.FC = () => {
 
     const AgendaItem = ({ event, onEdit, onDelete }: { event: CalendarEvent, onEdit: (event: CalendarEvent) => void, onDelete: (id: number | string) => void }) => {
         const isOwner = event.instructor === facultyMember.name;
+        const isMockTestEvent = String(event.id).startsWith('test-');
         return (
             <div className="flex items-start p-3 bg-gray-50 rounded-lg">
                 <div className={`w-3 h-3 rounded-full mt-1.5 mr-4 flex-shrink-0 ${eventTypeConfig[event.type].color}`}></div>
@@ -158,12 +200,15 @@ const Schedule: React.FC = () => {
                         <p className="font-bold text-sm text-brand-dark">{event.startTime || 'All Day'}</p>
                         {event.endTime && <p className="text-xs text-gray-500">to {event.endTime}</p>}
                     </div>
-                    <div className="space-x-2">
-                        {isOwner && (
+                    <div className="space-x-2 w-28 text-right">
+                        {isOwner && !isMockTestEvent && (
                             <>
                                 <button onClick={() => onEdit(event)} className="text-xs font-semibold text-blue-600 hover:underline">Edit</button>
                                 <button onClick={() => onDelete(event.id)} className="text-xs font-semibold text-brand-red hover:underline">Delete</button>
                             </>
+                        )}
+                        {isMockTestEvent && (
+                             <span className="text-xs text-gray-400 italic">From Mock Tests</span>
                         )}
                     </div>
                 </div>

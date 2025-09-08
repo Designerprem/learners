@@ -1,5 +1,6 @@
 import React from 'react';
-import { ACCA_FEE_STRUCTURE } from '../constants';
+// FIX: Add '.ts' to constants import to resolve module not found error.
+import { ACCA_FEE_STRUCTURE } from '../constants.ts';
 import type { AccaFeeCategory } from '../types';
 
 const FeeTable: React.FC<{ feeCategories: AccaFeeCategory[] }> = ({ feeCategories }) => {

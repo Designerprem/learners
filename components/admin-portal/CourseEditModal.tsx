@@ -109,8 +109,8 @@ const CourseEditModal: React.FC<CourseEditModalProps> = ({ isOpen, onClose, cour
                             {formData.syllabus.map((item, index) => (
                                 <div key={index} className="flex items-start gap-2 p-2 bg-white rounded border">
                                     <div className="flex-grow">
-                                        <input value={item.topic} onChange={e => handleSyllabusChange(index, 'topic', e.target.value)} placeholder="Topic" className="block w-full p-1 border rounded text-sm"/>
-                                        <textarea value={item.details} onChange={e => handleSyllabusChange(index, 'details', e.target.value)} placeholder="Details" rows={2} className="mt-1 block w-full p-1 border rounded text-sm"/>
+                                        <input value={item.topic} onChange={e => handleSyllabusChange(index, 'topic', e.target.value)} placeholder="Topic" className="block w-full p-1 border rounded text-sm bg-white"/>
+                                        <textarea value={item.details} onChange={e => handleSyllabusChange(index, 'details', e.target.value)} placeholder="Details" rows={2} className="mt-1 block w-full p-1 border rounded text-sm bg-white"/>
                                     </div>
                                     <button type="button" onClick={() => removeSyllabusItem(index)} className="text-red-500 hover:text-red-700 font-bold text-lg">&times;</button>
                                 </div>

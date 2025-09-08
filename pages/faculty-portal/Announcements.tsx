@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { FACULTY_ANNOUNCEMENTS } from '../../constants';
 import type { Announcement } from '../../types';

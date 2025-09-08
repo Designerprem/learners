@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useRef } from 'react';
 import type { Application } from '../../types';
 
@@ -140,8 +138,17 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({ applica
                                     <DetailRow label="Submitted Date" value={application.submittedDate} />
                                     <DetailRow label="Email" value={application.email} />
                                     <DetailRow label="Phone" value={application.phone} />
-                                    <DetailRow label="Address" value={application.address} />
+                                    <DetailRow label="Date of Birth" value={application.dob} />
                                     <DetailRow label="Program" value={application.program} />
+                                    <div className="md:col-span-2">
+                                        <DetailRow label="Address" value={application.address} />
+                                    </div>
+                                    {application.socialMediaUrl && (
+                                         <div className="md:col-span-2">
+                                            <p className="text-sm font-medium text-gray-500">Social Media</p>
+                                            <a href={application.socialMediaUrl} target="_blank" rel="noopener noreferrer" className="mt-1 text-md text-brand-red hover:underline break-all">{application.socialMediaUrl}</a>
+                                        </div>
+                                    )}
                                     {application.selectedPapers && application.selectedPapers.length > 0 && (
                                         <div className="md:col-span-2">
                                             <p className="text-sm font-medium text-gray-500">Selected Papers</p>

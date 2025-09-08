@@ -1,9 +1,6 @@
-
-
-
 import React, { useState, useRef, useEffect } from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
-import StudentSidebar from '../../components/student-portal/StudentSidebar.tsx';
+import StudentSidebar from '../components/student-portal/StudentSidebar.tsx';
 import Dashboard from './student-portal/Dashboard.tsx';
 import MyCourses from './student-portal/MyCourses.tsx';
 import Results from './student-portal/Results.tsx';
@@ -12,15 +9,15 @@ import Community from './student-portal/Community.tsx';
 import LiveClasses from './student-portal/LiveClasses.tsx';
 import FeePayment from './student-portal/FeePayment.tsx';
 import SchedulePage from './student-portal/SchedulePage.tsx';
-import type { Notification, Announcement, Student, MockTest, LiveClass, StudentSubmission } from '../../types.ts';
-import { GLOBAL_ANNOUNCEMENTS, LIVE_CLASSES } from '../../constants.ts';
-import AnnouncementPopup from '../../components/AnnouncementPopup.tsx';
-import { getLoggedInUser } from '../../services/authService.ts';
-import { getItems, saveItems } from '../../services/dataService.ts';
+import type { Notification, Announcement, Student, MockTest, LiveClass, StudentSubmission } from '../types.ts';
+import { GLOBAL_ANNOUNCEMENTS, LIVE_CLASSES } from '../constants.ts';
+import AnnouncementPopup from '../components/AnnouncementPopup.tsx';
+import { getLoggedInUser } from '../services/authService.ts';
+import { getItems, saveItems } from '../services/dataService.ts';
 import MockTestsListPage from './student-portal/MockTestsListPage.tsx';
 import TakeTestPage from './student-portal/TakeTestPage.tsx';
 import TestReviewPage from './student-portal/TestReviewPage.tsx';
-import LiveDateTime from '../../components/LiveDateTime.tsx';
+import LiveDateTime from '../components/LiveDateTime.tsx';
 
 const StudentPortalLayout = () => {
     const [student, setStudent] = useState<Student | null>(null);
@@ -32,6 +29,8 @@ const StudentPortalLayout = () => {
     const [announcementPopup, setAnnouncementPopup] = useState<Announcement | null>(null);
     const [unseenAnnouncements, setUnseenAnnouncements] = useState<Announcement[]>([]);
     const notificationRef = useRef<HTMLDivElement>(null);
+    const [impersonator, setImpersonator] = useState<any | null>(null);
+
 
      useEffect(() => {
         const { user, role } = getLoggedInUser();
@@ -39,6 +38,11 @@ const StudentPortalLayout = () => {
             setStudent(user as Student);
         } else {
             navigate('/login?role=student', { replace: true });
+        }
+
+        const impersonatorStr = sessionStorage.getItem('impersonator');
+        if (impersonatorStr) {
+            setImpersonator(JSON.parse(impersonatorStr));
         }
     }, [navigate]);
 
@@ -257,6 +261,17 @@ const StudentPortalLayout = () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, []);
+    
+    const handleReturnToAdmin = () => {
+        const impersonatorStr = sessionStorage.getItem('impersonator');
+        if (impersonatorStr) {
+            const { user, role } = JSON.parse(impersonatorStr);
+            sessionStorage.setItem('loggedInUser', JSON.stringify(user));
+            sessionStorage.setItem('userRole', role);
+            sessionStorage.removeItem('impersonator');
+            navigate('/admin-portal/dashboard', { replace: true });
+        }
+    };
 
     if (!student) {
         return <div className="flex h-screen items-center justify-center">Loading...</div>; // Or a spinner
@@ -266,7 +281,17 @@ const StudentPortalLayout = () => {
         <div className="flex h-screen bg-gray-100 font-sans">
             <StudentSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} student={student} />
             <div className="flex-1 flex flex-col lg:ml-64">
-                <header className="bg-white shadow-sm p-4 flex justify-between items-center sticky top-0 z-20 border-b">
+                {impersonator && (
+                    <div className="bg-yellow-400 text-black p-2 text-center text-sm font-semibold flex items-center justify-center gap-4 sticky top-0 z-50">
+                        <p>
+                            Viewing as <strong>{student?.name}</strong>.
+                        </p>
+                        <button onClick={handleReturnToAdmin} className="bg-black text-white px-3 py-1 rounded-md text-xs hover:bg-gray-700">
+                            Return to Admin Portal
+                        </button>
+                    </div>
+                )}
+                <header className={`bg-white shadow-sm p-4 flex justify-between items-center sticky z-20 border-b ${impersonator ? 'top-[36px]' : 'top-0'}`}>
                     <div className="flex items-center gap-4">
                         <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden text-gray-500 hover:text-brand-red">
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
